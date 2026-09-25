@@ -59,6 +59,10 @@ def username(cli_user: str | None) -> str:
     kj = Path.home() / ".kaggle/kaggle.json"
     if kj.exists():
         return json.loads(kj.read_text())["username"]
+    r = subprocess.run([kaggle_bin(), "config", "view"], capture_output=True, text=True)  # access_token auth
+    m = re.search(r"username:\s*(\S+)", r.stdout)
+    if m and m.group(1) != "None":
+        return m.group(1)
     sys.exit("Unknown Kaggle username: set KAGGLE_USERNAME or put kaggle.json in ~/.kaggle/")
 
 

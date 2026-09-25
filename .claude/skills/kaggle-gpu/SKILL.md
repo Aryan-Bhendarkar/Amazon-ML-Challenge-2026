@@ -11,11 +11,11 @@ Model: **Kaggle = remote GPU worker, this box = control plane.** You never open 
 upload → push → run in background → poll → download.
 
 ## Status check
-!`bash -lc 'test -f ~/.kaggle/kaggle.json && echo "auth: OK" || echo "auth: MISSING - ask human for kaggle.json (see Setup)"; kaggle --version 2>/dev/null || echo "cli missing: uv tool install kaggle"'`
+!`bash -lc 'test -f ~/.kaggle/kaggle.json -o -f ~/.kaggle/access_token && echo "auth: OK" || echo "auth: MISSING - ask human for kaggle.json (see Setup)"; kaggle --version 2>/dev/null || echo "cli missing: uv tool install kaggle"'`
 
 ## Setup (one-time, human does it)
 1. kaggle.com account **phone-verified** (Settings → Phone verification) — otherwise no GPU and no internet.
-2. Settings → API → **Create New Token** → `kaggle.json`. Copy it to the box: `~/.kaggle/kaggle.json`, `chmod 600`.
+2. Settings → API → Generate API token → save to `~/.kaggle/access_token` (chmod 600). Done for aryanbhendarkar (smoke test passed 25 Sep: 2x T4, HF ok).
 3. `python scripts/kaggle_gpu.py whoami` then the smoke test:
    `python scripts/kaggle_gpu.py run kaggle/gpu_smoke.py --slug amlc-smoke --wait` → expect 2× Tesla T4, `hf_ok: true`.
 
