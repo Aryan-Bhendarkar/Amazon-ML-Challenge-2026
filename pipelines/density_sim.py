@@ -67,12 +67,15 @@ def main(a):
                 um = pk.filter(~pl.col("entity_id").is_in(list(matched)))
                 pk = pk.filter(~pl.col("entity_id").is_in(um.filter(pl.Series(rg.random(um.height) >= r))["entity_id"]
                                                          .to_list()))
-            key = f"r={r}{'_dropunm' if drop_unm else ''}"
+            key = f"r={r}{'_dropunm' if drop_unm else ''}{'_clean' if a.clean and r < 1 else ''}"
             res[key] = {}
+            # clean: also remove candidates that are GT copies of the dropped S1. Without this they stay as
+            # ownerless look-alikes ('orphans'), which cannot exist on test (every true copy's owner is present).
+            keep_rows = ~pl.col("cand_id").is_in(dm.to_list()) if a.clean else pl.lit(True)
             for rid, (model, feats, t, v) in models.items():
                 F = cf.add_features(Xn, cf.SplitContext.from_frames(s1k, pk, v), workers=a.threads)
                 have = [f for f in feats if f in base.columns]
-                X = base.select(["s1_id", "cand_id"] + have).join(
+                X = base.filter(keep_rows).select(["s1_id", "cand_id"] + have).join(
                     F.select(["s1_id", "cand_id"] + [f for f in feats if f not in have]), on=["s1_id", "cand_id"])
                 Xp = X.select(["s1_id", "cand_id"] + feats).to_pandas()
                 p = Xp[["s1_id", "cand_id"]].assign(prob=model.predict(Xp[feats], num_threads=a.threads))
@@ -99,4 +102,5 @@ if __name__ == "__main__":
     ap.add_argument("--cache", default="v1_n1")
     ap.add_argument("--n", type=int, default=15000)
     ap.add_argument("--threads", type=int, default=2)
+    ap.add_argument("--clean", action="store_true", help="drop GT copies of dropped S1 from the candidates too")
     main(ap.parse_args())
