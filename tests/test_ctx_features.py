@@ -1,3 +1,4 @@
+import numpy as np
 import polars as pl
 
 from ber import ctx_features as cf
@@ -56,3 +57,21 @@ def test_features_end_to_end():
     assert r["sib_n"] == [1, 1, 2, 2]
     assert r["sib_house_agree"] == [0, 0, -1, 1]
     assert r["sib_s1house_agree"] == [0, 1, 1, 1]
+
+
+def test_v2_rarity_is_density_invariant():
+    s1 = pl.DataFrame({"country": ["X"] * 4, "n_core": ["solo co", "acme labs", "acme co", "zeta co"],
+                       "a_full": ["9 oak rd"] * 4, "a_street": ["oak rd"] * 4, "a_house": ["9"] * 4})
+    pool = pl.DataFrame({"country": ["X"], "n_core": ["solo co"], "a_full": ["9 oak rd"]})
+    ctx = cf.SplitContext.from_frames(s1, pool, version=2)
+    F = cf.add_features(_pairs(), ctx, groups=("G3",), workers=1).sort("cand_id")
+    r = {c: F[c].to_list() for c in F.columns}
+    # extras vs S1 'solo co': r0 none, r1 'holdings' (unseen), r2 'cp' (unseen), r3 'acme'(df 2) + 'labs'(df 1)
+    assert "ex_idf_max" not in r and r["ex_unseen_n"] == [0, 1, 1, 0]
+    assert abs(r["ex_ldf_max"][3] - np.log1p(2)) < 1e-6 and abs(r["ex_ldf_min"][3] - np.log1p(1)) < 1e-6
+    assert r["ex_ldf_max"][0] == -1.0 and abs(r["mi_ldf_max"][2] - np.log1p(3)) < 1e-6   # missing "co": df 3
+    assert r["ex_lfrac_cmax"][1] is None                                  # no common (df>=50) tokens here
+    # doubling the S1 table (denser split) must not change rare-token features of the same tokens
+    ctx2 = cf.SplitContext.from_frames(pl.concat([s1, s1.with_columns(pl.lit("Y").alias("country"))]), pool, version=2)
+    F2 = cf.add_features(_pairs(), ctx2, groups=("G3",), workers=1).sort("cand_id")
+    assert F2["ex_ldf_max"].to_list() == r["ex_ldf_max"]

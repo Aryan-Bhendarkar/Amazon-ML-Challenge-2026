@@ -56,7 +56,7 @@ def stage1(a, log=print):
     if groups:
         sctx = None
         if not (fv.ctx_path(a.cache, "train").exists() and fv.ctx_path(a.cache, a.eval_tag).exists()):
-            sctx = cf.SplitContext.build("train")
+            sctx = cf.SplitContext.build("train", fv.CTX_VER)
         f_tr = fv.featurize_tag(a.cache, "train", tr_pl, sctx, a.chunks, a.threads)
         f_ev = fv.featurize_tag(a.cache, a.eval_tag, ev_pl, sctx, max(1, a.chunks // 4), a.threads)
         if cf_pl is not None:
@@ -196,6 +196,7 @@ def evaluate(R, ctx, km, s2m, iso, kfeat, s2cols, threads, params=None):
 def main(a):
     t0 = time.time()
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
+    fv.CTX_VER = a.ctx_ver
     ctx = harness.EvalContext.load(a.subset)
     cctx = harness.EvalContext.load(a.confirm_tag) if a.confirm_tag else None
     with Run(f"decision-v1-{a.cache}", hypothesis=a.hypothesis or
@@ -275,6 +276,7 @@ if __name__ == "__main__":
     ap.add_argument("--subset", default="mini", choices=["micro", "mini", "fold0"])
     ap.add_argument("--confirm-tag", default="", help="e.g. fold0x: apply the mini-tuned rules frozen")
     ap.add_argument("--groups", default="G1,G2,G3,G4,G5")
+    ap.add_argument("--ctx-ver", type=int, default=1)
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--chunks", type=int, default=8)
     ap.add_argument("--extra-base", default=",".join(fv.EXTRA_BASE))

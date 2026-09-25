@@ -30,6 +30,7 @@ SLICE = 4_000_000
 def main(a):
     t0 = time.time()
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
+    fv.CTX_VER = a.ctx_ver
     runs = a.runs.split(",")
     ctx = harness.EvalContext.load(a.tag)
     df = fv.load_cache(a.cache, a.tag)
@@ -40,7 +41,7 @@ def main(a):
                     json.loads((art / "decision.json").read_text())["threshold"])
     need = sorted({f for _, feats, _ in specs.values() for f in feats if f not in df.columns})
     if need:
-        sctx = None if fv.ctx_path(a.cache, a.tag).exists() else cf.SplitContext.build("train")
+        sctx = None if fv.ctx_path(a.cache, a.tag).exists() else cf.SplitContext.build("train", fv.CTX_VER)
         F = fv.featurize_tag(a.cache, a.tag, df, sctx, a.chunks, a.threads)
         df = df.join(F.select(["s1_id", "cand_id"] + need), on=["s1_id", "cand_id"], how="left")
         del F, sctx
@@ -81,6 +82,7 @@ if __name__ == "__main__":
     ap.add_argument("--cache", default="v1_n1")
     ap.add_argument("--tag", default="fold0x")
     ap.add_argument("--runs", required=True, help="comma list; bootstrap = last vs first")
+    ap.add_argument("--ctx-ver", type=int, default=1)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--chunks", type=int, default=16)
     main(ap.parse_args())

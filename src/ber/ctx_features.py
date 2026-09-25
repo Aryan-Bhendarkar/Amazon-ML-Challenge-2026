@@ -34,6 +34,7 @@ from . import paths
 
 NORM_V = 0
 GROUPS = ("G1", "G2", "G3", "G4", "G5")
+DF_CAP = 50             # v2 token rarity: raw df saturates here (rare tokens keep their df at any density)
 CNT_CAP = 20            # counts are capped: test density differs from train (US test S1 ~0.5x)
 
 # Generic "extra business word" list (hand-written, English + French; documented in decisions.md).
@@ -80,15 +81,16 @@ class SplitContext:
     s1_hs: pl.DataFrame      # country, hs_key, cnt
     pool_name: pl.DataFrame  # country, n_key, cnt   (S2+S3 records)
     pool_addr: pl.DataFrame  # country, a_key, cnt
-    idf: pl.DataFrame        # country, tok, idf   (log(n_s1 / df) over S1 core names)
+    idf: pl.DataFrame        # country, tok, idf   (log(n_s1 / df) over S1 core names)       [v1 G3]
+    df: pl.DataFrame | None = None     # country, tok, df   (#S1 whose core name has the token)  [v2 G3]
+    n_s1: pl.DataFrame | None = None   # country, n_s1
+    version: int = 1
 
     @classmethod
-    def build(cls, split: str) -> "SplitContext":
-        s1 = (pl.scan_parquet(_norm_file(split, 1)).select("country", "n_core", "a_full", "a_street", "a_house")
-                .with_columns(key_exprs()).collect())
-        pool = pl.concat([pl.scan_parquet(_norm_file(split, s)).select("country", "n_core", "a_full")
-                          .with_columns(key_exprs()[:2]).select("country", "n_key", "a_key").collect()
-                          for s in (2, 3)])
+    def from_frames(cls, s1: pl.DataFrame, pool: pl.DataFrame, version: int = 1) -> "SplitContext":
+        """s1: country, n_core, a_full, a_street, a_house; pool: country, n_core, a_full (all records of a split)."""
+        s1 = s1.select("country", "n_core", "a_full", "a_street", "a_house").with_columns(key_exprs())
+        pool = pool.select("country", "n_core", "a_full").with_columns(key_exprs()[:2]).select("country", "n_key", "a_key")
         cnt = lambda df, k: df.filter(pl.col(k) != "").group_by("country", k).len("cnt")  # noqa: E731
         n_s1 = s1.group_by("country").len("n_s1")
         df = (s1.select("country", _tokens("n_core").list.unique().alias("tok")).explode("tok", empty_as_null=True)
@@ -96,7 +98,14 @@ class SplitContext:
         idf = (df.join(n_s1, on="country")
                  .select("country", "tok", (pl.col("n_s1") / pl.col("df")).log().cast(pl.Float32).alias("idf")))
         return cls(cnt(s1, "n_key"), cnt(s1, "a_key"), cnt(s1, "hs_key"),
-                   cnt(pool, "n_key"), cnt(pool, "a_key"), idf)
+                   cnt(pool, "n_key"), cnt(pool, "a_key"), idf, df, n_s1, version)
+
+    @classmethod
+    def build(cls, split: str, version: int = 1) -> "SplitContext":
+        s1 = pl.scan_parquet(_norm_file(split, 1)).select("country", "n_core", "a_full", "a_street", "a_house").collect()
+        pool = pl.concat([pl.scan_parquet(_norm_file(split, s)).select("country", "n_core", "a_full").collect()
+                          for s in (2, 3)])
+        return cls.from_frames(s1, pool, version)
 
     def max_idf(self) -> pl.DataFrame:
         """idf of an unseen token (df=0 -> treat as df=1) per country."""
@@ -156,6 +165,24 @@ def g3_token_edits(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.
     idf = ctx.idf
     imax = ctx.max_idf()
 
+    def tok_stats_v2(col: str, pre: str) -> pl.DataFrame:
+        """Density-invariant rarity: raw df (capped) for rare tokens, df/n_s1 only for common tokens,
+        explicit unseen-token count (v1 encoded 'unseen' as log(n_s1), which shifts with S1 density)."""
+        e = (X.select("_r", "country", pl.col(col).alias("tok")).explode("tok", empty_as_null=True).drop_nulls("tok")
+               .join(ctx.df, on=["country", "tok"], how="left").join(ctx.n_s1, on="country", how="left")
+               .with_columns(pl.col("df").fill_null(0)))
+        common = pl.col("df") >= DF_CAP
+        lfrac = (pl.col("df").cast(pl.Float64) / pl.col("n_s1")).log()
+        ldf = pl.col("df").clip(0, DF_CAP).cast(pl.Float64).log1p()
+        return e.group_by("_r").agg(
+            (pl.col("df") == 0).sum().cast(pl.Int16).alias(f"{pre}_unseen_n"),
+            ldf.min().cast(pl.Float32).alias(f"{pre}_ldf_min"), ldf.max().cast(pl.Float32).alias(f"{pre}_ldf_max"),
+            lfrac.filter(common).max().cast(pl.Float32).alias(f"{pre}_lfrac_cmax"),
+            lfrac.filter(common).min().cast(pl.Float32).alias(f"{pre}_lfrac_cmin"),
+            pl.col("tok").is_in(list(BIZ_WORDS)).any().cast(pl.Int8).alias(f"{pre}_biz"),
+            pl.col("tok").str.contains(r"\d").any().cast(pl.Int8).alias(f"{pre}_digit"),
+        )
+
     def tok_stats(col: str, pre: str) -> pl.DataFrame:
         e = (X.select("_r", "country", pl.col(col).alias("tok")).explode("tok", empty_as_null=True).drop_nulls("tok")
                .join(idf, on=["country", "tok"], how="left").join(imax, on="country", how="left")
@@ -167,7 +194,8 @@ def g3_token_edits(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.
             pl.col("tok").str.contains(r"\d").any().cast(pl.Int8).alias(f"{pre}_digit"),
         )
 
-    X = X.join(tok_stats("_ex", "ex"), on="_r", how="left").join(tok_stats("_mi", "mi"), on="_r", how="left")
+    ts = tok_stats_v2 if ctx.version >= 2 else tok_stats
+    X = X.join(ts("_ex", "ex"), on="_r", how="left").join(ts("_mi", "mi"), on="_r", how="left")
     # typo vs substitution: best JW between any extra and any missing token (only rows with both)
     both = X.filter((pl.col("ex_n") > 0) & (pl.col("mi_n") > 0)).select("_r", "_ex", "_mi")
     if both.height:
@@ -189,7 +217,11 @@ def g3_token_edits(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.
         ((c != "") & s.str.starts_with(c + " ")).cast(pl.Int8).alias("c_prefix_of_s1"),
         (pl.col("_ts").list.first() == pl.col("_tc").list.first()).fill_null(False).cast(pl.Int8).alias("first_tok_eq"),
     )
-    fill = {f"{p}_{k}": 0.0 for p in ("ex", "mi") for k in ("idf_max", "idf_min", "idf_sum")}
+    if ctx.version >= 2:      # rows without extra/missing tokens: counts 0, ldf -1; lfrac stays null (NaN)
+        fill = {f"{p}_{k}": -1.0 for p in ("ex", "mi") for k in ("ldf_min", "ldf_max")}
+        X = X.with_columns([pl.col(f"{p}_unseen_n").fill_null(0).cast(pl.Int16) for p in ("ex", "mi")])
+    else:
+        fill = {f"{p}_{k}": 0.0 for p in ("ex", "mi") for k in ("idf_max", "idf_min", "idf_sum")}
     X = X.with_columns([pl.col(k).fill_null(v).cast(pl.Float32) for k, v in fill.items()] +
                        [pl.col(f"{p}_{k}").fill_null(0).cast(pl.Int8) for p in ("ex", "mi") for k in ("biz", "digit")])
     return X.drop("_r", "_ts", "_tc", "_ex", "_mi")

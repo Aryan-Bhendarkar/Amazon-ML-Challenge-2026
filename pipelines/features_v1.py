@@ -57,8 +57,11 @@ def load_cache(ver: str, tag: str) -> pl.DataFrame:
     return df
 
 
+CTX_VER = 1                              # ber.ctx_features version (set from --ctx-ver); cache = ctx<v>_<tag>
+
+
 def ctx_path(ver: str, tag: str):
-    return CANDS / ver / f"ctx1_{tag}.parquet"
+    return CANDS / ver / f"ctx{CTX_VER}_{tag}.parquet"
 
 
 def featurize_tag(ver: str, tag: str, df: pl.DataFrame, sctx: cf.SplitContext, n_chunks: int, workers: int,
@@ -145,8 +148,10 @@ def loco(tr: pd.DataFrame, ev: pd.DataFrame, feats: list[str], cats: list[str], 
 
 
 def main(a):
+    global CTX_VER
     t0 = time.time()
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
+    CTX_VER = a.ctx_ver
     groups = [] if a.groups == "none" else a.groups.split(",")
     base = base_feats()
     print("[load cache]")
@@ -158,7 +163,7 @@ def main(a):
         tr_pl = tr_pl.filter(pl.col("s1_id").is_in(keep.tolist()))
     base += [c for c in a.extra_base.split(",") if c and c in tr_pl.columns]
     if a.featurize_only:
-        sctx = cf.SplitContext.build("train")
+        sctx = cf.SplitContext.build("train", CTX_VER)
         for tag in ("train", a.eval_tag):
             featurize_tag(a.cache, tag, load_cache(a.cache, tag), sctx, a.chunks, a.threads)
         print(f"featurized in {(time.time() - t0) / 60:.1f} min")
@@ -168,7 +173,7 @@ def main(a):
     new = []
     if groups:
         print("[ctx features]")
-        sctx = cf.SplitContext.build("train")
+        sctx = cf.SplitContext.build("train", CTX_VER)
         f_tr = featurize_tag(a.cache, "train", load_cache(a.cache, "train"), sctx, a.chunks, a.threads)
         f_ev = featurize_tag(a.cache, a.eval_tag, load_cache(a.cache, a.eval_tag), sctx, max(1, a.chunks // 4),
                              a.threads)
@@ -184,9 +189,9 @@ def main(a):
     ev = to_pandas(ev_pl, ["s1_id", "cand_id"] + feats)
     del tr_pl, ev_pl
     gc.collect()
-    name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}"
+    name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}" + (f"-ctx{CTX_VER}" if CTX_VER != 1 else "")
     with Run(name, hypothesis=a.hypothesis or f"ctx feature groups {groups or 'none'} on {a.cache} cache",
-             params={"cache": a.cache, "groups": groups, "subset": a.subset, "n_train_s1": a.n_train_s1,
+             params={"cache": a.cache, "ctx_ver": CTX_VER, "groups": groups, "subset": a.subset, "n_train_s1": a.n_train_s1,
                      "threads": a.threads, "n_feats": len(feats), "new_feats": new},
              tags=["features"], parent=a.parent) as run:
         run.log(train_pairs=int((~tr.is_es).sum()), es_pairs=int(tr.is_es.sum()), eval_pairs=len(ev))
@@ -245,6 +250,7 @@ if __name__ == "__main__":
     ap.add_argument("--chunks", type=int, default=8)
     ap.add_argument("--loco", action="store_true")
     ap.add_argument("--extra-base", default=",".join(EXTRA_BASE), help="cache columns added to the base features")
+    ap.add_argument("--ctx-ver", type=int, default=1, help="ber.ctx_features version (2 = density-invariant G3)")
     ap.add_argument("--loco-only", action="store_true", help="skip the main model; LOCO reference only")
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
