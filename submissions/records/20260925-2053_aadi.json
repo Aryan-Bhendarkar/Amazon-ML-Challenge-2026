@@ -1,0 +1,38 @@
+{
+  "sub_id": "20260925-2053_aadi",
+  "run_id": "20260925-1857_aadi_model-v2-pruned-union-ctx-notfname",
+  "author": "aadi",
+  "note": "v2: blocking v1 (no tf_name) + learned pruner top40 + base+ctx feats LGBM, t=0.75",
+  "created_ist": "2026-09-25T20:58:42+05:30",
+  "status": "prepared",
+  "validator_pass": true,
+  "val_f05": 0.9782,
+  "stats_matching": {
+    "rows": 1732544,
+    "nonempty": 1629561,
+    "ids": 5777229,
+    "dropped_bad_ids": 0
+  },
+  "stats_candidates": {
+    "rows": 1732544,
+    "nonempty": 1732542,
+    "ids": 68993815,
+    "matched_pairs_in_candidates": 5777229,
+    "matched_pairs_total": 5777229
+  },
+  "diagnostics": {
+    "empty_rate_by_country": {
+      "France": 0.059644943958805485,
+      "India": 0.06116031635114681,
+      "US": 0.05725932203901035
+    },
+    "mean_matches_by_country": {
+      "France": 3.2198171530764843,
+      "India": 3.278818399330359,
+      "US": 3.447478985260275
+    },
+    "empty_rate": 0.0594403374459754,
+    "mean_matches": 3.3345352268109787
+  },
+  "files": "submissions\\files\\20260925-2053_aadi"
+}
