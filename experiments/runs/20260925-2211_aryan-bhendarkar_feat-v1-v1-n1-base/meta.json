@@ -1,0 +1,25 @@
+{
+  "run_id": "20260925-2211_aryan-bhendarkar_feat-v1-v1-n1-base",
+  "name": "feat-v1-v1_n1-base",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "LOCO reference: base FEATS+rbits on v1_n1 (same protocol as the G1-G5 run)",
+  "params": {
+    "cache": "v1_n1",
+    "groups": [],
+    "subset": "mini",
+    "n_train_s1": 0,
+    "threads": 4,
+    "n_feats": 29,
+    "new_feats": []
+  },
+  "tags": [
+    "features"
+  ],
+  "parent": "20260925-2015_aryan-bhendarkar_gate-blocking-v1-n1",
+  "git_commit": "d1b6291",
+  "git_dirty": true,
+  "started_ist": "2026-09-25T22:11:57+05:30",
+  "status": "done",
+  "duration_min": 22.06,
+  "finished_ist": "2026-09-25T22:34:01+05:30"
+}
