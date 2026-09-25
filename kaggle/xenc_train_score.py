@@ -9,6 +9,9 @@ BCE, max_len 96, fp16 AMP, 1 epoch, AdamW lr 5e-5 with linear warmup/decay, seed
 
 Outputs (/kaggle/working): ckpt_m{k}.pt (fp16 state_dict, written progressively), progress_m{k}.json,
 logits_<name>.parquet (pair_id, xenc_l0, xenc_l1, xenc_logit), metrics.json.
+LOCO mode: if a loco_groups.parquet (pair_id, grp) + loco_config.json ({"train_grp": ["US", "India"]}) are in the
+inputs, model k trains on ALL train rows with grp == train_grp[k] (country used only to SPLIT, never as a feature),
+scores every non-train row, and outputs are prefixed "loco_" (xenc_l0 = model 0, xenc_l1 = model 1).
 Score-only rerun: attach this kernel's output as a kernel source; found ckpt_m{k}.pt are loaded (no training) and
 files whose logits_<name>.parquet already exist in the inputs are skipped.
 """
@@ -92,6 +95,15 @@ def read(f, columns=None):
     return df.head(SMOKE).copy() if SMOKE else df
 
 
+def loco_cfg():
+    c = inputs("loco_config.json")
+    if not c:
+        return None
+    cfg = json.load(open(c[0]))
+    cfg["groups"] = pd.read_parquet(inputs("loco_groups.parquet")[0]).set_index("pair_id")["grp"]
+    return cfg
+
+
 def worker(k, n_gpu):
     from transformers import BertForSequenceClassification, get_linear_schedule_with_warmup
     dev = torch.device(f"cuda:{k % n_gpu}") if n_gpu else torch.device("cpu")
@@ -102,16 +114,21 @@ def worker(k, n_gpu):
     tok = tokenizer()
     pad = tok.pad_token_id
     model = BertForSequenceClassification.from_pretrained(MODEL, num_labels=1).to(dev)
-    files = data_files()
+    files = {n: f for n, f in data_files().items() if n != "loco_groups"}
+    cfg = loco_cfg()
+    pre = "loco_" if cfg else ""
     prog = {"model": k, "gpu": torch.cuda.get_device_name(dev) if n_gpu else "cpu"}
-    prev = [p for p in inputs(f"ckpt_m{k}.pt") if not p.startswith(W)]
+    prev = [p for p in inputs(f"{pre}ckpt_m{k}.pt") if not p.startswith(W)]
     if prev:                                                 # score-only rerun
         model.load_state_dict({n: t.float() for n, t in torch.load(prev[0], map_location=dev).items()})
         log(k, f"loaded checkpoint {prev[0]} - skip training")
         prog["train"] = "skipped (checkpoint)"
     else:
         tr = read(files["train"])
-        tr = tr[tr.cf == k].reset_index(drop=True)
+        if cfg:
+            tr = tr[tr.pair_id.map(cfg["groups"]).to_numpy() == cfg["train_grp"][k]].reset_index(drop=True)
+        else:
+            tr = tr[tr.cf == k].reset_index(drop=True)
         t0 = time.time()
         ids = encode(tok, tr)
         y = tr.label.to_numpy(np.float32)
@@ -126,7 +143,8 @@ def worker(k, n_gpu):
         perm = rng.permutation(len(ids))
         probe = max(50, int(PROBE_FRAC * steps))
         ckpt_every = max(1, steps // N_CKPT)
-        n_score = sum(int((read(f, ["cf"]).cf != k).sum()) for n, f in files.items() if n != "train")
+        n_score = sum(len(read(f, ["cf"])) if cfg else int((read(f, ["cf"]).cf != k).sum())
+                      for n, f in files.items() if n != "train")
         model.train()
         t0, run_loss = time.time(), 0.0
         for s in range(steps):
@@ -158,24 +176,26 @@ def worker(k, n_gpu):
             if (s + 1) % 500 == 0:
                 log(k, f"step {s + 1}/{steps} loss {run_loss:.4f} {(s + 1) * BS / (time.time() - t0):.0f} pairs/s")
             if (s + 1) % ckpt_every == 0 or s + 1 == steps:
-                torch.save({n: t.half() for n, t in model.state_dict().items()}, f"{W}/ckpt_m{k}.pt")
+                torch.save({n: t.half() for n, t in model.state_dict().items()}, f"{W}/{pre}ckpt_m{k}.pt")
                 prog.update(ckpt_step=s + 1, loss=round(run_loss, 4))
                 json.dump(prog, open(f"{W}/progress_m{k}.json", "w"), indent=2)
         prog["train_min"] = round((time.time() - t0) / 60, 1)
         log(k, f"trained in {prog['train_min']} min")
         del ids, y, opt
     model.eval()
-    done = {os.path.basename(p)[7:-8] for p in inputs("logits_*.parquet")}
+    done = {os.path.basename(p)[7 + len(pre):-8] for p in inputs(f"logits_{pre}*.parquet")
+            if cfg or not os.path.basename(p).startswith("logits_loco_")}
     for name, f in files.items():
         if name == "train" or name in done:
             continue
         df = read(f)
-        df = df[df.cf != k].reset_index(drop=True)          # cf == k rows were this model's training S1
+        if not cfg:
+            df = df[df.cf != k].reset_index(drop=True)      # cf == k rows were this model's training S1
         if not len(df):
             continue
         t0 = time.time()
         lg = score(model, encode(tok, df), pad, dev)
-        pd.DataFrame({"pair_id": df.pair_id.to_numpy(), f"xenc_l{k}": lg}).to_parquet(f"{W}/part_{name}_m{k}.parquet")
+        pd.DataFrame({"pair_id": df.pair_id.to_numpy(), f"xenc_l{k}": lg}).to_parquet(f"{W}/part_{pre}{name}_m{k}.parquet")
         rate = len(df) / (time.time() - t0)
         prog.setdefault("score", {})[name] = {"rows": len(df), "pairs_per_s": round(rate)}
         log(k, f"scored {name}: {len(df):,} rows, {rate:.0f} pairs/s")
@@ -185,8 +205,9 @@ def worker(k, n_gpu):
 def merge():
     from sklearn.metrics import log_loss, roc_auc_score
     metrics = {}
+    pre = "loco_" if loco_cfg() else ""
     for name, f in data_files().items():
-        parts = [f"{W}/part_{name}_m{k}.parquet" for k in (0, 1)]
+        parts = [f"{W}/part_{pre}{name}_m{k}.parquet" for k in (0, 1)]
         if name == "train" or not any(os.path.exists(p) for p in parts):
             continue
         import pyarrow.parquet as pq
@@ -198,7 +219,7 @@ def merge():
         # OOF model for cf in {0,1}; mean of both for cf == -1
         base["xenc_logit"] = np.where(base.cf == 0, base.xenc_l1, np.where(base.cf == 1, base.xenc_l0,
                                                                          base[["xenc_l0", "xenc_l1"]].mean(axis=1)))
-        base[["pair_id", "xenc_l0", "xenc_l1", "xenc_logit"]].to_parquet(f"{W}/logits_{name}.parquet")
+        base[["pair_id", "xenc_l0", "xenc_l1", "xenc_logit"]].to_parquet(f"{W}/logits_{pre}{name}.parquet")
         m = {"rows": len(base), "nan": int(base.xenc_logit.isna().sum())}
         if "label" in base.columns:
             for c in ("xenc_l0", "xenc_l1", "xenc_logit"):
@@ -212,7 +233,7 @@ def merge():
             if os.path.exists(p):
                 os.remove(p)
         print("[merge]", name, json.dumps(m), flush=True)
-    json.dump(metrics, open(f"{W}/metrics.json", "w"), indent=2)
+    json.dump(metrics, open(f"{W}/{pre}metrics.json", "w"), indent=2)
 
 
 if __name__ == "__main__":

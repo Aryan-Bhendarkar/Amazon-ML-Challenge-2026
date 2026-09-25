@@ -1,0 +1,33 @@
+{
+  "run_id": "20260926-0201_aryan-bhendarkar_xenc-stage2-v1-n1",
+  "name": "xenc-stage2-v1_n1",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "xenc_logit (cross-fitted MiniLM cross-encoder, masked to stage-1 band 0.02-0.98) as a stage-2 feature beats the shipping stage-1 global threshold (0.9800) by >0.001 on mini without hurting LOCO",
+  "params": {
+    "decision_run": "20260925-2235_aryan-bhendarkar_decision-v1-v1-n1",
+    "xenc_dir": "/home/ubuntu/amlc/artifacts/kaggle/amlc-xenc-score,/home/ubuntu/amlc/artifacts/kaggle/amlc-xenc",
+    "loco_xenc_dir": "/home/ubuntu/amlc/artifacts/kaggle/amlc-xenc-loco-score,/home/ubuntu/amlc/artifacts/kaggle/amlc-xenc-loco-run",
+    "cache": "v1_n1",
+    "eval_tag": "mini",
+    "subset": "mini",
+    "confirm_tag": "",
+    "train_col": "xenc_logit",
+    "eval_col": "xenc_logit",
+    "pmin": 0.01,
+    "threads": 3,
+    "loco": true,
+    "hypothesis": "xenc_logit (cross-fitted MiniLM cross-encoder, masked to stage-1 band 0.02-0.98) as a stage-2 feature beats the shipping stage-1 global threshold (0.9800) by >0.001 on mini without hurting LOCO"
+  },
+  "tags": [
+    "model",
+    "xenc",
+    "decision"
+  ],
+  "parent": "20260925-2235_aryan-bhendarkar_decision-v1-v1-n1",
+  "git_commit": "c3e4787",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T02:01:17+05:30",
+  "status": "done",
+  "duration_min": 40.46,
+  "finished_ist": "2026-09-26T02:41:44+05:30"
+}

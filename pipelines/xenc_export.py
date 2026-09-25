@@ -15,11 +15,14 @@ Parts (--parts), fast ones first so the GPU can start while the CPU does the slo
                valid.parquet  es S1 (fold 1): same recipe (kernel metrics only)
                hardness = raw score of the gate's first RANK_TREES trees (1562 trees in full = too slow on 17M)
   mini         band_mini.parquet  exact gate probs from the gate run's val_pred.parquet, LO < p < HI
-  score_train  score_train.parquet  train+es roles, full gate (in-sample) TR_LO < p < TR_HI    [slow]
-  fold0x,test  band_<tag>.parquet  full gate LO < p < HI, streamed per row group              [slow]
+  s1band       s1band_{train,mini,<confirm>,test}.parquet: the EXACT stage-2 mask, stage-1 prob in (S1_LO, S1_HI),
+               from a decision_v1 run (oof_train / val_pred_stage1 / stage1.lgb on --confirm-tag) and the stage-1
+               run's test_pred.parquet (probs >= 0.01). Pairs already in band_mini are skipped (union at join).
+               This is the default path for train/fold0x/test (cheap; coverage of the mask = 100%).
+  score_train, fold0x, test: full-gate supersets (slow: ~4 min per 1M rows on a busy box; kept for reference)
 
     python pipelines/xenc_export.py --parts trainset,mini
-    python pipelines/xenc_export.py --parts score_train,test --threads 4
+    python pipelines/xenc_export.py --parts s1band --decision-run <id> --confirm-tag fold0x --test-pred <path>
 """
 import _bootstrap  # noqa: F401
 
@@ -48,7 +51,10 @@ NEG_HARD, NEG_RAND = 6, 2
 RANK_TREES = 200
 # pair_id offsets keep ids unique across files (joins are per file anyway)
 OFFSET = {"train": 0, "valid": 100_000_000, "score_train": 200_000_000, "band_mini": 300_000_000,
-          "band_fold0x": 400_000_000, "band_test": 500_000_000}
+          "band_fold0x": 400_000_000, "band_test": 500_000_000, "s1band_train": 600_000_000,
+          "s1band_mini": 700_000_000, "s1band_fold0x": 800_000_000, "s1band_test": 900_000_000,
+          "gband_test": 1_000_000_000}
+S1_LO, S1_HI = 0.02, 0.98
 
 
 def gate():
@@ -156,6 +162,42 @@ def part_band(tag, model, feats, threads):
           texts("test" if tag == "test" else "train"), ["cf"])
 
 
+def part_s1band(a):
+    import xenc_stage2 as xs
+    art = paths.ART_DIR / a.decision_run
+    band = (pl.col("prob") > S1_LO) & (pl.col("prob") < S1_HI)
+    tr = pl.read_parquet(art / "oof_train.parquet", columns=["s1_id", "cand_id", "is_es", "prob"]).filter(band)
+    tr = tr.with_columns(pl.when(pl.col("is_es")).then(pl.lit("es")).otherwise(pl.lit("train")).alias("role"),
+                         pl.lit(0).alias("label"))
+    tr = train_roles(tr).rename({"prob": "gate_prob"})     # map column keeps the stage-1 prob
+    T = texts("train")
+    write("s1band_train", tr.select("s1_id", "cand_id", "gate_prob", "cf"), T, ["cf"])
+    have = pl.read_parquet(MAP / "band_mini.parquet", columns=["s1_id", "cand_id"])
+    mi = pl.read_parquet(art / "val_pred_stage1.parquet", columns=["s1_id", "cand_id", "prob"]).filter(band)
+    mi = mi.join(have, on=["s1_id", "cand_id"], how="anti")
+    write("s1band_mini", mi.rename({"prob": "gate_prob"}).with_columns(pl.lit(-1, pl.Int8).alias("cf")), T, ["cf"])
+    if a.confirm_tag:
+        feats = json.loads((art / "features.json").read_text())
+        cf_ = pl.from_pandas(xs.confirm_frame(art, "v1_n1", a.confirm_tag, feats, a.threads)[["s1_id", "cand_id", "prob"]])
+        write(f"s1band_{a.confirm_tag}", cf_.filter(band).rename({"prob": "gate_prob"})
+              .with_columns(pl.lit(-1, pl.Int8).alias("cf")), T, ["cf"])
+    del T
+    gc.collect()
+    if a.test_pred:
+        te = pl.read_parquet(a.test_pred, columns=["s1_id", "cand_id", "prob"]).filter(band)
+        write("s1band_test", te.rename({"prob": "gate_prob"}).with_columns(pl.lit(-1, pl.Int8).alias("cf")),
+              texts("test"), ["cf"])
+
+
+def part_gband_test(a):
+    """Gate-stack path (pipelines/xenc_gate_stack.py): test pairs with 0.05 < gate prob < 0.98 from v1_test's
+    test_pred.parquet (saved with prob >= 0.05)."""
+    p = a.test_pred or str(paths.ART_DIR / GATE_RUN / "test_pred.parquet")
+    te = pl.read_parquet(p, columns=["s1_id", "cand_id", "prob"]).filter((pl.col("prob") > 0.05) & (pl.col("prob") < 0.98))
+    write("gband_test", te.rename({"prob": "gate_prob"}).with_columns(pl.lit(-1, pl.Int8).alias("cf")),
+          texts("test"), ["cf"])
+
+
 def main(a):
     t0 = time.time()
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
@@ -168,6 +210,10 @@ def main(a):
             part_score_train(model, feats, a.threads)
         elif part == "mini":
             part_mini()
+        elif part == "s1band":
+            part_s1band(a)
+        elif part == "gband_test":
+            part_gband_test(a)
         else:
             part_band(part, model, feats, a.threads)
         gc.collect()
@@ -180,4 +226,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--parts", default="trainset,mini")
     ap.add_argument("--threads", type=int, default=2)
+    ap.add_argument("--decision-run", default="", help="s1band: decision_v1 run on v1_n1")
+    ap.add_argument("--confirm-tag", default="", help="s1band: e.g. fold0x (stage-1 probs via stage1.lgb, cached)")
+    ap.add_argument("--test-pred", default="", help="s1band: stage-1 test_pred.parquet (probs >= 0.01)")
     main(ap.parse_args())

@@ -37,15 +37,18 @@ from ber.tracking import Run
 
 MAP = paths.DATA_DIR / "kaggle" / "xenc_map"
 BAND_LO, BAND_HI = 0.02, 0.98
-TAG_FILES = {"train": ["score_train"], "mini": ["band_mini"], "fold0x": ["band_fold0x"], "test": ["band_test"]}
+TAG_FILES = {"train": ["s1band_train"], "mini": ["band_mini", "s1band_mini"], "fold0x": ["s1band_fold0x"],
+             "test": ["s1band_test"]}
 
 
-def xenc_table(xdir: Path, names: list[str], col: str) -> pd.DataFrame:
+def xenc_table(xdirs, names: list[str], col: str, prefix: str = "") -> pd.DataFrame:
+    """xdirs: list of pulled kernel-output dirs, searched in order for logits_<prefix><name>.parquet."""
     parts = []
     for n in names:
-        lp = xdir / f"logits_{n}.parquet"
-        if not lp.exists():
-            raise FileNotFoundError(f"{lp} missing (kernel not run on {n} yet)")
+        found = [Path(d) / f"logits_{prefix}{n}.parquet" for d in xdirs if (Path(d) / f"logits_{prefix}{n}.parquet").exists()]
+        if not found:
+            raise FileNotFoundError(f"logits_{prefix}{n}.parquet not in {xdirs} (kernel not run on {n} yet)")
+        lp = found[0]
         mp = pl.read_parquet(MAP / f"{n}.parquet", columns=["pair_id", "s1_id", "cand_id"])
         parts.append(mp.join(pl.read_parquet(lp, columns=["pair_id", col]), on="pair_id")
                      .select("s1_id", "cand_id", pl.col(col).cast(pl.Float32).alias("xenc_logit")))
@@ -63,7 +66,11 @@ def attach(df: pd.DataFrame, X: pd.DataFrame, tag: str, log: dict) -> pd.DataFra
 
 
 def confirm_frame(art: Path, cache: str, tag: str, feats: list[str], threads: int) -> pd.DataFrame:
-    """Stage-1 probs on the confirm tag with the decision run's stage1.lgb (decision_v1 does not save them)."""
+    """Stage-1 probs on the confirm tag with the decision run's stage1.lgb (decision_v1 does not save them).
+    Cached to artifacts/<decision_run>/stage1_<tag>.parquet (shared with xenc_export s1band)."""
+    cache_p = art / f"stage1_{tag}.parquet"
+    if cache_p.exists():
+        return pd.read_parquet(cache_p)
     model = lgb.Booster(model_file=str(art / "stage1.lgb"))
     df = fv.load_cache(cache, tag)
     new = [c for c in feats if c not in df.columns]
@@ -76,7 +83,9 @@ def confirm_frame(art: Path, cache: str, tag: str, feats: list[str], threads: in
         c = fv.to_pandas(df.slice(o, 4_000_000), ["s1_id", "cand_id"] + feats)
         out.append(c[["s1_id", "cand_id"] + keep].assign(
             prob=model.predict(c[feats], num_threads=threads).astype(np.float32)))
-    return pd.concat(out, ignore_index=True)
+    out = pd.concat(out, ignore_index=True)
+    out.to_parquet(cache_p)
+    return out
 
 
 def fit_set_level(tr: pd.DataFrame, tr_truth: dict, es_ids: set, pmin: float, threads: int, km=None):
@@ -121,9 +130,14 @@ def run_arm(name, tr, ev, cf_, ctx, cctx, tr_truth, es_ids, a, km=None):
     return res, km
 
 
-def loco(tr, ev, ctx, tr_truth, es_ids, cmap, a):
+LOCO_COL = {"US": "xenc_l0", "India": "xenc_l1"}     # amlc-xenc-loco-run: model 0 trained on US only, 1 on India
+
+
+def loco(tr, ev, ctx, tr_truth, es_ids, cmap, a, ev_src_only=None):
     """Stage-2 trained on one country's train S1, rules tuned+scored on the other country's eval S1.
-    NOTE: the xenc itself saw both countries, so this only proxies the stage-2 side of the transfer."""
+    Arms: control (no xenc) | xenc_indomain (target logits from the xenc that saw both countries: optimistic) |
+    xenc_srconly (target logits from an xenc trained on the SOURCE country only = the France situation: stage 2
+    learnt to trust an in-domain xenc, then meets an xenc that never saw the country)."""
     out = {}
     ctry_tr, ctry_ev = tr.s1_id.map(cmap), ev.s1_id.map(cmap)
     for src in sorted(set(ctry_ev.dropna())):
@@ -135,14 +149,24 @@ def loco(tr, ev, ctx, tr_truth, es_ids, cmap, a):
             tt = {s: v for s, v in tr_truth.items() if cmap.get(s) == src}
             r = {}
             km = None
-            for arm, drop in (("control", True), ("xenc", False)):
+            arms = [("control", True, None), ("xenc_indomain", False, None)]
+            if ev_src_only is not None:
+                arms.append(("xenc_srconly", False, LOCO_COL[src]))
+            for arm, drop, scol in arms:
                 X = trs.drop(columns="xenc_logit") if drop else trs
                 E = ev[ctry_ev == tgt]
                 E = E.drop(columns="xenc_logit") if drop else E
+                if scol:
+                    E = E.drop(columns="xenc_logit").merge(ev_src_only[["s1_id", "cand_id", scol]]
+                                                           .rename(columns={scol: "xenc_logit"}),
+                                                           on=["s1_id", "cand_id"], how="left")
+                    E["xenc_logit"] = E["xenc_logit"].where((E.prob > BAND_LO) & (E.prob < BAND_HI))
                 res, km = run_arm(f"loco {src}->{tgt} {arm}", X, E, None, sctx, None, tt, es_ids, a, km)
                 r[arm] = {"f05": res["rules"][res["chosen"]]["f05"], "rule": res["chosen"],
                           "s2_kmodel": res["rules"]["s2_kmodel"]["f05"], "s2_thr": res["rules"]["s2_thr"]["f05"]}
-            r["delta"] = round(r["xenc"]["f05"] - r["control"]["f05"], 5)
+            for arm in r.copy():
+                if arm != "control":
+                    r[f"delta_{arm}"] = round(r[arm]["f05"] - r["control"]["f05"], 5)
             out[f"{src}->{tgt}"] = r
             print(f"[loco] {src}->{tgt}: {r}", flush=True)
     return out
@@ -151,7 +175,7 @@ def loco(tr, ev, ctx, tr_truth, es_ids, cmap, a):
 def main(a):
     t0 = time.time()
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
-    xdir = Path(a.xenc_dir)
+    xdir = a.xenc_dir.split(",")
     ctx = harness.EvalContext.load(a.subset)
     cctx = harness.EvalContext.load(a.confirm_tag) if a.confirm_tag else None
     art = paths.ART_DIR / a.decision_run
@@ -168,7 +192,8 @@ def main(a):
     ev = attach(ev, xenc_table(xdir, TAG_FILES[a.eval_tag], a.eval_col), a.eval_tag, cov)
     if cf_ is not None:
         cf_ = attach(cf_, xenc_table(xdir, TAG_FILES[a.confirm_tag], a.eval_col), a.confirm_tag, cov)
-    tr_truth = io.load_gt_sets(set(fv.load_cache(a.cache, "train")["s1_id"].unique().to_list()))
+    tr_truth = io.load_gt_sets(set(pl.read_parquet(fv.CANDS / a.cache / "train.parquet", columns=["s1_id"])
+                                   ["s1_id"].unique().to_list()))
     es_ids = set(tr.loc[tr.is_es, "s1_id"])
     gc.collect()
     with Run(f"xenc-stage2-{a.cache}", hypothesis=a.hypothesis or
@@ -178,9 +203,12 @@ def main(a):
         ctrl, km = run_arm("control", tr.drop(columns="xenc_logit"), ev.drop(columns="xenc_logit"),
                            None if cf_ is None else cf_.drop(columns="xenc_logit"), ctx, cctx, tr_truth, es_ids, a)
         trt, _ = run_arm("xenc", tr, ev, cf_, ctx, cctx, tr_truth, es_ids, a, km)
-        comp = {"mini_chosen": boot(ctrl["ent"][ctrl["chosen"]], trt["ent"][trt["chosen"]], ctx.truth),
+        comp = {"mini_vs_shipping_thr": boot(ctrl["ent"]["thr"], trt["ent"][trt["chosen"]], ctx.truth),
+                "mini_chosen": boot(ctrl["ent"][ctrl["chosen"]], trt["ent"][trt["chosen"]], ctx.truth),
                 "mini_s2_kmodel": boot(ctrl["ent"]["s2_kmodel"], trt["ent"]["s2_kmodel"], ctx.truth)}
         if cf_ is not None:
+            comp["confirm_vs_shipping_thr"] = boot(ctrl["confirm_ent"]["thr"], trt["confirm_ent"][trt["chosen"]],
+                                                   cctx.truth)
             comp["confirm_chosen"] = boot(ctrl["confirm_ent"][trt["chosen"]], trt["confirm_ent"][trt["chosen"]],
                                           cctx.truth)
         rep = metric.report(trt["ent"][trt["chosen"]], ctx.truth, ctx.country)
@@ -204,18 +232,25 @@ def main(a):
                 folds = io.load_folds()
                 cmap = dict(zip(folds.s1_id, folds.country))
                 del folds
-                run.log(loco=loco(tr, ev, ctx, tr_truth, es_ids, cmap, a))
+                so = None
+                if a.loco_xenc_dir:
+                    so = pd.concat([xenc_table(a.loco_xenc_dir.split(","), TAG_FILES[a.eval_tag], c, "loco_")
+                                    .rename(columns={"xenc_logit": c}).set_index(["s1_id", "cand_id"])
+                                    for c in ("xenc_l0", "xenc_l1")], axis=1).reset_index()
+                run.log(loco=loco(tr, ev, ctx, tr_truth, es_ids, cmap, a, so))
             except Exception as e:  # noqa: BLE001
                 run.log(loco_error=repr(e))
                 print("[loco] FAILED", repr(e))
         run.log(timing_min=round((time.time() - t0) / 60, 1))
-        d = comp["mini_chosen"]
-        note = (f"{ctx.subset}: control {ctrl['chosen']}={ctrl['rules'][ctrl['chosen']]['f05']:.5f} -> xenc "
+        d = comp["mini_vs_shipping_thr"]
+        note = (f"{ctx.subset}: shipping thr={ctrl['rules']['thr']['f05']:.5f}; control best {ctrl['chosen']}="
+                f"{ctrl['rules'][ctrl['chosen']]['f05']:.5f} -> xenc "
                 f"{trt['chosen']}={trt['rules'][trt['chosen']]['f05']:.5f}; bootstrap {json.dumps(d)}")
         if cf_ is not None:
             note += (f" | CONFIRM {a.confirm_tag} ({trt['chosen']}): control "
                      f"{ctrl['confirm_rules'][trt['chosen']]['f05']:.5f} -> xenc "
-                     f"{trt['confirm_rules'][trt['chosen']]['f05']:.5f}; {json.dumps(comp['confirm_chosen'])}")
+                     f"{trt['confirm_rules'][trt['chosen']]['f05']:.5f} (shipping thr "
+                     f"{ctrl['confirm_rules']['thr']['f05']:.5f}); {json.dumps(comp['confirm_vs_shipping_thr'])}")
         run.note(note)
         print(note)
 
@@ -223,7 +258,10 @@ def main(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--decision-run", required=True, help="decision_v1 run on the same cache (stage-1 frames)")
-    ap.add_argument("--xenc-dir", default=str(paths.ART_DIR / "kaggle" / "amlc-xenc-score"))
+    ap.add_argument("--xenc-dir", default=",".join(str(paths.ART_DIR / "kaggle" / d) for d in
+                                                    ("amlc-xenc-score", "amlc-xenc")), help="comma list, searched in order")
+    ap.add_argument("--loco-xenc-dir", default=",".join(str(paths.ART_DIR / "kaggle" / d) for d in
+                                                         ("amlc-xenc-loco-score", "amlc-xenc-loco-run")))
     ap.add_argument("--cache", default="v1_n1")
     ap.add_argument("--eval-tag", default="mini")
     ap.add_argument("--subset", default="mini", choices=["micro", "mini", "fold0"])

@@ -34,6 +34,10 @@ and keep working on CPU tracks meanwhile. The Kaggle run continues even if this 
   (each teammate has their own quota → run independent jobs on 2 accounts in parallel if needed).
 - One run ≤ **12 h**. Outputs: `/kaggle/working` ≤ 20 GB. Inputs mount read-only under `/kaggle/input/` — locate files
   with `glob('/kaggle/input/**/<name>', recursive=True)` (mount paths vary).
+- Measured (25 Sep, MiniLM-L12-H384, max_len 96, mean 47 tokens, fp16, bs 128): **~600 pairs/s training per T4**,
+  **~3.5–4k pairs/s scoring per T4**; the 1.7M-pair cross-fit run (2 models in parallel) took 31 min end to end.
+- **Dataset version race** (hit 26 Sep): a kernel pushed right after `data` reports "ready" can still mount the
+  PREVIOUS version. Check the kernel log's first line (`inputs: [...]`) — or wait ~2 min before `run`.
 - Upload speed from the box matters: keep inputs compact (parquet, zstd, only the columns needed, text pre-normalized).
 
 ## Rules (hard)
