@@ -31,7 +31,7 @@ def rss_gb():
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6
 
 
-def run_country(split_name, ctry, qids, log, norm_v=0, do_rev=False, keep_frames=False):
+def run_country(split_name, ctry, qids, log, norm_v=0, do_rev=False, keep_frames=False, retriever_frames=True):
     t0 = time.time()
     s1_all = (pl.scan_parquet(B.norm_file(split_name, 1, norm_v)).filter(pl.col("country") == ctry).select(S1_COLS)
                 .collect())
@@ -98,7 +98,8 @@ def run_country(split_name, ctry, qids, log, norm_v=0, do_rev=False, keep_frames
     U = U.with_columns(pl.when(pl.col("no_addr")).then(pl.col("cos_name")).otherwise(pl.col("cos_na")).alias("score"))
     qid = q["entity_id"].to_numpy()
     pid = pool["entity_id"].to_numpy()
-    fr = {n: pl.DataFrame({"s1_id": qid[d["i"].to_numpy()], "cand_id": pid[d["j"].to_numpy()]}) for n, d in parts.items()}
+    fr = ({n: pl.DataFrame({"s1_id": qid[d["i"].to_numpy()], "cand_id": pid[d["j"].to_numpy()]}) for n, d in parts.items()}
+          if retriever_frames else None)
     Ud = U.with_columns(pl.Series("s1_id", qid[i]), pl.Series("cand_id", pid[j]))
     del V, Qn, Qna, Pna, parts, kv
     gc.collect()
