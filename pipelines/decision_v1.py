@@ -49,7 +49,7 @@ def stage1(a, log=print):
     base = fv.base_feats()
     tr_pl = fv.load_cache(a.cache, "train")
     ev_pl = fv.load_cache(a.cache, a.eval_tag)
-    base += [c for c in fv.EXTRA_BASE if c in tr_pl.columns]
+    base += [c for c in a.extra_base.split(",") if c and c in tr_pl.columns]
     new = []
     if groups:
         sctx = None
@@ -80,11 +80,17 @@ def stage1(a, log=print):
         log(f"  oof fold {k}: best_iter {model.best_iteration}, {time.time() - t0:.0f}s")
         del model
         gc.collect()
-    model = fv.train_lgb(tr, feats, cats, a.threads, lr=a.lr)
+    if a.stage1_run:                     # reuse the features_v1 model trained on the whole train tag
+        art = paths.ART_DIR / a.stage1_run
+        assert json.loads((art / "features.json").read_text()) == feats, "stage-1 run has different features"
+        model = lgb.Booster(model_file=str(art / "model.lgb"))
+    else:
+        model = fv.train_lgb(tr, feats, cats, a.threads, lr=a.lr)
     ev_prob = model.predict(ev[feats], num_threads=a.threads).astype(np.float32)
     tr_out = tr[["s1_id", "cand_id", "label", "is_es"] + keep_pair].assign(prob=oof)
     ev_out = ev[["s1_id", "cand_id"] + keep_pair].assign(prob=ev_prob)
-    return tr_out, ev_out, feats, {"oof_iters": iters, "full_iter": model.best_iteration}, model
+    return tr_out, ev_out, feats, {"oof_iters": iters, "full_iter": model.best_iteration,
+                                   "stage1_run": a.stage1_run}, model
 
 
 def set_features(assigned: pd.DataFrame, s1_ids) -> pd.DataFrame:
@@ -218,8 +224,10 @@ if __name__ == "__main__":
     ap.add_argument("--groups", default="G1,G2,G3,G4,G5")
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--chunks", type=int, default=8)
+    ap.add_argument("--extra-base", default=",".join(fv.EXTRA_BASE))
     ap.add_argument("--lr", type=float, default=0.05)
     ap.add_argument("--pmin", type=float, default=0.01, help="drop stage-1 probs below this before assignment")
+    ap.add_argument("--stage1-run", default=None, help="features_v1 run whose model scores the eval tag")
     ap.add_argument("--parent", default=None)
     ap.add_argument("--hypothesis", default="")
     main(ap.parse_args())

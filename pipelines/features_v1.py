@@ -23,7 +23,7 @@ import pandas as pd
 import polars as pl
 
 from ber import ctx_features as cf
-from ber import harness, paths
+from ber import harness, io, paths
 from ber.decision import assign_best_s1, threshold_matches, tune_threshold
 from ber.metric import macro_f05
 from ber.tracking import Run
@@ -32,7 +32,7 @@ SEED = 42
 BASE_RUN = "20260925-1236_aryan_baseline-v0-keys-lgbm"
 CAT_BASE = ["house_rel", "legal_rel", "state_rel", "cand_kind"]
 CAT_NEW = ["edit_type"]
-EXTRA_BASE = ["rbits", "cos_name", "cos_ns"]          # present in cache v1+
+EXTRA_BASE = ["rbits"]                  # default = the v1_n1 gate run; --extra-base adds cos_name,cos_na
 CANDS = paths.DATA_DIR / "cands"
 
 
@@ -156,7 +156,7 @@ def main(a):
         ids = np.sort(tr_pl["s1_id"].unique().to_numpy())
         keep = np.random.default_rng(SEED).choice(ids, size=min(a.n_train_s1, len(ids)), replace=False)
         tr_pl = tr_pl.filter(pl.col("s1_id").is_in(keep.tolist()))
-    base += [c for c in EXTRA_BASE if c in tr_pl.columns]
+    base += [c for c in a.extra_base.split(",") if c and c in tr_pl.columns]
     if a.featurize_only:
         sctx = cf.SplitContext.build("train")
         for tag in ("train", a.eval_tag):
@@ -202,7 +202,14 @@ def main(a):
         gc.collect()
         if a.loco:
             print("[loco]")
-            run.log(loco=loco(tr, ev, feats, cats, ctx.truth, ctx.country, a.threads, a.loco_n))
+            try:                                       # never lose the main result to a LOCO failure
+                folds = io.load_folds()
+                cmap = dict(zip(folds.s1_id, folds.country))   # train S1 are not in ctx.country
+                del folds
+                run.log(loco=loco(tr, ev, feats, cats, ctx.truth, cmap, a.threads, a.loco_n))
+            except Exception as e:  # noqa: BLE001
+                run.log(loco_error=repr(e))
+                print("[loco] FAILED", repr(e))
         run.log(timing_min=round((time.time() - t0) / 60, 1))
         run.note(f"{a.subset} F0.5={out['val']['f05_macro']:.4f} "
                  f"({out['val']['f05_by_country']}), groups={groups}. Top gain: {list(imp)[:10]}")
@@ -232,6 +239,7 @@ if __name__ == "__main__":
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--chunks", type=int, default=8)
     ap.add_argument("--loco", action="store_true")
+    ap.add_argument("--extra-base", default=",".join(EXTRA_BASE), help="cache columns added to the base features")
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--parent", default=BASE_RUN)
