@@ -36,7 +36,13 @@
       "WebFetch(domain:arxiv.org)",
       "WebFetch(domain:pypi.org)",
       "WebFetch(domain:www.kaggle.com)",
-      "WebFetch(domain:code.claude.com)"
+      "WebFetch(domain:code.claude.com)",
+      "Bash(tmux *)",
+      "Bash(tail *)",
+      "Bash(free*)",
+      "Bash(nproc)",
+      "Bash(aws s3 ls*)",
+      "Bash(bash infra/aws/whereami.sh)"
     ],
     "ask": [
       "Bash(git push*)",
@@ -54,7 +60,11 @@
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_status.py\"", "timeout": 20 }
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_status.py\"",
+            "timeout": 20
+          }
         ]
       }
     ],
@@ -62,7 +72,11 @@
       {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
         "hooks": [
-          { "type": "command", "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.py\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.py\"",
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -70,7 +84,11 @@
       {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [
-          { "type": "command", "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/fairplay_scan.py\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/fairplay_scan.py\"",
+            "timeout": 10
+          }
         ]
       }
     ]

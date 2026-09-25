@@ -19,7 +19,7 @@ Follow every step. Skipping logging makes the result useless to the team.
 - Start from `pipelines/_template.py` (the standard skeleton: load → candidates → features → model → harness).
 - Use `ber.io` loaders and the normalized cache (`data/features/norm_v*_*.parquet`). Never re-read raw TSVs.
 - Smoke-test on `--subset micro` first (it must finish in minutes). Then run on `mini`.
-- Memory/time budget on the laptop: stay under ~12 GB RAM. Log elapsed time. If it doesn't fit, ask the `perf-engineer` agent or move it to SageMaker (`/sagemaker`).
+- Memory/time budget on the laptop: stay under ~12 GB RAM. Log elapsed time. If it doesn't fit, ask the `perf-engineer` agent or move it to the EC2 box (`/cloud`).
 
 ## 2. Run with tracking
 ```python

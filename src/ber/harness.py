@@ -22,15 +22,16 @@ class EvalContext:
     ids: set
     truth: dict
     country: dict
-    folds: pd.DataFrame
 
     @classmethod
     def load(cls, subset: str = "mini") -> "EvalContext":
         folds = io.load_folds()
         ids = split.eval_ids(folds, subset)
+        sub = folds[folds.s1_id.isin(ids)]
+        country = dict(zip(sub.s1_id, sub.country))
+        del folds, sub                                  # keep memory small (2.2M-row table)
         truth = io.load_gt_sets(ids)
-        country = dict(zip(folds.s1_id, folds.country))
-        return cls(subset, ids, truth, country, folds)
+        return cls(subset, ids, truth, country)
 
 
 def log_blocking(run, cands: pd.DataFrame, ctx: EvalContext, n_pool: int | None = None) -> dict:

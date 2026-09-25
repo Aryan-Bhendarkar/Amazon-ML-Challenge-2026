@@ -80,8 +80,14 @@ def load_all_sources(split: str, countries: Iterable[str] | None = None,
     return pd.concat(parts, ignore_index=True)
 
 
-def load_gt_pairs() -> pd.DataFrame:
-    return pq.read_table(paths.gt_pairs_path()).to_pandas()
+def load_gt_pairs(s1_ids: Iterable[str] | None = None) -> pd.DataFrame:
+    """(s1_id, match_id) pairs; pass s1_ids to load only those entities (much less memory)."""
+    if s1_ids is None:
+        return pq.read_table(paths.gt_pairs_path()).to_pandas()
+    import pyarrow.compute as pc
+    t = pq.read_table(paths.gt_pairs_path())
+    t = t.filter(pc.is_in(t["s1_id"], value_set=pa.array(sorted(set(s1_ids)), type=pa.string())))
+    return t.to_pandas()
 
 
 def load_gt_sets(s1_ids: Iterable[str] | None = None) -> dict[str, set[str]]:
@@ -90,8 +96,7 @@ def load_gt_sets(s1_ids: Iterable[str] | None = None) -> dict[str, set[str]]:
     if s1_ids is not None:
         folds = folds[folds["s1_id"].isin(set(s1_ids))]
     out: dict[str, set[str]] = {k: set() for k in folds["s1_id"]}
-    pairs = load_gt_pairs()
-    pairs = pairs[pairs["s1_id"].isin(out.keys())]
+    pairs = load_gt_pairs(out.keys() if s1_ids is not None else None)
     for s1, m in zip(pairs["s1_id"].to_numpy(), pairs["match_id"].to_numpy()):
         out[s1].add(m)
     return out

@@ -60,14 +60,21 @@ data/ artifacts/           derived data + big outputs (git-ignored, regenerable)
 student_resource/          ORIGINAL competition files, read-only
 ```
 
-## Environment
-- Laptop (Windows 11): RTX 3050 **4 GB** VRAM, 16 GB RAM, 12 threads. **Only ~5 GB RAM is really free** with the desktop apps open. On 25 Sep a full-data job exhausted memory and crashed several apps. Stay under ~4 GB per job locally: stream/chunk everything and use `micro` (sometimes `mini`).
-- Full-data jobs (fold0, test inference, big joins) go to **AWS SageMaker** (`/sagemaker` skill) or a Kaggle notebook (30 GB RAM, free) as a fallback.
-- Python: use the project venv. Windows: `.venv/Scripts/python.exe`; Linux/SageMaker: `.venv/bin/python` or the conda env. `scripts/*` import `ber` via `scripts/_bootstrap.py`, so no install is needed.
-- Unicode: `PYTHONUTF8=1` is set in `.claude/settings.json`. Still pass `encoding="utf-8"` when opening files.
-- Windows DLL gotcha: in scripts that use torch/sentence-transformers, `import torch` BEFORE pandas/pyarrow/lightgbm/faiss, or loading can fail with `OSError`.
-- Long jobs (> 2 min): run them in the background with a log file (`logs/<name>.log`) and poll it, instead of blocking the session.
-- First run on a new machine: `python scripts/check_env.py`, then `python scripts/prepare_data.py`, then `python scripts/build_norm_cache.py`.
+## Environment (cloud-first)
+- **Primary compute = AWS EC2 dev box** `amlc-box`: r7i.xlarge, 4 vCPU / 32 GB, Mumbai. Resize to r7i.2xlarge/4xlarge for full test runs. GPU box `amlc-gpu` is a g6.xlarge with an L4 24 GB.
+  - Claude Code runs ON the box (VS Code Remote-SSH terminal, or the Claude desktop app over SSH).
+  - Runbook: `infra/aws/README.md`. Operations: the `/cloud` skill.
+- Laptop (Windows, RTX 3050 4 GB): **only ~5 GB RAM is really free**. On 25 Sep a full-data job exhausted memory and crashed several apps. Use it only for editing and `micro` smoke tests.
+- Python:
+  - box: `.venv/bin/python` (uv, Python 3.13)
+  - laptop: `.venv/Scripts/python.exe`
+  - `scripts/*` import `ber` via `scripts/_bootstrap.py`, so no install is needed.
+- Long jobs (> 2 min): run them in `tmux` with a log in `logs/<name>.log` and poll the log. Estimate the runtime on `micro` first.
+- Auto-stop: the box stops after 20 min with no SSH session and idle CPU. `touch ~/.keepalive` to keep a job alive while nobody is connected, and remove it after.
+- Credits: each member has their own account ($100–200). Stop boxes when done, and state the expected $ before a big resize or GPU job.
+- Unicode: `PYTHONUTF8=1` is set in the settings and in the box profile. Still pass `encoding="utf-8"` when opening files.
+- Windows DLL gotcha: `import torch` before pandas/pyarrow/lightgbm/faiss.
+- First run on a new machine: `python scripts/check_env.py`, then `python scripts/prepare_data.py`, then `python scripts/build_norm_cache.py`. On the box, `bash ~/box_setup.sh` does all of this.
 
 ## How we work (the loop)
 1. **Pick** the top item in `docs/ideas_backlog.md` (or propose one with an expected gain). One hypothesis per run.
@@ -113,7 +120,7 @@ student_resource/          ORIGINAL competition files, read-only
   - `/error-analysis <run_id>`: FP/FN deep dive
   - `/submit <run_id>`: human-invoked; prepares LB files
   - `/package-final`: builds the final zip
-  - `/sagemaker`: heavy jobs on AWS
+  - `/cloud`: EC2 box operations, long jobs, S3 sharing, costs
   - `er-playbook`: auto-loaded ER/competition knowledge (blocking, features, France, scaling, decision rules)
 - Agents:
   - `error-analyst`: FP/FN taxonomy

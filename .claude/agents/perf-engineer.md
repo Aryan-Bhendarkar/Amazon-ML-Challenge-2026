@@ -18,6 +18,6 @@ Method:
    - GPU: fp16, batch sizing, sorting by length
 3. **Equivalence check**: the optimized code must produce identical candidates/features (or differences within float tolerance) on `micro`. Show the diff check.
 4. Windows specifics: `if __name__ == "__main__":` guards, spawn start method, and UTF-8 console (`PYTHONUTF8=1`).
-5. If it cannot fit locally, write the exact SageMaker plan (instance, runtime estimate, cost estimate) following the `/sagemaker` skill.
+5. If it cannot fit locally, write the exact SageMaker plan (instance, runtime estimate, cost estimate) following the `/cloud` skill.
 
 Report before/after time and memory, and what changed.

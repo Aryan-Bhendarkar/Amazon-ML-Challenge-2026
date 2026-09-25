@@ -48,6 +48,7 @@ Union of:
 - Day 2 (26 Sep): 2–3 submissions, only for major val gains (blocking v1 + features v1, cross-encoder).
 - Day 3 (27 Sep): 2–3 submissions: best model; best + conservative France variant. **Freeze features by 18:00 IST**, final full run, package the zip by 22:00 IST. Keep 2 submissions in reserve.
 
-## Compute plan
-- Laptop: normalization cache, blocking and feature dev on `mini`, LightGBM on sampled pairs, small bi-encoder fine-tunes (fp16, max_len 64).
+## Compute plan (updated 25 Sep: cloud-first, see infra/aws/README.md)
+- EC2 r7i.xlarge per member (32 GB) for all dev. Resize to 2xlarge/4xlarge for full test runs. g6.xlarge (L4) for encoders. Kaggle 2×T4 as the GPU fallback.
+- Laptop: editing + micro smoke tests only (~5 GB free RAM).
 - SageMaker: full train/test blocking + features (ml.m5.4xlarge / r5.4xlarge, 64–128 GB), GPU embedding/cross-encoder inference (ml.g5.xlarge/2xlarge, A10G 24 GB). Every member has their own credits, so parallelize across accounts.

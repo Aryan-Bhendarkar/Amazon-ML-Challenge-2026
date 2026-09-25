@@ -4,7 +4,7 @@ Status: `todo` · `doing(<who>)` · `done(<run_id>, Δ)` · `killed(<reason>)`
 
 ## P0: Day 1 (get on the board)
 - [ ] **SETUP**: `python scripts/prepare_data.py` → `python scripts/build_norm_cache.py` (all). Check `data/samples/`.
-- [ ] **EXP-001 Baseline end-to-end**: IMPLEMENTED in `pipelines/baseline_v0.py` and tested end-to-end on synthetic data. Next: run `--subset micro` locally, then `mini` + `--test` on SageMaker/Kaggle, then `/submit`.
+- [ ] **EXP-001 Baseline end-to-end**: IMPLEMENTED in `pipelines/baseline_v0.py` and tested end-to-end on synthetic data. Next: run `--subset micro` locally, then `mini` + `--test` on the EC2 box (or Kaggle), then `/submit`.
   - Blocking: key-based within country:
     - k1 = (a_house, first 4 chars of the first a_street token)
     - k2 = (first core token ≥3 chars, first 3 chars of the second core token)
