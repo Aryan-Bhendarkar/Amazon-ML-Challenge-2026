@@ -14,8 +14,8 @@ Status: `todo` · `doing(<who>)` · `done(<run_id>, Δ)` · `killed(<reason>)`
   - Features: rapidfuzz `cpdist` on n_core/n_full/n_compact/a_full/a_street (ratio, token_set_ratio, token_sort_ratio, partial_ratio, JaroWinkler), house equal/diff, legal equal, numbers Jaccard, state equal, empty flags, source, n_kind, n_script≠latin, token-count diffs, extra/missing core token counts.
   - Model: LightGBM on pairs from ~200k S1 of folds 1–4. Predict on `mini` → `assign_best_s1` → `tune_threshold` → report.
   - Then run on the full test, `/submit` it as the first LB anchor.
-- [ ] **EXP-002 TF-IDF char-3gram name blocking** (per country, chunked sparse top-k, k≈20–50) unioned with the keys. Goal: recall ≥ 0.99.
-- [ ] **EXP-003 Reverse retrieval** (record → top-3 S1) and union. Also yields competition features.
+- [x] done(blocking-v1-mini-n1, recall 0.861→0.9815): name char3 + address-word TF-IDF, keys, skeleton, empty-addr retrievers. **EXP-002 TF-IDF char-3gram name blocking** (per country, chunked sparse top-k, k≈20–50) unioned with the keys. Goal: recall ≥ 0.99.
+- [ ] (deferred: gate met without it; cost ≈ a full forward pass) **EXP-003 Reverse retrieval** (record → top-3 S1) and union. Also yields competition features.
 
 ## P1: Day 2 (big gains)
 - [ ] EXP-010 Difference + competition features (see strategy.md). Expect the biggest precision gain against hard negatives.
