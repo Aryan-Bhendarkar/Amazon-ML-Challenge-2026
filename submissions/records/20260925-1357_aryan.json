@@ -4,7 +4,7 @@
   "author": "aryan",
   "note": "EXP-001 baseline v0: key blocking + rapidfuzz + LightGBM",
   "created_ist": "2026-09-25T14:02:59+05:30",
-  "status": "prepared",
+  "status": "uploaded",
   "validator_pass": true,
   "val_f05": 0.9057224141218779,
   "stats_matching": {
@@ -34,5 +34,8 @@
     "empty_rate": 0.09535746278305197,
     "mean_matches": 2.902113885707953
   },
-  "files": "submissions/files/20260925-1357_aryan"
+  "files": "submissions/files/20260925-1357_aryan",
+  "public_score": 0.901,
+  "uploaded_ist": "2026-09-25T16:57:30+05:30",
+  "lb_note": "public LB; val mini 0.9057 -> gap 0.0047"
 }
