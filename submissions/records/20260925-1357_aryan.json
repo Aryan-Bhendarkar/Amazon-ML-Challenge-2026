@@ -1,0 +1,38 @@
+{
+  "sub_id": "20260925-1357_aryan",
+  "run_id": "20260925-1236_aryan_baseline-v0-keys-lgbm",
+  "author": "aryan",
+  "note": "EXP-001 baseline v0: key blocking + rapidfuzz + LightGBM",
+  "created_ist": "2026-09-25T14:02:59+05:30",
+  "status": "prepared",
+  "validator_pass": true,
+  "val_f05": 0.9057224141218779,
+  "stats_matching": {
+    "rows": 1732544,
+    "nonempty": 1567333,
+    "ids": 5028040,
+    "dropped_bad_ids": 0
+  },
+  "stats_candidates": {
+    "rows": 1732544,
+    "nonempty": 1703443,
+    "ids": 126411747,
+    "matched_pairs_in_candidates": 5028040,
+    "matched_pairs_total": 5028040
+  },
+  "diagnostics": {
+    "empty_rate_by_country": {
+      "France": 0.06087445847401446,
+      "India": 0.12138111029079515,
+      "US": 0.07706158593045456
+    },
+    "mean_matches_by_country": {
+      "France": 3.2848735026132,
+      "India": 2.6957947421313455,
+      "US": 3.004371850051123
+    },
+    "empty_rate": 0.09535746278305197,
+    "mean_matches": 2.902113885707953
+  },
+  "files": "submissions/files/20260925-1357_aryan"
+}

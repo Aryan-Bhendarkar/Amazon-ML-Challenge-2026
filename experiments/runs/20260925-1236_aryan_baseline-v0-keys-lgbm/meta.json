@@ -1,0 +1,30 @@
+{
+  "run_id": "20260925-1236_aryan_baseline-v0-keys-lgbm",
+  "name": "baseline-v0-keys-lgbm",
+  "author": "aryan",
+  "hypothesis": "key blocking + rapidfuzz features + LightGBM baseline",
+  "params": {
+    "subset": "mini",
+    "n_train": 150000,
+    "caps": {
+      "A": 150,
+      "N1": 200,
+      "N2": 100,
+      "C": 60
+    },
+    "norm_v": 0,
+    "chunk": 40000
+  },
+  "tags": [
+    "baseline",
+    "blocking",
+    "model"
+  ],
+  "parent": null,
+  "git_commit": "56c646a",
+  "git_dirty": false,
+  "started_ist": "2026-09-25T12:36:37+05:30",
+  "status": "done",
+  "duration_min": 12.78,
+  "finished_ist": "2026-09-25T12:49:24+05:30"
+}
