@@ -187,8 +187,12 @@ class AddrNorm(NamedTuple):
     empty: bool
 
 
-def _state_of(component: str, country: str) -> str:
+def _state_of(component: str, country: str, admin: dict | None = None) -> str:
     c = component.strip()
+    if admin:            # learned from the provided records (ber.adminmap) for countries without a parser
+        if c in admin["admins"]:
+            return c
+        return admin["alias"].get(c, "")
     if country == "us":
         if c in US_STATES:
             return US_STATES[c]
@@ -203,7 +207,8 @@ def _state_of(component: str, country: str) -> str:
     return ""
 
 
-def normalize_address(raw: str, country: str = "") -> AddrNorm:
+def normalize_address(raw: str, country: str = "", admin: dict | None = None) -> AddrNorm:
+    """admin: optional learned admin-area map {'admins': set, 'alias': dict} (ber.adminmap) for this country."""
     ctry = (country or "").strip().lower()
     s = to_ascii(raw or "").replace("<null>", " ")
     s = _squash(s)
@@ -215,7 +220,7 @@ def normalize_address(raw: str, country: str = "") -> AddrNorm:
     state, toks, street_toks = "", [], []
     for c in comps:
         alpha = _squash(re.sub(r"[^a-z]+", " ", c))
-        st = _state_of(alpha, ctry)           # state is usually a whole component ('up 201301' ok)
+        st = _state_of(alpha, ctry, admin)    # state is usually a whole component ('up 201301' ok)
         if st:
             state = st
             toks.append(st)

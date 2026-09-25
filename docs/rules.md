@@ -55,5 +55,5 @@
 1. Which submission counts for the final ranking: the last one, the best public one, or one we select? → _pending_
 2. Documentation length limit? → _pending_
 3. Does the license/size rule cover all pretrained models or only the final matcher? → _pending_
-4. Are hand-written normalization dictionaries OK? → _pending_
+4. Are hand-written normalization dictionaries OK? → **YES (judge clarification, 26 Sep):** prohibited = external databases, APIs, geocoding/entity lookup, internet-sourced augmentation, and packages bundling external geo/postal/business data (libpostal, geocoders, postal-code or gazetteer datasets). Allowed = pure-algorithm libraries (RapidFuzz, jellyfish, scikit-learn, LightGBM, pandas), general-language pretrained NLP/embedding models within the license/size limits, any algorithm using only the provided records, and SMALL hand-written normalization dictionaries.
 5. When does the daily submission count reset? → _pending_

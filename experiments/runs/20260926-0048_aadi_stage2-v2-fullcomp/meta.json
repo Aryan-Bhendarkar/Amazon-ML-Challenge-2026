@@ -1,0 +1,60 @@
+{
+  "run_id": "20260926-0048_aadi_stage2-v2-fullcomp",
+  "name": "stage2-v2-fullcomp",
+  "author": "aadi",
+  "hypothesis": "stage-2 on full-competition stage-1 probs (record + S1 profile features)",
+  "params": {
+    "n_train": 400000,
+    "lgb": {
+      "objective": "binary",
+      "learning_rate": 0.05,
+      "num_leaves": 63,
+      "min_data_in_leaf": 200,
+      "feature_fraction": 0.9,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 1.0,
+      "verbose": -1,
+      "seed": 42,
+      "num_threads": 0,
+      "deterministic": true,
+      "force_row_wise": true
+    },
+    "feats": [
+      "prob",
+      "rec_n",
+      "rec_n50",
+      "rec_rank",
+      "rec_max",
+      "rec_2nd",
+      "rec_margin",
+      "s1_n",
+      "s1_rank",
+      "s1_top",
+      "s1_sum",
+      "s1_n50",
+      "s1_n75",
+      "s1_n90",
+      "s1_gap_top",
+      "gap_prev",
+      "gap_next",
+      "s1_win50",
+      "s1_win75",
+      "s1_p2",
+      "s1_p3",
+      "s1_p4",
+      "s1_p5",
+      "s1_p6"
+    ]
+  },
+  "tags": [
+    "decision"
+  ],
+  "parent": "20260925-1857_aadi_model-v2-pruned-union-ctx-notfname",
+  "git_commit": "cb5e79d",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T00:48:34+05:30",
+  "status": "done",
+  "duration_min": 4.78,
+  "finished_ist": "2026-09-26T00:53:21+05:30"
+}
