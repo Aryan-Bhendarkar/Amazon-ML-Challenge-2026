@@ -18,6 +18,8 @@ from sklearn.feature_extraction.text import HashingVectorizer
 N_FEATURES = 1 << 20
 _HV = HashingVectorizer(analyzer="char_wb", ngram_range=(3, 3), n_features=N_FEATURES,
                         alternate_sign=False, norm=None, dtype=np.float32)
+_HVW = HashingVectorizer(analyzer="word", token_pattern=r"\S+", n_features=N_FEATURES,
+                         alternate_sign=False, norm=None, dtype=np.float32)
 _CHUNK = 200_000
 
 
@@ -25,19 +27,24 @@ def _counts(texts) -> sp.csr_matrix:
     return _HV.transform(texts)
 
 
+def _counts_word(texts) -> sp.csr_matrix:
+    return _HVW.transform(texts)
+
+
 def _workers(n: int | None) -> int:
     return n or max(1, (os.cpu_count() or 2))
 
 
-def raw_counts(texts, n_jobs: int | None = None) -> sp.csr_matrix:
-    """Hashed char-3gram counts, parallel over chunks. texts: sequence of str."""
+def raw_counts(texts, n_jobs: int | None = None, analyzer: str = "char") -> sp.csr_matrix:
+    """Hashed counts (analyzer 'char' = char_wb 3-grams, 'word' = whitespace tokens), parallel over chunks."""
+    fn = _counts if analyzer == "char" else _counts_word
     texts = list(texts)
     parts = [texts[o:o + _CHUNK] for o in range(0, len(texts), _CHUNK)]
     if len(parts) <= 1 or _workers(n_jobs) == 1:
-        mats = [_counts(p) for p in parts]
+        mats = [fn(p) for p in parts]
     else:
         with ProcessPoolExecutor(min(_workers(n_jobs), len(parts))) as ex:
-            mats = list(ex.map(_counts, parts))
+            mats = list(ex.map(fn, parts))
     return sp.vstack(mats, format="csr") if mats else sp.csr_matrix((0, N_FEATURES), dtype=np.float32)
 
 

@@ -4,7 +4,7 @@ Every retriever returns a polars frame (i: query row, j: pool row, s: float32 sc
 has a bit in RBITS. `union` ORs the bits and keeps the max score. Retrievers:
   keys_v0     baseline keys (house+street-token, 2 rarest name tokens, compact prefix), capped blocks
   tf_name     char-3gram TF-IDF on n_core, top-k                                   (Sparkly-style)
-  tf_ns       TF-IDF name view (w .6) + street view (w .4), top-k
+  tf_na       TF-IDF name char3 view (w .35) + address word view (w .65), top-k (main retriever)
   akey        exact sorted a_full token key                   (co-located / unrelated-name positives)
   hskey       house number (leading zeros stripped) + sorted significant street tokens
   tf_empty    tf_name top-k restricted to pool records with an EMPTY address (name-only records)
@@ -25,7 +25,7 @@ import scipy.sparse as sp
 from . import paths, tfidf
 from .normalize import STREET_CANON
 
-RBITS = {"keys_v0": 1, "tf_name": 2, "tf_ns": 4, "akey": 8, "hskey": 16, "tf_empty": 32, "skel": 64, "rev": 128}
+RBITS = {"keys_v0": 1, "tf_name": 2, "tf_na": 4, "akey": 8, "hskey": 16, "tf_empty": 32, "skel": 64, "rev": 128}
 
 POOL_COLS = ["entity_id", "country", "n_core", "n_compact", "n_alias", "n_legal", "n_kind", "n_script",
              "a_full", "a_street", "a_numbers", "a_house", "a_state", "a_empty"]
@@ -186,24 +186,29 @@ def key_join(qk: pl.Series, pk: pl.Series, cap: int, min_len: int = 1) -> pl.Dat
 
 # ============================================================================ TF-IDF
 class TfViews:
-    """Weighted TF-IDF matrices for queries (S1) and pool, per country. idf fit on S1_all ∪ pool."""
+    """TF-IDF matrices for S1 (all of the country) and pool; idf fit on S1_all ∪ pool (unlabeled).
+    name = char_wb 3-grams of n_core; addr = whitespace tokens of a_full. Columns with df > max_df are
+    dropped (bounds the top-k matmul; measured on micro: address-heavy word view is ~10x faster than
+    char 3-grams on the address and has better recall)."""
 
-    def __init__(self, s1_all: pl.DataFrame, pool: pl.DataFrame, max_df: float = 0.05, n_jobs: int | None = None):
-        cn_s, cn_p = tfidf.raw_counts(s1_all["n_core"].fill_null("").to_list(), n_jobs), \
-            tfidf.raw_counts(pool["n_core"].fill_null("").to_list(), n_jobs)
-        cs_s, cs_p = tfidf.raw_counts(s1_all["a_street"].fill_null("").to_list(), n_jobs), \
-            tfidf.raw_counts(pool["a_street"].fill_null("").to_list(), n_jobs)
-        idf_n = tfidf.fit_idf([cn_s, cn_p], max_df)
-        idf_s = tfidf.fit_idf([cs_s, cs_p], max_df)
-        self.Sn, self.Pn = tfidf.weight(cn_s, idf_n), tfidf.weight(cn_p, idf_n)
-        self.Ss, self.Ps = tfidf.weight(cs_s, idf_s), tfidf.weight(cs_p, idf_s)
-        del cn_s, cn_p, cs_s, cs_p
+    def __init__(self, s1_all: pl.DataFrame, pool: pl.DataFrame, max_df_name: float = 0.01,
+                 max_df_addr: float = 0.02, n_jobs: int | None = None):
+        cn_s = tfidf.raw_counts(s1_all["n_core"].fill_null("").to_list(), n_jobs)
+        cn_p = tfidf.raw_counts(pool["n_core"].fill_null("").to_list(), n_jobs)
+        idf = tfidf.fit_idf([cn_s, cn_p], max_df_name)
+        self.Sn, self.Pn = tfidf.weight(cn_s, idf), tfidf.weight(cn_p, idf)
+        del cn_s, cn_p
+        ca_s = tfidf.raw_counts(s1_all["a_full"].fill_null("").to_list(), n_jobs, analyzer="word")
+        ca_p = tfidf.raw_counts(pool["a_full"].fill_null("").to_list(), n_jobs, analyzer="word")
+        idf = tfidf.fit_idf([ca_s, ca_p], max_df_addr)
+        self.Sa, self.Pa = tfidf.weight(ca_s, idf), tfidf.weight(ca_p, idf)
+        del ca_s, ca_p
 
-    def ns(self, which: str, rows=None, w=(0.6, 0.4)) -> sp.csr_matrix:
-        n, s = (self.Sn, self.Ss) if which == "s1" else (self.Pn, self.Ps)
+    def na(self, which: str, rows=None, w=(0.35, 0.65)) -> sp.csr_matrix:
+        n, a = (self.Sn, self.Sa) if which == "s1" else (self.Pn, self.Pa)
         if rows is not None:
-            n, s = n[rows], s[rows]
-        return tfidf.combine([n, s], list(w))
+            n, a = n[rows], a[rows]
+        return tfidf.combine([n, a], list(w))
 
 
 def rowdot(A: sp.csr_matrix, B: sp.csr_matrix, i: np.ndarray, j: np.ndarray, chunk: int = 2_000_000) -> np.ndarray:
