@@ -21,6 +21,7 @@ import argparse
 import gc
 import json
 import os
+import pickle
 import time
 
 import lightgbm as lgb
@@ -245,6 +246,8 @@ def main(a):
         metric.per_entity_scores(ent[chosen], ctx.truth).to_parquet(run.art_dir / "val_entity_scores.parquet")
         S_ev.to_parquet(run.art_dir / "val_stage2.parquet")
         km.save_model(str(run.art_dir / "k_model.lgb"))
+        with open(run.art_dir / "iso.pkl", "wb") as fh:
+            pickle.dump(iso, fh)
         s2m.save_model(str(run.art_dir / "stage2.lgb"))
         (run.art_dir / "decision.json").write_text(json.dumps(
             {"rule": chosen, "params": params, "kfeat": kfeat, "s2cols": s2cols, "pmin": a.pmin}))
