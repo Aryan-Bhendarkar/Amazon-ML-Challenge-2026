@@ -190,17 +190,19 @@ def main(a):
                      "threads": a.threads, "n_feats": len(feats), "new_feats": new},
              tags=["features"], parent=a.parent) as run:
         run.log(train_pairs=int((~tr.is_es).sum()), es_pairs=int(tr.is_es.sum()), eval_pairs=len(ev))
-        model = train_lgb(tr, feats, cats, a.threads)
-        model.save_model(str(run.art_dir / "model.lgb"))
-        (run.art_dir / "features.json").write_text(json.dumps(feats))
-        imp = dict(sorted(zip(feats, model.feature_importance("gain").round(1).tolist()), key=lambda x: -x[1]))
-        run.log(best_iter=model.best_iteration, feature_gain=imp)
-        pred = ev[["s1_id", "cand_id"]].assign(prob=model.predict(ev[feats], num_threads=a.threads).astype(np.float32))
-        out = harness.log_predictions(run, pred, ctx)
-        (run.art_dir / "decision.json").write_text(json.dumps({"threshold": out["val"]["threshold"]}))
-        del model
-        gc.collect()
-        if a.loco:
+        out = None
+        if not a.loco_only:
+            model = train_lgb(tr, feats, cats, a.threads)
+            model.save_model(str(run.art_dir / "model.lgb"))
+            (run.art_dir / "features.json").write_text(json.dumps(feats))
+            imp = dict(sorted(zip(feats, model.feature_importance("gain").round(1).tolist()), key=lambda x: -x[1]))
+            run.log(best_iter=model.best_iteration, feature_gain=imp)
+            pred = ev[["s1_id", "cand_id"]].assign(prob=model.predict(ev[feats], num_threads=a.threads).astype(np.float32))
+            out = harness.log_predictions(run, pred, ctx)
+            (run.art_dir / "decision.json").write_text(json.dumps({"threshold": out["val"]["threshold"]}))
+            del model
+            gc.collect()
+        if a.loco or a.loco_only:
             print("[loco]")
             try:                                       # never lose the main result to a LOCO failure
                 folds = io.load_folds()
@@ -211,8 +213,11 @@ def main(a):
                 run.log(loco_error=repr(e))
                 print("[loco] FAILED", repr(e))
         run.log(timing_min=round((time.time() - t0) / 60, 1))
-        run.note(f"{a.subset} F0.5={out['val']['f05_macro']:.4f} "
-                 f"({out['val']['f05_by_country']}), groups={groups}. Top gain: {list(imp)[:10]}")
+        if out is not None:
+            run.note(f"{a.subset} F0.5={out['val']['f05_macro']:.4f} "
+                     f"({out['val']['f05_by_country']}), groups={groups}. Top gain: {list(imp)[:10]}")
+        else:
+            run.note(f"LOCO-only reference for groups={groups} (no main model).")
 
 
 _PREFIX = {"G1": ("s1_name", "pool_name", "n_key_equal"),
@@ -240,6 +245,7 @@ if __name__ == "__main__":
     ap.add_argument("--chunks", type=int, default=8)
     ap.add_argument("--loco", action="store_true")
     ap.add_argument("--extra-base", default=",".join(EXTRA_BASE), help="cache columns added to the base features")
+    ap.add_argument("--loco-only", action="store_true", help="skip the main model; LOCO reference only")
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--parent", default=BASE_RUN)
