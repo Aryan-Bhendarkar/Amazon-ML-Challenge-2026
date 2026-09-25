@@ -31,10 +31,15 @@ from ber import paths
 from ber.decision import assign_best_s1, threshold_matches
 
 NORM_V = mv.NORM_V
-SPLIT = "test"
 
 
 def main(a):
+    global NORM_V
+    SPLIT = a.split
+    if a.norm_v is not None:            # e.g. v2 = v1 + French region/department state (test only; models unchanged)
+        NORM_V = a.norm_v
+        cf.NORM_V = a.norm_v
+    tag = a.tag
     t00 = time.time()
     log = lambda s: print(f"[{(time.time() - t00) / 60:5.1f}m] {s}", flush=True)  # noqa: E731
     art = paths.ART_DIR / a.run_id
@@ -45,10 +50,12 @@ def main(a):
     sctx = cf.SplitContext.build(SPLIT)
     P = cv.P
     cand_schema = pa.schema([("s1_id", pa.string()), ("cand_id", pa.string())])
-    cw = pq.ParquetWriter(str(art / "test_candidates.parquet"), cand_schema, compression="zstd")
+    cw = pq.ParquetWriter(str(art / f"{SPLIT}_candidates{tag}.parquet"), cand_schema, compression="zstd") if SPLIT == "test" else None
     preds, n_cand = [], 0
     keepcols = ["s1_id", "cand_id", "p_prune", "r_prune"] + mv.PRUNE_FEATS
     for ctry in B.countries_of(SPLIT, NORM_V):
+        if a.countries and ctry not in a.countries.split(","):
+            continue
         s1 = (pl.scan_parquet(B.norm_file(SPLIT, 1, NORM_V)).filter(pl.col("country") == ctry)
                 .select(bv0.COLS).collect().with_row_index("idx"))
         ptbl = B.pool_table(SPLIT, ctry, NORM_V)
@@ -110,7 +117,8 @@ def main(a):
             assert not missing, missing
             prob = model.predict(F.select(feats).to_pandas(), num_threads=0).astype(np.float32)
             ct = pa.Table.from_arrays([F["s1_id"].to_arrow(), F["cand_id"].to_arrow()], schema=cand_schema)
-            cw.write_table(ct, row_group_size=max(1, ct.num_rows))
+            if cw is not None:
+                cw.write_table(ct, row_group_size=max(1, ct.num_rows))
             n_cand += ct.num_rows
             keep = prob >= 0.05
             preds.append(pd.DataFrame({"s1_id": F["s1_id"].to_numpy()[keep], "cand_id": F["cand_id"].to_numpy()[keep],
@@ -121,12 +129,16 @@ def main(a):
             gc.collect()
         del V, Pna, PnE, pk, pak, phs, psk, pool, ptbl, s1
         gc.collect()
-    cw.close()
+    if cw is not None:
+        cw.close()
     pred = pd.concat(preds, ignore_index=True)
-    pred.to_parquet(art / "test_pred.parquet")
+    pred.to_parquet(art / f"{SPLIT}_pred{tag}.parquet")
+    if SPLIT != "test":
+        log(f"done: {len(pred):,} pairs with prob>=0.05 ({SPLIT})")
+        return
     m = threshold_matches(assign_best_s1(pred), t)
     pd.DataFrame([(s, x) for s, xs in m.items() for x in xs], columns=["s1_id", "match_id"]) \
-      .to_parquet(art / "test_matches.parquet")
+      .to_parquet(art / f"test_matches{tag}.parquet")
     log(f"done: {n_cand:,} candidate pairs, {sum(map(len, m.values())):,} matches for {len(m):,} S1 (t={t})")
 
 
@@ -136,4 +148,9 @@ if __name__ == "__main__":
     ap.add_argument("--keep", type=int, default=40)
     ap.add_argument("--chunk", type=int, default=100_000)
     ap.add_argument("--threshold", type=float, default=None)
+    ap.add_argument("--split", default="test", choices=["train", "test"],
+                    help="train = test-like val: ALL train S1 compete (score mini only; pruner/matcher S1 are in-sample)")
+    ap.add_argument("--norm-v", type=int, default=None, help="override the normalization cache version for this split")
+    ap.add_argument("--countries", default="", help="comma list: run only these countries (others untouched)")
+    ap.add_argument("--tag", default="", help="suffix for output files")
     main(ap.parse_args())
