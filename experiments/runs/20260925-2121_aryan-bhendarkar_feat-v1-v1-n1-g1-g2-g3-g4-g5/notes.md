@@ -10,7 +10,7 @@ mini F0.5=0.9800 ({'India': 0.9746621041429615, 'US': 0.9836495163907002}), grou
 - Gain in every n_true bucket (singletons +0.026, n=1 +0.040, n≥4 +0.014). Entities with any FP 3.87% → 1.23%; empty on non-singleton 0.68% → 0.42%.
 - **LOCO** (60k training S1 per country, lr 0.1; base reference = run 20260925-2211_aryan-bhendarkar_feat-v1-v1-n1-base, identical protocol):
   India→US 0.9446 → 0.9587 (+0.014; at source t +0.011); US→India 0.9072 → 0.9237 (+0.017; at source t +0.020). Transfers: the LOCO gain has the same order as the in-country gain.
-- **Density-shift check** (test has fewer S1/country than train): recomputing the S1-count features after dropping non-query train S1 from the counts, same model and t: 75% kept → 0.9793 (−0.0007), 50% → 0.9779 (−0.0021). Expect ≤ ~0.002 of drift on test.
+- **Density-shift check (CORRECTED by the audit, see audit.md B2):** my first check recomputed only the S1 counts (−0.0021 at 50%) and **understated the drift**. The auditor's full simulation recomputes the S1 counts, pool counts and idf at reduced S1 density (test/train S1 density: US ~0.5×, France ~0.2×). New model vs parent: r=0.5 clean 0.9774 vs 0.9635 (+0.014), r=0.2 orphan 0.9676 vs 0.9611 (+0.0065). The idf features cause most of the loss (the unseen-token value log(n_s1) shifts). **Expected test gain vs parent: +0.010 to +0.015, not +0.019.** Fix = density-invariant token rarity (ctx v2).
 - Headroom for the decision layer: prefix oracle 0.9921 vs 0.9800. 80% of the remaining loss is FN-only entities.
 - Earlier keys_v0 measurement: 0.9057 → 0.9209 (run record lost to the LOCO bug, since fixed).
 ## Why
