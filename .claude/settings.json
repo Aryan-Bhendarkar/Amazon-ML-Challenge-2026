@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "PYTHONUTF8": "1",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/*)",
+      "Bash(python pipelines/*)",
+      "Bash(python -m pytest*)",
+      "Bash(.venv/Scripts/python.exe scripts/*)",
+      "Bash(.venv/Scripts/python.exe pipelines/*)",
+      "Bash(.venv/Scripts/python.exe -m pytest*)",
+      "Bash(.venv/Scripts/python scripts/*)",
+      "Bash(.venv/Scripts/python pipelines/*)",
+      "Bash(.venv/Scripts/python -m pytest*)",
+      "Bash(.venv/bin/python scripts/*)",
+      "Bash(.venv/bin/python pipelines/*)",
+      "Bash(.venv/bin/python -m pytest*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git branch*)",
+      "Bash(git checkout -b *)",
+      "Bash(nvidia-smi*)",
+      "Bash(pip list*)",
+      "Bash(pip show *)",
+      "WebSearch",
+      "WebFetch(domain:huggingface.co)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:www.kaggle.com)",
+      "WebFetch(domain:code.claude.com)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(pip install *)",
+      "Bash(pip uninstall *)",
+      "Bash(git reset *)"
+    ],
+    "deny": [
+      "Edit(/student_resource/**)",
+      "Write(/student_resource/**)",
+      "Bash(rm -rf /*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session_status.py\"", "timeout": 20 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard.py\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          { "type": "command", "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/fairplay_scan.py\"", "timeout": 10 }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/statusline.py\""
+  }
+}

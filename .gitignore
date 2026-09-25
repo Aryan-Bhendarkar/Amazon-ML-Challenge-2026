@@ -1,1 +1,26 @@
+# competition data (download separately; never commit)
 /student_resource/
+__MACOSX/
+.DS_Store
+# derived / large
+data/
+artifacts/
+dist/
+submissions/files/
+logs/
+*.parquet
+*.npy
+*.faiss
+*.bin
+*.pt
+*.safetensors
+*.lgb
+*.zip
+# envs / caches
+.venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+.claude/settings.local.json
+.claude/agent-memory-local/
+work/

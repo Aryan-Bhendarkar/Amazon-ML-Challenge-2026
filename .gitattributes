@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.tsv -text
+*.parquet binary
+*.png binary
+*.pdf binary

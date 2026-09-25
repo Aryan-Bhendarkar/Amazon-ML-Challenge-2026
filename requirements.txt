@@ -1,0 +1,17 @@
+# Pinned from the team laptop venv (Python 3.13.1, Windows 11, CUDA 12.4). Re-freeze before packaging.
+# NOTE: pandas 2.2.3 segfaults (hashtable access violation) with numpy 2.4 on this setup -> use pandas 3.x.
+numpy==2.4.6
+pandas==3.0.2
+pyarrow==24.0.0
+polars==1.44.2
+scipy==1.15.3
+scikit-learn==1.7.0
+rapidfuzz==3.14.6
+anyascii==0.3.3
+lightgbm==4.6.0
+faiss-cpu==1.14.2
+sentence-transformers==5.5.1
+torch==2.6.0            # CUDA build from https://download.pytorch.org/whl/cu124 (or reuse system torch)
+psutil==7.0.0
+tqdm
+pytest==9.0.2
