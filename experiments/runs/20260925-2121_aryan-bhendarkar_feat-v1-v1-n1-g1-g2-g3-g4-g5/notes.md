@@ -17,3 +17,7 @@ mini F0.5=0.9800 ({'India': 0.9746621041429615, 'US': 0.9836495163907002}), grou
 Name-only and co-located records become resolvable through S1-side uniqueness (G1/G2). Typed token edits (G3) and house relations (G4) separate injected business words and ±k house numbers from noise, and sibling consensus (G5) helps too. The precision jump (FP entities /3) is the main effect.
 ## Next
 decision_v1 (Track C) on this stage 1; confirm on v1_n1 fold0x; validation-auditor before any submission; test inference via pipelines/predict_test_v1.py.
+
+## CONFIRMED on fold0x (fold0 minus mini, 353,503 S1; frozen models and thresholds; run 20260926-0109_aryan-bhendarkar_confirm-fold0x-v1-n1)
+- gate 0.96102 (t 0.725) → ctx 0.97989 (t 0.75): **Δ +0.01887, CI [0.01857, 0.01917], p_not_better 0**. India 0.9536 → 0.9748, US 0.9659 → 0.9833.
+- The frozen t=0.75 is also the fold0x-optimal t (0.725 gives the same 0.97989), so the threshold is not overfit to mini.

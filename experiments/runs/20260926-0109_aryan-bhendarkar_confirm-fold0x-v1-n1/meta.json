@@ -1,0 +1,23 @@
+{
+  "run_id": "20260926-0109_aryan-bhendarkar_confirm-fold0x-v1-n1",
+  "name": "confirm-fold0x-v1_n1",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "frozen models/thresholds of ['20260925-2015_aryan-bhendarkar_gate-blocking-v1-n1', '20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5'] on fold0x",
+  "params": {
+    "cache": "v1_n1",
+    "tag": "fold0x",
+    "runs": "20260925-2015_aryan-bhendarkar_gate-blocking-v1-n1,20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5",
+    "threads": 4,
+    "chunks": 16
+  },
+  "tags": [
+    "confirm"
+  ],
+  "parent": "20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5",
+  "git_commit": "2e6b9a9",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T01:09:41+05:30",
+  "status": "done",
+  "duration_min": 122.8,
+  "finished_ist": "2026-09-26T03:12:29+05:30"
+}
