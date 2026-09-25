@@ -18,11 +18,11 @@ Write-Host "Account $acct | region $Region | member '$Member'" -ForegroundColor 
 $budget = @{ BudgetName = "$Prefix-budget"; BudgetType = "COST"; TimeUnit = "MONTHLY";
              BudgetLimit = @{ Amount = "$BudgetUsd"; Unit = "USD" };
              CostTypes = @{ IncludeCredit = $false; IncludeRefund = $false } } | ConvertTo-Json -Depth 5
-$tmpB = New-TemporaryFile; Set-Content $tmpB $budget -Encoding ascii
+$tmpB = [IO.Path]::GetTempFileName(); Set-Content $tmpB $budget -Encoding ascii
 $notes = @(25, 50, 80, 100) | ForEach-Object {
     @{ Notification = @{ NotificationType = "ACTUAL"; ComparisonOperator = "GREATER_THAN"; Threshold = $_; ThresholdType = "PERCENTAGE" };
        Subscribers = @(@{ SubscriptionType = "EMAIL"; Address = $Email }) } }
-$tmpN = New-TemporaryFile; Set-Content $tmpN (ConvertTo-Json @($notes) -Depth 6) -Encoding ascii
+$tmpN = [IO.Path]::GetTempFileName(); Set-Content $tmpN (ConvertTo-Json @($notes) -Depth 6) -Encoding ascii
 $existing = & aws budgets describe-budgets --account-id $acct --query "Budgets[?BudgetName=='$Prefix-budget'].BudgetName" --output text 2>$null
 if (-not $existing) {
     & aws budgets create-budget --account-id $acct --budget "file://$tmpB" --notifications-with-subscribers "file://$tmpN"
@@ -52,10 +52,10 @@ if ($LASTEXITCODE -ne 0) {
 & aws iam get-role --role-name $RoleName 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
     $trust = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
-    $tmpT = New-TemporaryFile; Set-Content $tmpT $trust -Encoding ascii
+    $tmpT = [IO.Path]::GetTempFileName(); Set-Content $tmpT $trust -Encoding ascii
     & aws iam create-role --role-name $RoleName --assume-role-policy-document "file://$tmpT" | Out-Null
     $pol = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:ListBucket","s3:GetObject","s3:PutObject","s3:DeleteObject","s3:GetBucketLocation"],"Resource":["arn:aws:s3:::amlc26-*","arn:aws:s3:::amlc26-*/*"]}]}'
-    $tmpP = New-TemporaryFile; Set-Content $tmpP $pol -Encoding ascii
+    $tmpP = [IO.Path]::GetTempFileName(); Set-Content $tmpP $pol -Encoding ascii
     & aws iam put-role-policy --role-name $RoleName --policy-name "$Prefix-s3" --policy-document "file://$tmpP"
     & aws iam create-instance-profile --instance-profile-name $ProfileName | Out-Null
     & aws iam add-role-to-instance-profile --instance-profile-name $ProfileName --role-name $RoleName
@@ -75,7 +75,7 @@ if (-not (Test-Path $KeyFile)) {
 } else { Write-Host "key exists: $KeyFile" }
 
 # 6) Security group: SSH from current public IP only
-$vpc = Invoke-Aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query "Vpcs[0].VpcId" --output text
+$vpc = Invoke-Aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query "Vpcs[0].VpcId" --output text
 $sg = Invoke-Aws ec2 describe-security-groups --filters "Name=group-name,Values=$SgName" "Name=vpc-id,Values=$vpc" --query "SecurityGroups[0].GroupId" --output text
 if ($sg -eq "None" -or -not $sg) {
     $sg = Invoke-Aws ec2 create-security-group --group-name $SgName --description "AMLC SSH" --vpc-id $vpc --query GroupId --output text

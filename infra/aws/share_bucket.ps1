@@ -8,7 +8,7 @@ param([Parameter(Mandatory = $true)][string[]]$Accounts)
 $bucket = Get-BucketName
 $principals = ($Accounts | ForEach-Object { "`"arn:aws:iam::$($_.Trim()):root`"" }) -join ","
 $policy = "{`"Version`":`"2012-10-17`",`"Statement`":[{`"Sid`":`"TeamRead`",`"Effect`":`"Allow`",`"Principal`":{`"AWS`":[$principals]},`"Action`":[`"s3:GetObject`",`"s3:ListBucket`"],`"Resource`":[`"arn:aws:s3:::$bucket`",`"arn:aws:s3:::$bucket/*`"]}]}"
-$f = New-TemporaryFile; Set-Content $f $policy -Encoding ascii
+$f = [IO.Path]::GetTempFileName(); Set-Content $f $policy -Encoding ascii
 Invoke-Aws s3api put-bucket-policy --bucket $bucket --policy "file://$f" | Out-Null
 Write-Host "s3://$bucket is readable by: $($Accounts -join ', ')" -ForegroundColor Green
 Write-Host "Tell teammates:  AMLC_DATA_BUCKET=$bucket bash ~/box_setup.sh"

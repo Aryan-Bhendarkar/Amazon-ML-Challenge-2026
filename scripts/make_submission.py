@@ -26,12 +26,6 @@ def main(a) -> int:
     s1 = io.load_source("test", 1, columns=["entity_id", "country"])
     order = s1.entity_id.tolist()
     m = pd.read_parquet(a.matches)
-    c = pd.read_parquet(a.candidates) if a.candidates else None
-    if c is not None:
-        cs = set(zip(c.s1_id, c.cand_id))
-        missing = sum((x, y) not in cs for x, y in zip(m.s1_id, m.match_id))
-        if missing:
-            print(f"WARNING: {missing} matched pairs are not in candidates (pipeline bug?)")
     dup = m.duplicated("match_id").sum()
     if dup:
         print(f"WARNING: {dup} records matched to >1 S1 — violates the at-most-one structure; "
@@ -41,9 +35,13 @@ def main(a) -> int:
     ml = m.groupby("s1_id").match_id.agg(list).to_dict()
     st_m = submission.write_id_lists(out / "matching_results.tsv", ml, order, submission.MATCH_HEADER)
     st_c = None
-    if c is not None:
-        cl = c.groupby("s1_id").cand_id.agg(list).to_dict()
-        st_c = submission.write_id_lists(out / "candidate_pairs.tsv", cl, order, submission.CAND_HEADER)
+    if a.candidates:   # streamed: candidate sets can be 100M+ pairs
+        st_c = submission.write_candidates_streaming(a.candidates, out / "candidate_pairs.tsv", order,
+                                                     matched_pairs=set(zip(m.s1_id, m.match_id)))
+        miss = st_c["matched_pairs_total"] - st_c["matched_pairs_in_candidates"]
+        if miss:
+            print(f"WARNING: {miss} matched pairs are not in candidates (pipeline bug?)")
+    c = a.candidates
     ok, log = submission.run_validator(out / "matching_results.tsv",
                                        out / "candidate_pairs.tsv" if c is not None else None,
                                        check_ids=not a.no_check_ids)

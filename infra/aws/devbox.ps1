@@ -24,7 +24,7 @@ function Update-SshConfig($ip) {
 Host $HostAlias
     HostName $ip
     User ubuntu
-    IdentityFile $($KeyFile -replace '\\','/')
+    IdentityFile "$($KeyFile -replace '\\','/')"
     IdentitiesOnly yes
     ServerAliveInterval 60
     ServerAliveCountMax 10
@@ -71,9 +71,9 @@ switch ($Action) {
         $bucket = Get-BucketName
         $boxSetup = (Get-Content "$PSScriptRoot\box_setup.sh" -Raw) -replace "`r", ""
         $ud = ((Get-Content "$PSScriptRoot\user_data.sh" -Raw) -replace "`r", "").Replace("__AMLC_BUCKET__", $bucket).Replace("__BOX_SETUP__", $boxSetup.TrimEnd())
-        $udFile = New-TemporaryFile; [IO.File]::WriteAllText($udFile, $ud)
+        $udFile = [IO.Path]::GetTempFileName(); [IO.File]::WriteAllText($udFile, $ud)
         $bdm = "[{`"DeviceName`":`"/dev/sda1`",`"Ebs`":{`"VolumeSize`":$DiskGb,`"VolumeType`":`"gp3`",`"DeleteOnTermination`":true}}]"
-        $bdmFile = New-TemporaryFile; [IO.File]::WriteAllText($bdmFile, $bdm)
+        $bdmFile = [IO.Path]::GetTempFileName(); [IO.File]::WriteAllText($bdmFile, $bdm)
         Write-Host "launching $Type ($ami) as $Tag ..." -ForegroundColor Cyan
         $id = Invoke-Aws ec2 run-instances --image-id $ami --instance-type $Type --key-name $KeyName `
             --security-group-ids $sg --iam-instance-profile "Name=$ProfileName" `

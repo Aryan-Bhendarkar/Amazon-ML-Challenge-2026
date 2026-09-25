@@ -1,6 +1,6 @@
 # Shared settings for the AWS scripts. Dot-sourced by the other .ps1 files.
 # Every teammate runs the scripts in THEIR OWN AWS account (per-member credits).
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"   # PS 5.1 turns native stderr into errors under "Stop"; Invoke-Aws checks exit codes instead
 $Region      = if ($env:AMLC_REGION) { $env:AMLC_REGION } else { "ap-south-1" }   # Mumbai: low latency from India
 $env:AWS_DEFAULT_REGION = $Region   # also for commands that do not pass --region
 $Member      = if ($env:AMLC_MEMBER) { $env:AMLC_MEMBER } else { ($env:USERNAME -split " ")[0].ToLower() }
@@ -16,7 +16,11 @@ $DiskGb      = 150
 
 function Invoke-Aws {
     # Run the AWS CLI, throw on failure, return trimmed stdout.
-    $out = & aws @args --region $Region 2>&1
+    for ($i = 1; $i -le 3; $i++) {     # retry: transient network errors happen on home connections
+        $out = & aws @args --region $Region 2>&1
+        if ($LASTEXITCODE -eq 0) { break }
+        Start-Sleep -Seconds (3 * $i)
+    }
     if ($LASTEXITCODE -ne 0) { throw "aws $($args -join ' ') failed:`n$out" }
     return ($out | Out-String).Trim()
 }

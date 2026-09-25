@@ -48,6 +48,42 @@ def write_id_lists(path: Path, lists: Mapping[str, Iterable[str]], s1_order: lis
     return {"rows": len(s1_order), "nonempty": n_nonempty, "ids": n_ids, "dropped_bad_ids": dropped}
 
 
+def write_candidates_streaming(parquet_path: Path, out_tsv: Path, s1_order: list[str],
+                               matched_pairs: set | None = None) -> dict:
+    """Stream a (s1_id, cand_id) parquet to candidate_pairs.tsv without loading it all.
+    Each parquet ROW GROUP must contain complete S1 groups (write one row group per S1 chunk).
+    If matched_pairs is given, also counts how many matched pairs are present (matches ⊆ candidates)."""
+    import pyarrow.parquet as pq
+    out_tsv = Path(out_tsv)
+    out_tsv.parent.mkdir(parents=True, exist_ok=True)
+    wanted, seen = set(s1_order), set()
+    n_ids = found = 0
+    pf = pq.ParquetFile(parquet_path)
+    with open(out_tsv, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\t".join(CAND_HEADER) + "\n")
+        for rg in range(pf.num_row_groups):
+            t = pf.read_row_group(rg, columns=["s1_id", "cand_id"]).to_pandas()
+            for s1, ids in t.groupby("s1_id", sort=False)["cand_id"]:
+                if s1 in seen:
+                    raise ValueError(f"S1 {s1} split across row groups - write one row group per S1 chunk")
+                if s1 not in wanted:
+                    raise ValueError(f"S1 {s1} not in test_source1")
+                seen.add(s1)
+                u = list(dict.fromkeys(x for x in ids if x.startswith(("S2-", "S3-"))))
+                n_ids += len(u)
+                if matched_pairs is not None:
+                    found += sum((s1, x) in matched_pairs for x in u)
+                f.write(f"{s1}\t{','.join(u)}\n")
+        for s1 in s1_order:
+            if s1 not in seen:
+                f.write(f"{s1}\t\n")
+    out = {"rows": len(s1_order), "nonempty": len(seen), "ids": n_ids}
+    if matched_pairs is not None:
+        out["matched_pairs_in_candidates"] = found
+        out["matched_pairs_total"] = len(matched_pairs)
+    return out
+
+
 def run_validator(matching: Path, candidate: Path | None = None, check_ids: bool = True) -> tuple[bool, str]:
     """Run the official student_resource/utils/validate_submission.py. Returns (passed, output)."""
     cmd = [sys.executable, str(paths.VALIDATOR), "--matching", str(matching),

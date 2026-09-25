@@ -362,21 +362,26 @@ def main(a):
         model = lgb.Booster(model_file=str(art / "model.lgb"))
         FEATS = json.loads((art / "features.json").read_text())
         t = a.threshold if a.threshold is not None else json.loads((art / "decision.json").read_text())["threshold"]
-        cand_parts, pred_parts = [], []
+        pred_parts, n_cand = [], [0]
+        cand_schema = pa.schema([("s1_id", pa.string()), ("cand_id", pa.string())])
+        cw = pq.ParquetWriter(str(art / "test_candidates.parquet"), cand_schema, compression="zstd")
 
         def fn(f):
-            cand_parts.append(f[["s1_id", "cand_id"]])
+            # one row group per S1 chunk (complete S1 groups) -> streamable to candidate_pairs.tsv
+            ct = pa.Table.from_pandas(f[["s1_id", "cand_id"]], schema=cand_schema, preserve_index=False)
+            cw.write_table(ct, row_group_size=max(1, ct.num_rows))
+            n_cand[0] += ct.num_rows
             p = model.predict(f[FEATS], num_threads=0).astype(np.float32)
             keep = p >= min(0.05, t)
             pred_parts.append(f.loc[keep, ["s1_id", "cand_id"]].assign(prob=p[keep]))
         run_split("test", None, a.chunk, fn)
-        cands = pd.concat(cand_parts, ignore_index=True)
-        cands.to_parquet(art / "test_candidates.parquet")
+        cw.close()
         pred = pd.concat(pred_parts, ignore_index=True)
+        pred.to_parquet(art / "test_pred.parquet")
         m = threshold_matches(assign_best_s1(pred), t)
         pd.DataFrame([(s, x) for s, xs in m.items() for x in xs], columns=["s1_id", "match_id"]) \
           .to_parquet(art / "test_matches.parquet")
-        print(f"test done in {(time.time() - t0) / 60:.1f} min: {len(cands):,} candidate pairs, "
+        print(f"test done in {(time.time() - t0) / 60:.1f} min: {n_cand[0]:,} candidate pairs, "
               f"{sum(map(len, m.values())):,} matches for {len(m):,} S1 (threshold {t})")
 
 
