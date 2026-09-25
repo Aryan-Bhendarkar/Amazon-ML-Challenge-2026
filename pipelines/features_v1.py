@@ -32,7 +32,7 @@ SEED = 42
 BASE_RUN = "20260925-1236_aryan_baseline-v0-keys-lgbm"
 CAT_BASE = ["house_rel", "legal_rel", "state_rel", "cand_kind"]
 CAT_NEW = ["edit_type"]
-EXTRA_BASE = ["rbits", "tf_name", "tf_na"]          # present in cache v1+
+EXTRA_BASE = ["rbits", "cos_name", "cos_ns"]          # present in cache v1+
 CANDS = paths.DATA_DIR / "cands"
 
 
