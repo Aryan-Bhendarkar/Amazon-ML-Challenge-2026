@@ -1,0 +1,38 @@
+{
+  "sub_id": "20260925-1533_aryan-bhendarkar",
+  "run_id": "20260925-1531_aryan-bhendarkar_postrules-v0",
+  "author": "aryan-bhendarkar",
+  "note": "EXP-002 baseline v0 + S1-context post-rules A+dropA+B (t=0.675, floor 0.05)",
+  "created_ist": "2026-09-25T15:45:39+05:30",
+  "status": "prepared",
+  "validator_pass": true,
+  "val_f05": 0.9107191366513687,
+  "stats_matching": {
+    "rows": 1732544,
+    "nonempty": 1569045,
+    "ids": 5078526,
+    "dropped_bad_ids": 0
+  },
+  "stats_candidates": {
+    "rows": 1732544,
+    "nonempty": 1703443,
+    "ids": 126411747,
+    "matched_pairs_in_candidates": 5078526,
+    "matched_pairs_total": 5078526
+  },
+  "diagnostics": {
+    "empty_rate_by_country": {
+      "France": 0.059926306214637,
+      "India": 0.12007861864279136,
+      "US": 0.07644177552306872
+    },
+    "mean_matches_by_country": {
+      "France": 3.320390669565083,
+      "India": 2.72450634949246,
+      "US": 3.0315394522142762
+    },
+    "empty_rate": 0.09436932049056186,
+    "mean_matches": 2.9312536939898783
+  },
+  "files": "submissions/files/20260925-1533_aryan-bhendarkar"
+}
