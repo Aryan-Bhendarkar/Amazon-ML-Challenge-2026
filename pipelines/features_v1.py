@@ -62,7 +62,7 @@ def ctx_path(ver: str, tag: str):
 
 
 def featurize_tag(ver: str, tag: str, df: pl.DataFrame, sctx: cf.SplitContext, n_chunks: int, workers: int,
-                  log=print) -> pl.DataFrame:
+                  log=print, split: str = "train") -> pl.DataFrame:
     """ctx features for every (s1_id, cand_id) of a tag, in S1-hash chunks (complete S1 groups)."""
     p = ctx_path(ver, tag)
     if p.exists():
@@ -73,7 +73,7 @@ def featurize_tag(ver: str, tag: str, df: pl.DataFrame, sctx: cf.SplitContext, n
     parts = []
     for ch in range(n_chunks):
         P = keys.filter(pl.col("_ch") == ch).drop("_ch")
-        X = cf.add_features(cf.attach_norm(P, "train"), sctx, workers=workers)
+        X = cf.add_features(cf.attach_norm(P, split), sctx, workers=workers)
         new = cf.new_feature_cols(X, ["name_tset"])
         parts.append(X.select(["s1_id", "cand_id"] + new))
         log(f"  [{tag}] chunk {ch + 1}/{n_chunks} {P.height:,} pairs {time.time() - t0:.0f}s")
