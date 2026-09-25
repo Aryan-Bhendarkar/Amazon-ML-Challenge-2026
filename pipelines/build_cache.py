@@ -117,7 +117,7 @@ def main(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--cand-ver", default="keys_v0")
-    ap.add_argument("--subset", default="mini", choices=["micro", "mini", "fold0"])
+    ap.add_argument("--subset", default="mini", choices=["micro", "mini", "fold0", "fold0x"])
     ap.add_argument("--n-train", type=int, default=150_000)
     ap.add_argument("--chunk", type=int, default=40_000)
     ap.add_argument("--skip-train", action="store_true")

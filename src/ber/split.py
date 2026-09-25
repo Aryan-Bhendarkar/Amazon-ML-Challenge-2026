@@ -40,9 +40,11 @@ def make_folds(gt: pd.DataFrame, s1: pd.DataFrame, k: int = K_FOLDS) -> pd.DataF
 
 
 def eval_ids(folds: pd.DataFrame, subset: str = "mini") -> set[str]:
-    """subset in {'micro','mini','fold0'}."""
+    """subset in {'micro','mini','fold0','fold0x'}; fold0x = fold0 minus mini (disjoint confirmation set)."""
     if subset == "fold0":
         return set(folds.loc[folds.fold == 0, "s1_id"])
+    if subset == "fold0x":
+        return set(folds.loc[(folds.fold == 0) & ~folds["mini"], "s1_id"])
     return set(folds.loc[folds[subset], "s1_id"])
 
 
