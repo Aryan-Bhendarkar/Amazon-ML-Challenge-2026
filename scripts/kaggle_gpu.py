@@ -6,7 +6,7 @@ Kaggle GPUs -> poll -> download /kaggle/working outputs here.
 
   python scripts/kaggle_gpu.py whoami
   python scripts/kaggle_gpu.py data   <dir> --slug amlc-xenc-data [-m "msg"]
-  python scripts/kaggle_gpu.py run    <script.py> --slug amlc-xenc [--data amlc-xenc-data ...]
+  python scripts/kaggle_gpu.py run    <script.py> --slug amlc-xenc [--data amlc-xenc-data ...] [--kernels amlc-xenc]
                                       [--gpu t4x2] [--no-internet] [--wait] [--timeout SEC]
   python scripts/kaggle_gpu.py status --slug amlc-xenc
   python scripts/kaggle_gpu.py wait   --slug amlc-xenc          # poll until done, then pull
@@ -101,7 +101,7 @@ def build_kernel_dir(a, user: str) -> Path:
         "language": "python", "kernel_type": "script", "is_private": True,
         "enable_gpu": a.gpu != "none", "enable_internet": not a.no_internet,
         "dataset_sources": [x if "/" in x else f"{user}/{x}" for x in a.data],
-        "competition_sources": [], "kernel_sources": [],
+        "competition_sources": [], "kernel_sources": [x if "/" in x else f"{user}/{x}" for x in a.kernels],
     }
     if a.gpu != "none":
         meta["machine_shape"] = GPU.get(a.gpu, a.gpu)
@@ -165,6 +165,7 @@ def main():
     p.add_argument("-m", "--message", default="update")
     p = sp.add_parser("run"); p.add_argument("script"); p.add_argument("--slug", required=True)
     p.add_argument("--data", nargs="*", default=[]); p.add_argument("--gpu", default="t4x2")
+    p.add_argument("--kernels", nargs="*", default=[], help="kernel outputs to mount (e.g. checkpoints)")
     p.add_argument("--no-internet", action="store_true"); p.add_argument("--timeout", type=int)
     p.add_argument("--wait", action="store_true"); p.add_argument("--poll", type=int, default=60)
     p.add_argument("--out")
