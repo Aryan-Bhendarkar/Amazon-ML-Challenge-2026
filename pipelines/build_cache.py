@@ -54,7 +54,7 @@ def build_v1(a):
     out = paths.ROOT / "data" / "cands" / f"v1_n{a.norm_v}"
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    ids = train_ids(a.n_train)
+    ids = train_ids(a.n_train) if not a.skip_train else pd.DataFrame({"s1_id": [], "role": []})
     ctx = harness.EvalContext.load(a.subset)
     role = dict(zip(ids.s1_id, ids.role))
     role.update({s: "eval" for s in ctx.ids})
@@ -76,13 +76,16 @@ def build_v1(a):
                         how="left", validate="one_to_one")
             f["role"] = f.s1_id.map(role)
             for r, key in (("eval", "eval"), ("train", "train"), ("es", "train")):
-                parts[key].append(f[f.role == r])
+                if (f.role == r).any():
+                    parts[key].append(f[f.role == r])
             del f, pool_part
             gc.collect()
         print(f"[{ctry}] featurized {(time.time() - t0) / 60:.1f} min", flush=True)
         del U, q, qx, ptbl
         gc.collect()
     for key, name in (("train", "train"), ("eval", a.subset)):
+        if not parts[key]:
+            continue
         f = pd.concat(parts[key], ignore_index=True)
         f["label"] = label(f, set(f.s1_id)).to_numpy()
         f.to_parquet(out / f"{name}.parquet", index=False)
