@@ -94,5 +94,7 @@ if __name__ == "__main__":
     ap.add_argument("--split", default="all", choices=["train", "test", "all"])
     ap.add_argument("--jobs", type=int, default=max(1, min(8, (os.cpu_count() or 4) - 4)))
     ap.add_argument("--limit", type=int, default=None, help="smoke test on first N rows")
+    ap.add_argument("--version", type=int, default=NORM_VERSION, help="0 = hand rules only (needed by build_token_map)")
     a = ap.parse_args()
+    NORM_VERSION = a.version
     main(paths.SPLITS if a.split == "all" else (a.split,), a.jobs, a.limit)

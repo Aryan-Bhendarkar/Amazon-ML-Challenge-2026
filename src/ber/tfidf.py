@@ -32,7 +32,7 @@ def _counts_word(texts) -> sp.csr_matrix:
 
 
 def _workers(n: int | None) -> int:
-    return n or max(1, (os.cpu_count() or 2))
+    return n or int(os.environ.get("AMLC_TFIDF_JOBS", 0)) or max(1, (os.cpu_count() or 2))
 
 
 def raw_counts(texts, n_jobs: int | None = None, analyzer: str = "char") -> sp.csr_matrix:
@@ -40,6 +40,7 @@ def raw_counts(texts, n_jobs: int | None = None, analyzer: str = "char") -> sp.c
     fn = _counts if analyzer == "char" else _counts_word
     texts = list(texts)
     parts = [texts[o:o + _CHUNK] for o in range(0, len(texts), _CHUNK)]
+    n_jobs = n_jobs or int(os.environ.get("AMLC_PROC_JOBS", 0)) or None
     if len(parts) <= 1 or _workers(n_jobs) == 1:
         mats = [fn(p) for p in parts]
     else:
