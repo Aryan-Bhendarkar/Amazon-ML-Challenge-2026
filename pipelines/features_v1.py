@@ -157,6 +157,12 @@ def main(a):
         keep = np.random.default_rng(SEED).choice(ids, size=min(a.n_train_s1, len(ids)), replace=False)
         tr_pl = tr_pl.filter(pl.col("s1_id").is_in(keep.tolist()))
     base += [c for c in EXTRA_BASE if c in tr_pl.columns]
+    if a.featurize_only:
+        sctx = cf.SplitContext.build("train")
+        for tag in ("train", a.eval_tag):
+            featurize_tag(a.cache, tag, load_cache(a.cache, tag), sctx, a.chunks, a.threads)
+        print(f"featurized in {(time.time() - t0) / 60:.1f} min")
+        return
     ctx = harness.EvalContext.load(a.subset)
     ev_pl = ev_pl.filter(pl.col("s1_id").is_in(sorted(ctx.ids)))
     new = []
@@ -226,6 +232,7 @@ if __name__ == "__main__":
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--chunks", type=int, default=8)
     ap.add_argument("--loco", action="store_true")
+    ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--parent", default=BASE_RUN)
     ap.add_argument("--hypothesis", default="")
