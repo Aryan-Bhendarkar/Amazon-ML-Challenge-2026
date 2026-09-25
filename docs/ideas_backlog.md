@@ -34,3 +34,10 @@ Status: `todo` · `doing(<who>)` · `done(<run_id>, Δ)` · `killed(<reason>)`
 
 ## Parking lot
 - LLM judge (Qwen2.5-7B-Instruct, Apache) on the few hardest France pairs. Probably too slow and costly; only if time allows.
+
+## From error analysis of 20260925-1236_aryan_baseline-v0-keys-lgbm (25 Sep, see its error_analysis.md)
+- [ ] **EXP-016 S1-context uniqueness features** (TOP): `s1_same_name` = #S1 (same split+country) with identical sorted n_core; `s1_same_addr` = same for sorted a_full; ==1 flags; `n_key_equal`. Targets name-only (empty cand address) records and co-location, which cost 0.0135 macro. **Measured as post-processing rules (no retraining): +0.0044 mini (CI [0.0041, 0.0048]), IN +0.0046, US +0.0043.** Expected +0.005–0.008 as LGBM features. Cheap (group_by counts). France: 52.5% of S1 share names (same as train), and 19% share addresses, which makes the flags more conservative there.
+- [ ] **EXP-017 Competition-aware val**: 55% of val FPs are records owned by a non-mini S1 that never competes in val `assign_best_s1`. Add competitor S1 queries (all S1 sharing a key with a mini candidate) and record-side best-other-S1 sim/margin features. +0.002 FP-side at stake, plus a threshold that matches test conditions.
+- [ ] **EXP-018 Number + extra-token features**: house digit-edit distance / abs diff / other-number agreement; max S1-doc-freq of cand-only name tokens. Targets house noise (0.0058) and business-word edits (0.0044); expected +0.001–0.002.
+- [ ] **NORM v1 (small)**: honorific stopwords (mr/dr/smt/m s/www/com) + fuzzy legal canonicalization (praibhet/piraivet/limirrd/PRlVATE/lnc). ≤ +0.0005. Add French honorifics/legal typos too.
+- Killed on arrival: top-1 fallback for empty predictions (−0.0045 … −0.00002 at every t2); these are blocking misses or singletons.

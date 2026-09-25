@@ -1,0 +1,2 @@
+- [Error buckets (baseline v0)](error_buckets_baseline.md) — recurring buckets, S1 name-sharing 50%, measured rules +0.0044, what hurt
+- [Error-analysis method pitfalls](error_analysis_method.md) — TN-less crosstabs, pandas3 str NaN, counterfactual recipe, resource caps
