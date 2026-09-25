@@ -87,7 +87,11 @@ class NameNorm(NamedTuple):
     kind: str          # 'name' | 'domain' | 'handle' | 'empty'
 
 
-def normalize_name(raw: str) -> NameNorm:
+def normalize_name(raw: str, token_map: dict | None = None) -> NameNorm:
+    """token_map (ber.tokenmap, learned from train pairs) is applied only when the raw name is in a
+    non-Latin script, before legal-form canonicalization. None -> v0 behaviour."""
+    if token_map and script_of(raw or "") == "latin":
+        token_map = None
     s = to_ascii(raw or "")
     s = _squash(s)
     if s in ("", "na", "n/a", "null", "<null>", "none", "-"):
@@ -109,6 +113,8 @@ def normalize_name(raw: str) -> NameNorm:
     s = _DOTTED_ABBR.sub(lambda mm: mm.group(0).replace(".", ""), s)
     full_toks, core_toks, legal = [], [], []
     for t in _NONALNUM.sub(" ", s).split():
+        if token_map:
+            t = token_map.get(t, t)
         c = LEGAL_CANON.get(t)
         if c is not None:
             full_toks.append(c)
@@ -117,7 +123,7 @@ def normalize_name(raw: str) -> NameNorm:
             full_toks.append(t)
             if t not in NAME_STOP:
                 core_toks.append(t)
-    alias_n = normalize_name(alias).core if alias else ""
+    alias_n = normalize_name(alias, token_map).core if alias else ""
     core = " ".join(core_toks)
     return NameNorm(" ".join(full_toks), core, " ".join(sorted(set(legal))),
                     core.replace(" ", ""), alias_n, kind)

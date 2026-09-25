@@ -17,10 +17,18 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from ber import paths
+from ber import paths, tokenmap
 from ber.normalize import normalize_address, normalize_name, script_of
 
-NORM_VERSION = 0
+# v0: hand rules only. v1: + learned native-script token map (scripts/build_token_map.py, folds 1-4 pairs)
+NORM_VERSION = 1
+TOKEN_MAP_PATH = paths.FEATURE_DIR / "token_map_v1.json"
+_TMAP = None
+
+
+def _init(tmap):
+    global _TMAP
+    _TMAP = tmap
 NAME_COLS = ["n_full", "n_core", "n_legal", "n_compact", "n_alias", "n_kind"]
 ADDR_COLS = ["a_full", "a_street", "a_numbers", "a_house", "a_postcode", "a_state", "a_nparts", "a_empty"]
 BATCH = 100_000
@@ -31,7 +39,7 @@ def norm_path(split: str, source: int):
 
 
 def _work(rows: dict) -> pa.Table:
-    names = [normalize_name(x) for x in rows["business_name"]]
+    names = [normalize_name(x, token_map=_TMAP) for x in rows["business_name"]]
     addrs = [normalize_address(a, c) for a, c in zip(rows["business_address"], rows["country"])]
     out = pd.DataFrame(names, columns=NAME_COLS)
     out[ADDR_COLS] = pd.DataFrame(addrs, columns=ADDR_COLS)
@@ -58,7 +66,12 @@ def _batches(split: str, source: int, limit: int | None):
 
 def main(splits, jobs: int, limit: int | None) -> None:
     paths.ensure_dirs()
-    with Pool(jobs) as pool:
+    tmap = None
+    if NORM_VERSION >= 1:
+        if not TOKEN_MAP_PATH.exists():
+            raise FileNotFoundError(f"{TOKEN_MAP_PATH} missing — run: python scripts/build_token_map.py")
+        tmap = tokenmap.load(TOKEN_MAP_PATH)
+    with Pool(jobs, initializer=_init, initargs=(tmap,)) as pool:
         for sp in splits:
             for s in paths.SOURCES:
                 t0 = time.time()
