@@ -4,7 +4,7 @@
   "author": "aryan-bhendarkar",
   "note": "EXP-002 baseline v0 + S1-context post-rules A+dropA+B (t=0.675, floor 0.05)",
   "created_ist": "2026-09-25T15:45:39+05:30",
-  "status": "prepared",
+  "status": "uploaded",
   "validator_pass": true,
   "val_f05": 0.9107191366513687,
   "stats_matching": {
@@ -34,5 +34,8 @@
     "empty_rate": 0.09436932049056186,
     "mean_matches": 2.9312536939898783
   },
-  "files": "submissions/files/20260925-1533_aryan-bhendarkar"
+  "files": "submissions/files/20260925-1533_aryan-bhendarkar",
+  "public_score": 0.904555,
+  "uploaded_ist": "2026-09-26T01:16:57+05:30",
+  "lb_note": "sub2 baseline+postrules; val-LB gap -0.006"
 }
