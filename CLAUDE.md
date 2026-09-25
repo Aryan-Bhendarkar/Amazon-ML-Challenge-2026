@@ -61,7 +61,7 @@ student_resource/          ORIGINAL competition files, read-only
 ```
 
 ## Environment (cloud-first)
-- **Primary compute = AWS EC2 dev box** `amlc-box`: r7i.xlarge, 4 vCPU / 32 GB, Mumbai. Resize to r7i.2xlarge/4xlarge for full test runs. GPU box `amlc-gpu` is a g6.xlarge with an L4 24 GB.
+- **Primary compute = AWS EC2 dev box** `amlc-box`: r7i.xlarge, 4 vCPU / 32 GB, Mumbai. Resize to r7i.2xlarge/4xlarge for full test runs. **GPU = Kaggle 2x T4** (AWS GPU quota is 0 on our accounts): `/kaggle-gpu` skill, `scripts/kaggle_gpu.py` (private dataset upload -> push script -> poll -> pull outputs).
   - Claude Code runs ON the box (VS Code Remote-SSH terminal, or the Claude desktop app over SSH).
   - Runbook: `infra/aws/README.md`. Operations: the `/cloud` skill.
 - Laptop (Windows, RTX 3050 4 GB): **only ~5 GB RAM is really free**. On 25 Sep a full-data job exhausted memory and crashed several apps. Use it only for editing and `micro` smoke tests.
@@ -121,6 +121,7 @@ student_resource/          ORIGINAL competition files, read-only
   - `/submit <run_id>`: human-invoked; prepares LB files
   - `/package-final`: builds the final zip
   - `/cloud`: EC2 box operations, long jobs, S3 sharing, costs
+  - `/kaggle-gpu`: GPU jobs on Kaggle 2x T4 driven from this box (cross-encoder / bi-encoder)
   - `er-playbook`: auto-loaded ER/competition knowledge (blocking, features, France, scaling, decision rules)
 - Agents:
   - `error-analyst`: FP/FN taxonomy
