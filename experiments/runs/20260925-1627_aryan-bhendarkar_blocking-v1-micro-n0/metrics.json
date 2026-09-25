@@ -1,0 +1,112 @@
+{
+  "blocking": {
+    "pair_recall": 0.9765876403756485,
+    "entity_full_coverage": 0.9305721809911419,
+    "cands_mean": 95.09384858044164,
+    "cands_p50": 100.0,
+    "cands_p95": 100.0,
+    "cands_max": 100,
+    "n_pairs": 844053,
+    "empty_cand_rate": 0.0,
+    "pair_recall_by_country": {
+      "India": 0.9592644512245403,
+      "US": 0.9880504174169259
+    }
+  },
+  "per_country": {
+    "India": {
+      "n_q": 3535,
+      "alone": {
+        "keys_v0": 0.8227,
+        "tf_na": 0.9213,
+        "tf_empty": 0.0295,
+        "akey": 0.2248,
+        "hskey": 0.2673,
+        "skel": 0.4229
+      },
+      "marginal": {
+        "keys_v0": 0.0167,
+        "tf_na": 0.1053,
+        "tf_empty": 0.0026,
+        "akey": 0.0,
+        "hskey": 0.0004,
+        "skel": 0.0031
+      },
+      "union_recall": 0.9662,
+      "union_pairs_per_s1": 179.6,
+      "capped_recall": 0.9593,
+      "capped_pairs_per_s1": 97.4,
+      "recall_at_cap": {
+        "50": 0.9478,
+        "150": 0.9635,
+        "200": 0.9659
+      },
+      "pairs_per_s1": {
+        "keys_v0": 104.3,
+        "tf_na": 30.0,
+        "tf_empty": 48.3,
+        "akey": 0.9,
+        "hskey": 1.4,
+        "skel": 15.6
+      },
+      "timing_s": {
+        "keys_v0": 25,
+        "tf_build": 41,
+        "tf_na": 15,
+        "tf_empty": 0,
+        "akey": 15,
+        "hskey": 23,
+        "skel": 20
+      }
+    },
+    "US": {
+      "n_q": 5341,
+      "alone": {
+        "keys_v0": 0.8832,
+        "tf_na": 0.9634,
+        "tf_empty": 0.041,
+        "akey": 0.4135,
+        "hskey": 0.5608,
+        "skel": 0.5129
+      },
+      "marginal": {
+        "keys_v0": 0.002,
+        "tf_na": 0.0729,
+        "tf_empty": 0.0063,
+        "akey": 0.0,
+        "hskey": 0.0007,
+        "skel": 0.0007
+      },
+      "union_recall": 0.9905,
+      "union_pairs_per_s1": 129.0,
+      "capped_recall": 0.9881,
+      "capped_pairs_per_s1": 93.6,
+      "recall_at_cap": {
+        "50": 0.9834,
+        "150": 0.9898,
+        "200": 0.9903
+      },
+      "pairs_per_s1": {
+        "keys_v0": 51.8,
+        "tf_na": 30.0,
+        "tf_empty": 49.3,
+        "akey": 1.8,
+        "hskey": 2.7,
+        "skel": 15.5
+      },
+      "timing_s": {
+        "keys_v0": 32,
+        "tf_build": 52,
+        "tf_na": 44,
+        "tf_empty": 0,
+        "akey": 14,
+        "hskey": 23,
+        "skel": 26
+      }
+    }
+  },
+  "zero_cand_nonsingleton": 0.002591257323118522,
+  "zero_cand_nonsingleton_n": 23,
+  "peak_rss_gb": 8.1,
+  "timing_min": 5.7
+}

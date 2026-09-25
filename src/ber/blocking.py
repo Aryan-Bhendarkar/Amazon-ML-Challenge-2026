@@ -9,6 +9,7 @@ has a bit in RBITS. `union` ORs the bits and keeps the max score. Retrievers:
   hskey       house number (leading zeros stripped) + sorted significant street tokens
   tf_empty    tf_name top-k restricted to pool records with an EMPTY address (name-only records)
   skel        phonetic consonant skeleton of the first two core tokens (native-script transliterations)
+  nkey_empty  exact sorted-name key -> pool records with an EMPTY address (name ties defeat top-k there)
   rev         reverse: each pool record -> top-k S1 over ALL S1 of the country (tf_name)
 """
 from __future__ import annotations
@@ -25,7 +26,7 @@ import scipy.sparse as sp
 from . import paths, tfidf
 from .normalize import STREET_CANON
 
-RBITS = {"keys_v0": 1, "tf_name": 2, "tf_na": 4, "akey": 8, "hskey": 16, "tf_empty": 32, "skel": 64, "rev": 128}
+RBITS = {"keys_v0": 1, "tf_name": 2, "tf_na": 4, "akey": 8, "hskey": 16, "tf_empty": 32, "skel": 64, "rev": 128, "nkey_empty": 256}
 
 POOL_COLS = ["entity_id", "country", "n_core", "n_compact", "n_alias", "n_legal", "n_kind", "n_script",
              "a_full", "a_street", "a_numbers", "a_house", "a_state", "a_empty"]

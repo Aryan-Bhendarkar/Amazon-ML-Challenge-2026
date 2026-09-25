@@ -1,0 +1,35 @@
+{
+  "run_id": "20260925-1627_aryan-bhendarkar_blocking-v1-micro-n0",
+  "name": "blocking-v1-micro-n0",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "multi-retriever union (tf-idf name+addr / name / empty-addr k50 / akey / hskey / skeleton / reverse) + baseline keys -> recall >= 0.98",
+  "params": {
+    "k_name": 0,
+    "k_na": 30,
+    "k_empty": 50,
+    "k_rev": 3,
+    "cap_akey": 100,
+    "cap_hskey": 100,
+    "cap_skel": 100,
+    "cap": 100,
+    "max_df_name": 0.01,
+    "max_df_addr": 0.02,
+    "w_na": [
+      0.35,
+      0.65
+    ],
+    "subset": "micro",
+    "norm_v": 0,
+    "rev": false
+  },
+  "tags": [
+    "blocking"
+  ],
+  "parent": "20260925-1236_aryan_baseline-v0-keys-lgbm",
+  "git_commit": "2f03c4c",
+  "git_dirty": true,
+  "started_ist": "2026-09-25T16:27:55+05:30",
+  "status": "done",
+  "duration_min": 5.71,
+  "finished_ist": "2026-09-25T16:33:38+05:30"
+}
