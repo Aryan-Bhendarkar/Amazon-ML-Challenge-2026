@@ -21,7 +21,7 @@ Status: `todo` · `doing(<who>)` · `done(<run_id>, Δ)` · `killed(<reason>)`
 - [ ] EXP-010 Difference + competition features (see strategy.md). Expect the biggest precision gain against hard negatives.
 - [ ] EXP-011 Learned token map from train pairs: align tokens of native-script/transliterated names with Latin names ('praivet'→'private', state names in 7 scripts, 'kampani'→'company'). Apply in normalization (bump NORM_VERSION).
 - [ ] EXP-012 Bi-encoder: fine-tune `intfloat/multilingual-e5-small` (MIT, 118M) with in-batch + hard negatives on "name | address" strings from folds 1–4. Use it for FAISS retrieval + a cosine feature.
-- [ ] doing(amlc-07, pipelines/decision_v1.py) EXP-013 Decision rule: expected-F0.5 top-k vs global threshold vs per-source threshold. Calibrate first (isotonic on OOF).
+- [x] killed(20260925-2235_aryan-bhendarkar_decision-v1-v1-n1: stage-2 +0.0003, K-model −0.0002, iso expected-F −0.0008 vs threshold 0.9800) EXP-013 Decision rule: expected-F0.5 top-k vs global threshold vs per-source threshold. Calibrate first (isotonic on OOF).
 - [ ] EXP-014 LOCO evaluation for every feature group. Drop features that don't transfer.
 - [ ] EXP-015 Cross-encoder (`microsoft/mdeberta-v3-base` MIT or `xlm-roberta-base` MIT) trained on blocking hard negatives. Run on the uncertain band only (0.05<p<0.95).
 

@@ -1,0 +1,32 @@
+{
+  "run_id": "20260925-2235_aryan-bhendarkar_decision-v1-v1-n1",
+  "name": "decision-v1-v1_n1",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "S1-local set-level decision (k* multiclass + stage-2 relative) beats a global threshold",
+  "params": {
+    "cache": "v1_n1",
+    "eval_tag": "mini",
+    "subset": "mini",
+    "confirm_tag": "",
+    "groups": "G1,G2,G3,G4,G5",
+    "threads": 4,
+    "chunks": 8,
+    "extra_base": "rbits",
+    "lr": 0.1,
+    "pmin": 0.01,
+    "stage1_run": "20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5",
+    "parent": "20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5",
+    "hypothesis": ""
+  },
+  "tags": [
+    "decision",
+    "model"
+  ],
+  "parent": "20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5",
+  "git_commit": "eb1d464",
+  "git_dirty": true,
+  "started_ist": "2026-09-25T22:35:54+05:30",
+  "status": "done",
+  "duration_min": 106.57,
+  "finished_ist": "2026-09-26T00:22:29+05:30"
+}

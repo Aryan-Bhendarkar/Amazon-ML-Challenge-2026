@@ -1,0 +1,161 @@
+{
+  "stage1": {
+    "oof_iters": [
+      536,
+      381,
+      498,
+      468
+    ],
+    "full_iter": -1,
+    "stage1_run": "20260925-2121_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5"
+  },
+  "n_feats": 83,
+  "train_pairs": 16951437,
+  "eval_pairs": 8286867,
+  "k_model": {
+    "best_iter": 104
+  },
+  "s2": {
+    "best_iter": 188,
+    "feats": [
+      "name_tset",
+      "addr_tset",
+      "cand_addr_empty",
+      "house_rel",
+      "name_rank_in_s1",
+      "addr_rank_in_s1",
+      "n_cand_s1",
+      "cand_src",
+      "prob",
+      "r_rank",
+      "r_pmax",
+      "r_ratio",
+      "r_prev_gap",
+      "r_next_gap",
+      "r_n_ge50",
+      "r_sum_above",
+      "r_n",
+      "r_src_rank",
+      "s_p1",
+      "s_p2",
+      "s_p3",
+      "s_gap1",
+      "s_gap2",
+      "s_n_ge50",
+      "s_n_ge90",
+      "s_p_sum",
+      "s_s2_ge50",
+      "s_s3_ge50",
+      "s_n_assigned"
+    ],
+    "gain": {
+      "prob": 4257566.0,
+      "r_ratio": 804941.1,
+      "r_pmax": 34915.8,
+      "r_next_gap": 30881.8,
+      "s_n_ge90": 20018.0,
+      "r_src_rank": 13179.9,
+      "s_p_sum": 13085.6,
+      "r_prev_gap": 6999.1,
+      "addr_tset": 5197.8,
+      "s_gap1": 4956.9,
+      "s_p2": 4803.5,
+      "name_tset": 4673.3,
+      "addr_rank_in_s1": 4528.9,
+      "s_gap2": 3974.6,
+      "s_p3": 3718.4
+    }
+  },
+  "rules": {
+    "thr": {
+      "f05": 0.98,
+      "by_country": {
+        "India": 0.9746621041429615,
+        "US": 0.9836495163907002
+      },
+      "P": 0.996,
+      "R": 0.9521,
+      "singleton_acc": 0.9772039540044382,
+      "param": 0.75
+    },
+    "s2_thr": {
+      "f05": 0.9803,
+      "by_country": {
+        "India": 0.9754296545835506,
+        "US": 0.9836324189941875
+      },
+      "P": 0.9956,
+      "R": 0.9549,
+      "singleton_acc": 0.9860802904982853,
+      "param": 0.675
+    },
+    "kmodel": {
+      "f05": 0.97981,
+      "by_country": {
+        "India": 0.9745473646009156,
+        "US": 0.9834144624285275
+      },
+      "P": 0.9962,
+      "R": 0.9492,
+      "singleton_acc": 0.974581400040347,
+      "param": 0.5
+    },
+    "s2_kmodel": {
+      "f05": 0.97993,
+      "by_country": {
+        "India": 0.9748593217840313,
+        "US": 0.9834032229593946
+      },
+      "P": 0.9962,
+      "R": 0.9494,
+      "singleton_acc": 0.9790195682872705,
+      "param": 0.5
+    },
+    "iso_ef": {
+      "f05": 0.97923,
+      "by_country": {
+        "India": 0.9740096526318845,
+        "US": 0.9827998752508065
+      },
+      "P": 0.9959,
+      "R": 0.951,
+      "singleton_acc": 0.9501714746822675,
+      "param": null
+    },
+    "oracle_prefix": 0.99206,
+    "k_acc": 0.9116
+  },
+  "val": {
+    "f05_macro": 0.9803015848100701,
+    "n_entities": 87952,
+    "pair_precision": 0.9955638315351334,
+    "pair_recall": 0.9548773441193465,
+    "singleton_rate_true": 0.056360287429507,
+    "singleton_acc": 0.9860802904982853,
+    "empty_pred_on_nonsingleton": 0.0052171817579372256,
+    "entities_with_fp": 0.013677915226487175,
+    "avg_pred_per_entity": 3.321629979989085,
+    "f05_by_ntrue": {
+      "0": 0.9860802904982853,
+      "1": 0.9265389098401302,
+      "2": 0.9748623938045426,
+      "3": 0.9831228856805023,
+      "4": 0.9857695243219299,
+      "5": 0.9859074474806628,
+      "6": 0.9870385610031529
+    },
+    "f05_by_country": {
+      "India": 0.9754296545835506,
+      "US": 0.9836324189941875
+    },
+    "rule": "s2_thr"
+  },
+  "subset": "mini",
+  "decision_params": {
+    "thr": 0.75,
+    "s2_thr": 0.675,
+    "kmodel": 0.5,
+    "s2_kmodel": 0.5
+  },
+  "timing_min": 106.7
+}
