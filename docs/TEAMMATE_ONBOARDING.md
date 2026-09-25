@@ -10,29 +10,37 @@ Read these first:
 - `docs/strategy_v2.md`, the problem → solution map.
 - `docs/claude_code_master_prompt.md`, the ML hygiene rules.
 
-## 1. Accounts (Aryan does these for you)
-- **GitHub:** Aryan adds you as a collaborator on `Aryan-Bhendarkar/Amazon-ML-Challenge-2026`. Accept the invite e-mail.
-- **Data:** send Aryan your **12-digit AWS account ID**. He runs:
-  `infra\aws\share_bucket.ps1 -Accounts <ids>`
+## 1. Access model: read-only, nothing touches Aryan's repo
+- You get a **read-only snapshot** of the code and a **read-only** data pack from Aryan's S3 bucket. The bucket policy only allows `GetObject`/`ListBucket` for your AWS account.
+- You work in **your own local git** (optionally your own private GitHub repo). You **never push to Aryan's repo.**
+- Your results come back as a **patch + run record** (step 7). Aryan's Claude Code reviews them and merges what is proven.
+- To get access, send Aryan your **12-digit AWS account ID**. He runs `infra\aws\share_bucket.ps1 -Accounts <ids>`.
 
-## 2. Your own cloud box (your AWS account and credits; ~15 min)
-Follow `infra/aws/README.md`, steps 1, 2, 4 and 5:
-1. Upgrade to the Paid plan (the credits carry over).
-2. On your laptop:
-   - `aws login --region ap-south-1`
-   - `$env:AMLC_MEMBER="<yourname>"`
-   - `infra\aws\setup_account.ps1 -Email <you>`
-   - `infra\aws\devbox.ps1 up`
-3. Connect with VS Code Remote-SSH to `amlc-box`, then run:
+## 2. Get the code snapshot (on your laptop, after `aws login --region ap-south-1`)
+```powershell
+mkdir amlc; cd amlc
+aws s3 cp s3://amlc26-699191579023/share/code/amlc-latest.tar.gz . ; tar -xzf amlc-latest.tar.gz ; del amlc-latest.tar.gz
+git init -q; git add -A; git commit -qm "snapshot from Aryan"
+```
+
+## 3. Your own cloud box (your AWS account and credits; ~15 min)
+1. Upgrade to the Paid plan (credits carry over).
+2. From the snapshot folder on your laptop:
+   ```powershell
+   $env:AMLC_MEMBER="<yourname>"
+   infra\aws\setup_account.ps1 -Email <you>
+   infra\aws\devbox.ps1 up
+   ```
+3. VS Code Remote-SSH → `amlc-box`. In the box terminal:
    ```bash
-   AMLC_DATA_BUCKET=amlc26-699191579023 bash ~/box_setup.sh      # GitHub login, venv, data, tests
+   mkdir -p ~/amlc && cd ~/amlc
+   aws s3 cp s3://amlc26-699191579023/share/code/amlc-latest.tar.gz - | tar -xz
+   git init -q && git add -A && git commit -qm "snapshot from Aryan"
+   AMLC_DATA_BUCKET=amlc26-699191579023 bash ~/box_setup.sh      # venv, data, caches, tests (skips the GitHub clone)
+   AMLC_DATA_BUCKET=amlc26-699191579023 bash infra/aws/pull_share.sh   # prepared caches + baseline model
    ```
 
-## 3. Fast start: pull the prepared caches (skip the ~15 min of rebuilding)
-```bash
-cd ~/amlc && AMLC_DATA_BUCKET=amlc26-699191579023 bash infra/aws/pull_share.sh
-```
-You get:
+The fast-start pack gives you:
 - the raw parquet and folds
 - the normalized caches v0 and v1, and the token map
 - the **keys_v0 candidate cache**, with features for the train sample, mini and micro
@@ -60,10 +68,20 @@ Kick off your Claude Code with:
 Read CLAUDE.md, docs/TEAMMATE_ONBOARDING.md, docs/strategy_v2.md and docs/claude_code_master_prompt.md. I own Track <X>. Plan first (expected gain, time, memory), then run /experiment on the keys_v0 cache. One heavy job at a time.
 ```
 
-## 6. Team rules (these matter; we're 4 people plus several agents in one repo)
-- **Branch per track:** `git checkout -b track-<X>-<you>`. Commit run records together with the code. Push the branch. Aryan merges into `main` after `compare_runs.py` shows a real gain.
-- **Only touch files in your track.** Shared library changes (`src/ber/io.py`, `metric.py`, `split.py`, `harness.py`) must be announced first.
-- **Nobody uploads to the leaderboard except Aryan** (one login, one device). Send him the run_id + `/evaluate` output.
+## 6. Team rules
+- **Only work on your track's files.** Keep changes small and focused, so Aryan can merge them cleanly.
+- **Nobody uploads to the leaderboard except Aryan** (one login, one device).
 - **Gains count only if** they're on mini with paired bootstrap p < 0.05, confirmed on fold0 minus mini, and LOCO is not worse.
-- **Credits:** stop your box when you're done (`infra\aws\devbox.ps1 stop`). Keep one heavy job at a time.
-- **Artifacts** go to your own bucket: `aws s3 sync artifacts/<run_id> s3://$AMLC_BUCKET/artifacts/<run_id>`. Share them with the team via `share_bucket.ps1`.
+- **Credits:** stop your box when done (`infra\aws\devbox.ps1 stop`). One heavy job at a time.
+
+## 7. Handing results back (how your work reaches the main pipeline)
+When a run beats its parent:
+```bash
+cd ~/amlc
+git add -A && git commit -m "<run_id>: <what> (mini F0.5 x.xxxx)"
+git format-patch -1 -o ~/handoff/                                   # your code change as a patch file
+tar -czf ~/handoff/<run_id>.tar.gz experiments/runs/<run_id>         # the run record (meta/metrics/notes)
+aws s3 cp --recursive ~/handoff s3://$AMLC_BUCKET/handoff/<you>/     # your own bucket
+```
+Then send Aryan the run_id and your bucket name, and run `share_bucket.ps1 -Accounts 699191579023` in your account so he can read it.
+He reviews it with the validation-auditor, re-runs it, and merges it. New snapshots appear at `share/code/amlc-latest.tar.gz`. To update, re-download it into a fresh folder, or apply it over yours.
