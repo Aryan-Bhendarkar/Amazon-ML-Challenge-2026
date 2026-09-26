@@ -38,3 +38,12 @@ def test_loss_decomposition_sums():
     from ber.metric import macro_f05
     assert abs(d["loss_total"] - (1 - macro_f05(pred, truth))) < 1e-12
     assert d["loss_fp_singleton"] == 0.25
+
+
+def test_derived_lfrac_roundtrip():
+    from ber import ctx_features as cf
+    X = pl.DataFrame({"ex_lfrac_cmax": [-3.26, -3.24, None], "other": [1, 2, 3]})
+    feats = ["other", "ex_lfrac_cmax_q05"]
+    assert cf.expand_derived(feats) == ["other", "ex_lfrac_cmax"]
+    Y = cf.add_derived(X, feats)
+    assert Y["ex_lfrac_cmax_q05"].to_list()[:2] == [-3.5, -3.0] and Y["ex_lfrac_cmax_q05"][2] is None

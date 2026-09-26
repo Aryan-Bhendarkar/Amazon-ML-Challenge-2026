@@ -390,6 +390,23 @@ def add_features(X: pl.DataFrame, ctx: SplitContext, groups=GROUPS, workers: int
     return X
 
 
+# Derived (coarsened) features: new name -> (source column, quantum). Computed from the saved raw column at load time
+# by every consumer (training, orphan_sim, test rescoring), so they can never disagree. lfrac q05 = log(df/n_s1) rounded
+# to 0.5: the raw value acts as a token-identity code and is brittle to S1 pruning/density (EXP-A, 26 Sep).
+DERIVED = {f"{p}_lfrac_{k}_q05": (f"{p}_lfrac_{k}", 0.5) for p in ("ex", "mi") for k in ("cmax", "cmin")}
+
+
+def expand_derived(feats: list[str]) -> list[str]:
+    """Feature list with derived names replaced by their source columns (dedup, order kept)."""
+    return list(dict.fromkeys(DERIVED[f][0] if f in DERIVED else f for f in feats))
+
+
+def add_derived(X: pl.DataFrame, feats: list[str]) -> pl.DataFrame:
+    add = [(pl.col(DERIVED[f][0]) / DERIVED[f][1]).round(0) * DERIVED[f][1] for f in feats if f in DERIVED]
+    names = [f for f in feats if f in DERIVED]
+    return X.with_columns([e.cast(pl.Float32).alias(n) for e, n in zip(add, names)]) if add else X
+
+
 NORM_COLS = [c for c in S1_COLS if c != "entity_id"] + [c + "_c" for c in C_COLS if c != "entity_id"] + \
             ["n_key", "a_key", "hs_key", "n_key_c", "a_key_c", "hs_key_c"]
 

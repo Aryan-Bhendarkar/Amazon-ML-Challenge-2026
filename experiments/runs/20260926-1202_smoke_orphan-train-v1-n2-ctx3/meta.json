@@ -1,0 +1,57 @@
+{
+  "run_id": "20260926-1202_smoke_orphan-train-v1-n2-ctx3",
+  "name": "orphan-train-v1_n2-ctx3",
+  "author": "smoke",
+  "hypothesis": "EXP-B: training on orphan-pruned views (0/19/30%, uniform+biased) makes the model robust to test's S1 removal: orphan-sim mini +0.003, clean >= -0.001, LOCO >= -0.0005",
+  "params": {
+    "cache": "v1_n2",
+    "ctx_ver": 3,
+    "eval_tag": "mini",
+    "subset": "mini",
+    "parent": "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3",
+    "n_train_s1": 5000,
+    "threads": 2,
+    "chunks": 2,
+    "loco": false,
+    "loco_n": 60000,
+    "hypothesis": "",
+    "views": {
+      "0": [
+        "clean",
+        0.0
+      ],
+      "1": [
+        "clean",
+        0.0
+      ],
+      "2": [
+        "uniform",
+        0.19
+      ],
+      "3": [
+        "biased",
+        0.19
+      ],
+      "4": [
+        "uniform",
+        0.3
+      ],
+      "5": [
+        "biased",
+        0.3
+      ]
+    },
+    "n_feats": 87
+  },
+  "tags": [
+    "features",
+    "orphan"
+  ],
+  "parent": "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3",
+  "git_commit": "1f6e7c2",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T12:02:14+05:30",
+  "status": "done",
+  "duration_min": 5.96,
+  "finished_ist": "2026-09-26T12:08:11+05:30"
+}

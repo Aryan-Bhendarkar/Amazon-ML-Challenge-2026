@@ -65,8 +65,9 @@ def main(a):
     pf = pq.ParquetFile(src)
     all_cols = pf.schema_arrow.names
     have = set(all_cols)
-    base = [f for f in feats if f in have]
-    need_ctx = [f for f in feats if f not in have]
+    raw = cf.expand_derived(feats)                             # derived (coarsened) feats come from raw columns
+    base = [f for f in raw if f in have]
+    need_ctx = [f for f in raw if f not in have]
     if a.from_feats:
         assert not need_ctx, f"{src.name} lacks model features {need_ctx}"
     print(f"{pf.metadata.num_rows:,} test pairs in {pf.num_row_groups} row groups from {src.name}; {len(base)} "
@@ -102,7 +103,7 @@ def main(a):
                 fw["writer"] = pq.ParquetWriter(str(ftmp), tb.schema, compression="zstd")
             fw["writer"].write_table(tb.select(fw["schema"].names).cast(fw["schema"]), row_group_size=tb.num_rows)
             del tb
-        Xp = X.select(["s1_id", "cand_id"] + feats).to_pandas()
+        Xp = cf.add_derived(X, feats).select(["s1_id", "cand_id"] + feats).to_pandas()
         p = model.predict(Xp[feats], num_threads=a.threads).astype(np.float32)
         keep = p >= PMIN
         parts.append(Xp.loc[keep, ["s1_id", "cand_id"]].assign(prob=p[keep]))
