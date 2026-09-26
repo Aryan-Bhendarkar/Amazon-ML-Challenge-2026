@@ -1,4 +1,9 @@
-Updated: 27 Sep 04:55 IST (amlc-49 HEADLESS, lead prompt 02:35)
+Updated: 27 Sep 05:00 IST (amlc-49 HEADLESS, lead prompt 04:50)
+**Running (lead 04:50): tmux xs2** = Lane G MiniLM-5x on top of XB
+  - C = XB + xenc_mlm5x; D = XB with mlm5x replacing minilm
+  - DM-mini → DM-fold0x → paired vs XB (clean, DM, per country). ETA C ~05:30, D ~06:05 IST.
+  - mlm5x halves verified OOF: md5(s1_id) % 2; each train-role pair in exactly one file, 0 in-sample, es rows in both.
+  - XLM-R logits: watching s3://…/share/g3logits (lead ETA 06:30–07:30).
 Base: **psemb 20260926-1737**, t = 0.775 (C1 = psemb + FR norm v2 = **LB 0.968**, current best)
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
