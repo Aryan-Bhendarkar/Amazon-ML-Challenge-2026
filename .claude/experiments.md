@@ -317,3 +317,22 @@ Orphan-sim protocol:
 - post-drop D1 re-run crashed (polars collect error in adv_val on the dropped-feature set); not re-run, since it is not decision-relevant after the val drop.
 - verdict: **KILL.** lfrac is split-fingerprinting but still carries in-domain signal; the LOCO transfer gain is not bidirectional.
 
+## EXP-XS-A xenc stack: psemb + existing cross-fitted MiniLM logit as a feature (20260927-0234_…-ctx3-a; DM 0247 / 0249; 27 Sep 02:34–03:25 IST)
+- change: psemb recipe + `xenc_minilm` (the amlc-xenc ckpts m0/m1, MIT, scored on Kaggle as amlc-xenc2-score) as a LightGBM feature. NaN where the pair was not scored (stage-1 p < 0.01).
+  - Train rows use OOF logits (cross-fit halves, cf = s1_id.hash(42) % 2, verified 0 mismatches). es / val / test rows use the mean of both models.
+  - Leak check: train-role OOF AUC 0.9932 = never-trained es rows 0.9934. Train coverage: 99.4% of positives; 100% of every OOF-prob band.
+  - Stack method: GBDT feature (preferred). The sigmoid fallback was not needed.
+- clean mini 0.9856 @ t = 0.775 (P 0.9980, R 0.9612; IN 0.9845, US 0.9865). DM-mini t_DM = 0.825.
+- **paired vs psemb (0.775) at t_DM = 0.825:**
+
+| | overall | India | US |
+|---|---|---|---|
+| **DM-fold0x** | **+0.00361 [+0.00341, +0.00383]** | +0.00548 | +0.00237 |
+| clean fold0x | +0.00318 [+0.00301, +0.00338] | +0.00488 | +0.00206 |
+| DM-mini | +0.00412 | +0.00605 | +0.00280 |
+| clean mini | +0.00362 | +0.00546 | +0.00237 |
+
+  - Absolute DM-fold0x 0.98441, clean fold0x 0.98511.
+- LOCO IN→US 0.98379 / US→IN 0.98114: **not a transfer measure**. The xenc ckpts were trained on both countries, so the LOCO models get a feature fitted on the held-out country. Info only.
+- verdict: **PASSES the model gate** (DM-fold0x ≥ +0.002, both countries up). The transfer risk for France is unmeasured: the ckpts never saw France. The earlier LOCO for an xenc trained on one country was −0.0015…−0.0026, but France is 15% vs +0.0036 on the 85%. Check the FR test diagnostics before the request.
+
