@@ -93,6 +93,12 @@ def to_pandas(df: pl.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df.select(cols).to_pandas()
 
 
+# pure similarity scores (higher = more alike): P(match) must not decrease in them (France robustness guardrail)
+MONO_UP = ["name_tset", "name_tsort", "name_ratio", "name_partial", "comp_jw", "comp_partial", "alias_tset",
+           "addr_tset", "addr_ratio", "street_tset"]
+MONOTONE = False                           # set from --monotone
+
+
 def train_lgb(tr: pd.DataFrame, feats: list[str], cats: list[str], threads: int, lr=0.05, rounds=3000):
     es = tr["is_es"].to_numpy()
     dtr = lgb.Dataset(tr.loc[~es, feats], tr.loc[~es, "label"].astype(int), categorical_feature=cats,
@@ -101,6 +107,9 @@ def train_lgb(tr: pd.DataFrame, feats: list[str], cats: list[str], threads: int,
     params = dict(objective="binary", learning_rate=lr, num_leaves=127, min_data_in_leaf=100,
                   feature_fraction=0.8, bagging_fraction=0.8, bagging_freq=1, lambda_l2=1.0,
                   verbose=-1, seed=SEED, num_threads=threads, deterministic=True, force_row_wise=True)
+    if MONOTONE:
+        params.update(monotone_constraints=[1 if f in MONO_UP else 0 for f in feats],
+                      monotone_constraints_method="advanced")
     return lgb.train(params, dtr, rounds, valid_sets=[des],
                      callbacks=[lgb.early_stopping(100, verbose=False), lgb.log_evaluation(200)])
 
@@ -148,8 +157,9 @@ def loco(tr: pd.DataFrame, ev: pd.DataFrame, feats: list[str], cats: list[str], 
 
 
 def main(a):
-    global CTX_VER
+    global CTX_VER, MONOTONE
     t0 = time.time()
+    MONOTONE = a.monotone
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
     CTX_VER = a.ctx_ver
     groups = [] if a.groups == "none" else a.groups.split(",")
@@ -189,9 +199,10 @@ def main(a):
     ev = to_pandas(ev_pl, ["s1_id", "cand_id"] + feats)
     del tr_pl, ev_pl
     gc.collect()
-    name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}" + (f"-ctx{CTX_VER}" if CTX_VER != 1 else "")
+    name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}" + (f"-ctx{CTX_VER}" if CTX_VER != 1 else "") \
+        + ("-mono" if MONOTONE else "")
     with Run(name, hypothesis=a.hypothesis or f"ctx feature groups {groups or 'none'} on {a.cache} cache",
-             params={"cache": a.cache, "ctx_ver": CTX_VER, "groups": groups, "subset": a.subset, "n_train_s1": a.n_train_s1,
+             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "subset": a.subset, "n_train_s1": a.n_train_s1,
                      "threads": a.threads, "n_feats": len(feats), "new_feats": new},
              tags=["features"], parent=a.parent) as run:
         run.log(train_pairs=int((~tr.is_es).sum()), es_pairs=int(tr.is_es.sum()), eval_pairs=len(ev))
@@ -252,6 +263,7 @@ if __name__ == "__main__":
     ap.add_argument("--loco", action="store_true")
     ap.add_argument("--extra-base", default=",".join(EXTRA_BASE), help="cache columns added to the base features")
     ap.add_argument("--ctx-ver", type=int, default=1, help="ber.ctx_features version (2 = density-invariant G3, 3 = v2 on norm_v1)")
+    ap.add_argument("--monotone", action="store_true", help="monotone(+1) constraints on pure similarity scores")
     ap.add_argument("--loco-only", action="store_true", help="skip the main model; LOCO reference only")
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
