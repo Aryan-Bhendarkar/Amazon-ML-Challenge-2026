@@ -259,3 +259,26 @@ Orphan-sim protocol:
   2. The non-FR loss (~0.010) is split between US precision and India recall.
   3. Features that make noisy true copies score high (India) and features that separate distractors (US) are the levers. bge-m3 cosines target the India case (native / transliteration noise).
 
+## DIAG-IN India recall shift: what moved into the band? (26 Sep 19:10 IST; label-free, 0710 predictions)
+- transliteration coverage (norm_v1 n_full of native-script pool names; token in the same split's Latin-S1 vocabulary):
+  - train: tokens 97.5%, names fully covered 90.4%
+  - test: tokens 96.2%, **names fully covered 85.2%**
+  - Native share of the India pool is the same (18.2% / 18.4%).
+  - Real but small: about 1% of India pool records get a worse transliteration on test (train coverage is flattered, since the map was learned on train).
+- composition of India assigned pairs in the band (p 0.2–0.975), test (10% S1 sample) vs val mini:
+
+| | test | val |
+|---|---|---|
+| native candidate | 7.4% | 9.7% |
+| name-only candidate | 15.3% | 27.0% |
+| house_rel = 0 | 27.6% | 22.5% |
+| n_key_equal | 0.415 | 0.488 |
+| extra name tokens (ex_n) | 0.72 | 0.60 |
+
+  - Top bucket (p > 0.999): n_key_equal 0.764 vs 0.713, ex_n 0.22 vs 0.29.
+- reading: the extra India band mass is **not** native-script noise (the native share in the band is lower on test). It is pairs *with* an address whose name has extra tokens (business-word additions / variants): the same family as the US distractors. Whether these are true copies (recall) or near-copies (precision) cannot be resolved label-free.
+- implication:
+  - A transliteration-map extension or skeleton feature targets at most ~1% of India records; it is low value for the remaining time.
+  - Better lever: word-addition discrimination (G3 ex_* features are already in; bge-m3 in psemb already helped India, mini India 0.9794).
+- verdict: India transliteration work **deprioritised** (small ceiling). NEEDS-LEAD only if the lead disagrees.
+
