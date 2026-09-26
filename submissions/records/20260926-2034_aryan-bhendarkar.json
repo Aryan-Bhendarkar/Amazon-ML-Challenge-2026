@@ -1,0 +1,38 @@
+{
+  "sub_id": "20260926-2034_aryan-bhendarkar",
+  "run_id": "20260926-1737_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-psemb",
+  "author": "aryan-bhendarkar",
+  "note": "C0 = psemb (ps + frozen bge-m3 band cosines), t=0.775 (DM-selected). clean fold0x 0.98192 (+0.00075 vs 0710), DM-fold0x 0.98101 (+0.0014), LOCO 0.95383/0.93387",
+  "created_ist": "2026-09-26T20:40:39+05:30",
+  "status": "prepared",
+  "validator_pass": true,
+  "val_f05": 0.98101,
+  "stats_matching": {
+    "rows": 1732544,
+    "nonempty": 1627862,
+    "ids": 5700127,
+    "dropped_bad_ids": 0
+  },
+  "stats_candidates": {
+    "rows": 1732544,
+    "nonempty": 1732544,
+    "ids": 164745367,
+    "matched_pairs_in_candidates": 5700127,
+    "matched_pairs_total": 5700127
+  },
+  "diagnostics": {
+    "empty_rate_by_country": {
+      "France": 0.06300201964139802,
+      "India": 0.06185415550392229,
+      "US": 0.05766046454111409
+    },
+    "mean_matches_by_country": {
+      "France": 3.1501356705671957,
+      "India": 3.2416794858182736,
+      "US": 3.4038343794204846
+    },
+    "empty_rate": 0.06042097632152488,
+    "mean_matches": 3.2900330381219756
+  },
+  "files": "submissions/files/20260926-2034_aryan-bhendarkar"
+}

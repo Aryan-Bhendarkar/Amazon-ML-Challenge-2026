@@ -282,3 +282,22 @@ Orphan-sim protocol:
   - Better lever: word-addition discrimination (G3 ex_* features are already in; bge-m3 in psemb already helped India, mini India 0.9794).
 - verdict: India transliteration work **deprioritised** (small ceiling). NEEDS-LEAD only if the lead disagrees.
 
+## SUB-C0 / SUB-C1 Submission #4 candidates (lead decisions 18:50; built 26 Sep 18:48–20:45 IST)
+- model: 20260926-1737_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-psemb (ps + frozen bge-m3 band cosines), t = 0.775 (DM-selected, 1802).
+  - val: clean fold0x 0.98192 (+0.00075 vs 0710), DM-fold0x 0.98101 (+0.0014); LOCO 0.95383 / 0.93387.
+- **C0** = submissions/files/20260926-2034_aryan-bhendarkar
+  - Test rescored from the saved test_feats + emb join (90 min).
+  - 5,700,127 matches for 1,627,862 S1; validator `--check-ids` **PASS**; matches ⊆ candidates (5,700,127/5,700,127).
+  - Empty rate FR 6.30% / IN 6.19% / US 5.77%; matches/S1 FR 3.150 / IN 3.242 / US 3.404.
+- **C1** = submissions/files/20260926-2040_aryan-bhendarkar = C0 + France norm v2 (laneC, merged d26c5d6)
+  - 24,240,674 France pairs re-featurized: base on norm_v2 (refeat_norm) + ctx on norm_v2 statistics (SplitContext test, norm 2); same model, same t.
+  - France pairs outside the bge-m3 band stay NaN.
+  - Validator **PASS**; matches ⊆ candidates (5,704,167/5,704,167).
+  - **US/India rows byte-identical to C0 (0 of 1,473,092 differ)**; candidate_pairs.tsv byte-identical.
+  - 28,101 of 259,452 France rows differ.
+- France label-free before/after (C0 → C1):
+  - matches/S1 3.150 → 3.166; empty 6.30% → 6.26%
+  - S1 with a p ≥ 0.99 candidate 0.928 → 0.927
+  - **band pairs/S1 (p 0.2–0.975) 0.821 → 0.698 (−15%)**
+- expected LB: C0 ≈ 0.967 + gains from ps/emb (non-FR DM +0.0014 → ≈ +0.001); C1 adds the France normalization effect (lead's estimate 0.969–0.972).
+

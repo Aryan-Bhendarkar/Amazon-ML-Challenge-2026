@@ -1,13 +1,24 @@
-Updated: 26 Sep 18:55 IST (amlc-49, Lane A; /loop running; executing "Lead decisions 18:50")
-New base: **20260926-1737_…-psemb** (ps + frozen bge-m3 band cosines), t = 0.775
+Updated: 26 Sep 20:50 IST (amlc-49, Lane A; /loop running)
+Base: **20260926-1737_…-psemb** (ps + frozen bge-m3 band cosines), t = 0.775
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
-Running now:
-  - tmux c0: C0 test rescore (psemb, --from-feats + emb join, t = 0.775; 7 threads, ~90 min → ~20:25)
-  - tmux frprep (2 threads): norm v2 test cache → refeat_norm test (France pairs)
-  - tmux qC1 (queued): France-only filter → France scoring on norm v2 (ctx on v2) → splice → make_submission C0 and C1 → checks. ETA ~21:30.
-  - laneC merged into main (d26c5d6); tests 46 pass.
-Next: SUBMIT-REQUEST with C0 + C1 when files validate; India recall (token-map coverage on test, skeleton-similarity feature) at ≤1 thread meanwhile.
+Running now: nothing (box idle).
+**SUBMIT-REQUEST: C0 and C1** (submission #4, today's last slot; the lead picks one)
+  - **C0**: `submissions/files/20260926-2034_aryan-bhendarkar/{matching_results.tsv,candidate_pairs.tsv}`
+    - psemb, t = 0.775
+    - validator `--check-ids` PASS; matches ⊆ candidates 5,700,127/5,700,127; 1,627,862 non-empty S1
+    - clean fold0x 0.98192 (+0.00075), DM-fold0x 0.98101 (+0.0014), LOCO 0.95383 / 0.93387
+  - **C1**: `submissions/files/20260926-2040_aryan-bhendarkar/…`
+    - C0 + France norm v2 (24.2M France pairs re-featurized, base + ctx on norm_v2)
+    - validator PASS; matches ⊆ candidates 5,704,167/5,704,167
+    - **US/IN rows byte-identical to C0 (0/1,473,092 differ)**; candidate_pairs.tsv identical
+    - FR: 28,101 rows differ; matches/S1 3.150 → 3.166; empty 6.30% → 6.26%; band pairs/S1 0.821 → 0.698
+    - clean / DM / LOCO: identical to C0 (train unchanged under norm v2)
+  - records: submissions/records/20260926-2034_aryan-bhendarkar.json, …-2040_….json
+  - After upload: `python scripts/record_lb.py <sub_id> --score 0.XXX`
+Next (Lane A):
+  - India/word-addition discrimination ideas on DM + LOCO.
+  - 23:00 overnight: nothing new needs test featurization so far (ps + emb are rescorable). Lane C's French BIZ_WORDS would need one; waiting on its merge.
 **FR-probe uploaded: public 0.834 → F_France ≈ 0.944, F_non-France ≈ 0.971 (val 0.981).** The non-FR gap is the larger part (≈ 0.0086 of the 0.014).
 - US test = extra band negatives (precision); India test = true copies shifted from >0.999 into the band (recall). See LB-PROBE in experiments.md.
 Blockers / needs human:

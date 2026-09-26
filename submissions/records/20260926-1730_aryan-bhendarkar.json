@@ -1,0 +1,38 @@
+{
+  "sub_id": "20260926-1730_aryan-bhendarkar",
+  "run_id": "20260926-1511_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-ps",
+  "author": "aryan-bhendarkar",
+  "note": "per-source competition features (ps), t=0.825 (DM-tuned). DM-fold0x +0.00036 [+0.00019,+0.00053], clean fold0x -0.00004 n.s., LOCO-avg +0.003 (IN->US +0.0008, US->IN +0.0052). PREPARED ONLY - NEEDS-LEAD (fails +0.002 model gate, passes transfer gate)",
+  "created_ist": "2026-09-26T17:36:53+05:30",
+  "status": "prepared",
+  "validator_pass": true,
+  "val_f05": 0.97999,
+  "stats_matching": {
+    "rows": 1732544,
+    "nonempty": 1628666,
+    "ids": 5709674,
+    "dropped_bad_ids": 0
+  },
+  "stats_candidates": {
+    "rows": 1732544,
+    "nonempty": 1732544,
+    "ids": 164745367,
+    "matched_pairs_in_candidates": 5709674,
+    "matched_pairs_total": 5709674
+  },
+  "diagnostics": {
+    "empty_rate_by_country": {
+      "France": 0.062003761774817694,
+      "India": 0.061245503008693976,
+      "US": 0.057582045706116365
+    },
+    "mean_matches_by_country": {
+      "France": 3.1668979233152954,
+      "India": 3.2558167672033838,
+      "US": 3.3944045145120088
+    },
+    "empty_rate": 0.05995691884304237,
+    "mean_matches": 3.295543432085996
+  },
+  "files": "submissions/files/20260926-1730_aryan-bhendarkar"
+}
