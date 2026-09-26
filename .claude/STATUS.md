@@ -12,7 +12,12 @@ Running now: tmux xs (`logs/chainXS.sh`): xenc stack
     - train-role OOF AUC 0.9932 = never-trained es rows 0.9934 → no in-sample leak
   - Stack choice: **feature in the GBDT** (preferred path; coverage adequate). The 3-parameter sigmoid fallback is not needed.
   - Multi-source ready: `pipelines/xenc_join.py name=dir …` → feature `xenc_<name>`. Lane G logits plug in as `features_v1 --xenc minilm,xlmr,…`.
-Next: gate (DM-fold0x ≥ +0.002 vs psemb, no per-country drop, FR diagnostics) → C1-path test build (~2 h) → SUBMIT-REQUEST. Nothing will be uploaded.
+**Result A (03:25): GATE PASS.** 20260927-0234_…-ctx3-a, t_DM = 0.825; paired vs psemb:
+  - **DM-fold0x +0.00361 [+0.0034, +0.0038]** (IN +0.0055, US +0.0024)
+  - clean fold0x +0.00318 (IN +0.0049, US +0.0021)
+  - absolute: DM-fold0x 0.98441, clean fold0x 0.98511
+  - LOCO is not a transfer measure here (the xenc ckpts saw both countries).
+B (A − ldf) is training (20260927-0257). Then: build the C1-path test files for the better of A/B (B preferred if DM is within noise, since it is transfer-safer), check the FR diagnostics, SUBMIT-REQUEST. ETA of files ~06:30 IST. Nothing will be uploaded.
 Done: EXP-NL (psemb − lfrac) KILL: DM-fold0x −0.0009, LOCO direction-flip.
 **Lane G handoff (box2): G3 pair set ready.**
   - `aws s3 sync s3://amlc26-699191579023/share/g3 data/kaggle/g3`
