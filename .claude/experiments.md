@@ -309,3 +309,11 @@ Orphan-sim protocol:
 - India-only: **AUC 0.799** (120k val vs 300k test). lfrac = 60% of gain (mi_lfrac_cmax 0.31); ex_ldf_max/min 0.10 (token df, also split-specific).
 - US-only: **AUC 0.834** (177k vs 300k). lfrac = 47%; then sib_n 0.056, s1_name_self 0.049, sib_s1house_frac 0.033.
 
+## EXP-NL psemb minus the 4 lfrac features (20260926-2135_…-psemb-nolfrac; DM 2200 / 2201; run 26 Sep 21:35–22:30 IST, logged 27 Sep 02:40)
+- motivation: D1 (lfrac = 50% of val-vs-test separability).
+- clean mini 0.9811 @ t = 0.70. DM-mini best 0.97995 @ t = 0.775.
+- **DM-fold0x 0.98010 vs psemb 0.98101 (−0.0009)**; clean fold0x 0.98101 vs 0.98192 (−0.0009).
+- LOCO IN→US 0.96408 (+0.0103 vs psemb), US→IN 0.92727 (−0.0066): the same direction-flip as B0a/B0b.
+- post-drop D1 re-run crashed (polars collect error in adv_val on the dropped-feature set); not re-run, since it is not decision-relevant after the val drop.
+- verdict: **KILL.** lfrac is split-fingerprinting but still carries in-domain signal; the LOCO transfer gain is not bidirectional.
+

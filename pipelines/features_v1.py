@@ -203,6 +203,9 @@ def main(a):
         feats = feats + cf.PS_FEATS
     if a.emb:                                      # Lane B band cosines (NaN outside the band)
         feats = feats + cf.EMB_FEATS
+    if a.xenc:                                     # stacked cross-encoder logits (pipelines/xenc_join.py)
+        feats = feats + [f"xenc_{n}" for n in a.xenc.split(",")]
+    if a.emb or a.xenc:
         tr_pl, ev_pl = cf.join_emb(tr_pl, a.cache, "train", feats), cf.join_emb(ev_pl, a.cache, a.eval_tag, feats)
     if a.lfrac_q or a.ps:
         tr_pl, ev_pl = cf.add_derived(tr_pl, feats), cf.add_derived(ev_pl, feats)
@@ -214,7 +217,7 @@ def main(a):
     name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}" + (f"-ctx{CTX_VER}" if CTX_VER != 1 else "") \
         + ("-mono" if MONOTONE else "") + (f"-{a.tag}" if a.tag else "")
     with Run(name, hypothesis=a.hypothesis or f"ctx feature groups {groups or 'none'} on {a.cache} cache",
-             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "drop_feats": drop, "lfrac_q": a.lfrac_q, "ps": a.ps, "emb": a.emb, "subset": a.subset, "n_train_s1": a.n_train_s1,
+             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "drop_feats": drop, "lfrac_q": a.lfrac_q, "ps": a.ps, "emb": a.emb, "xenc": a.xenc, "subset": a.subset, "n_train_s1": a.n_train_s1,
                      "threads": a.threads, "n_feats": len(feats), "new_feats": new},
              tags=["features"], parent=a.parent) as run:
         run.log(train_pairs=int((~tr.is_es).sum()), es_pairs=int(tr.is_es.sum()), eval_pairs=len(ev))
@@ -280,6 +283,7 @@ if __name__ == "__main__":
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--drop-feats", default="", help="comma list of features to exclude (ablation)")
+    ap.add_argument("--xenc", default="", help="comma list of xenc sources joined as features xenc_<name>")
     ap.add_argument("--emb", action="store_true", help="add Lane B bge-m3 band cosines (data/cands/<cache>/emb_<tag>.parquet)")
     ap.add_argument("--ps", action="store_true", help="add per-source competition features (ctx_features.PS_FEATS)")
     ap.add_argument("--lfrac-q", action="store_true", help="use lfrac rounded to 0.5 (ctx_features.DERIVED)")

@@ -413,10 +413,14 @@ EMB_FEATS = ["emb_cos_name", "emb_cos_addr", "emb_cos_full"]   # Lane B: frozen 
 def join_emb(X: pl.DataFrame, cache: str, tag: str, feats: list[str]) -> pl.DataFrame:
     """Left-join the band cosines data/cands/<cache>/emb_<tag>.parquet (s1_id, cand_id, emb_cos_*) when requested."""
     need = [f for f in EMB_FEATS if f in feats and f not in X.columns]
-    if not need:
-        return X
-    E = pl.read_parquet(paths.DATA_DIR / "cands" / cache / f"emb_{tag}.parquet", columns=["s1_id", "cand_id"] + need)
-    return X.join(E, on=["s1_id", "cand_id"], how="left")
+    if need:
+        E = pl.read_parquet(paths.DATA_DIR / "cands" / cache / f"emb_{tag}.parquet", columns=["s1_id", "cand_id"] + need)
+        X = X.join(E, on=["s1_id", "cand_id"], how="left")
+    # stacked cross-encoder logits (pipelines/xenc_join.py): one file per source, NaN = pair not scored (p < 0.01)
+    for f in [f for f in feats if f.startswith("xenc_") and f not in X.columns]:
+        E = pl.read_parquet(paths.DATA_DIR / "cands" / cache / f"{f}_{tag}.parquet", columns=["s1_id", "cand_id", f])
+        X = X.join(E, on=["s1_id", "cand_id"], how="left")
+    return X
 
 
 def expand_derived(feats: list[str]) -> list[str]:
@@ -427,7 +431,7 @@ def expand_derived(feats: list[str]) -> list[str]:
             out.append(DERIVED[f][0])
         elif f in PS_FEATS:
             out.extend(PS_SRC)
-        elif f in EMB_FEATS:                     # joined from emb_<tag>.parquet, not a cache column
+        elif f in EMB_FEATS or f.startswith("xenc_"):   # joined from per-tag files, not cache columns
             continue
         else:
             out.append(f)
