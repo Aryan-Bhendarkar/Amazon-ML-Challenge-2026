@@ -1,0 +1,505 @@
+{
+  "loco_raw": {
+    "full@42": {
+      "India->US": {
+        "f05_tuned": 0.95425,
+        "t_tuned": 0.5,
+        "f05_at_src_t": 0.95194,
+        "t_src": 0.7,
+        "in_country_f05": 0.97745,
+        "best_iter": 262
+      },
+      "US->India": {
+        "f05_tuned": 0.92988,
+        "t_tuned": 0.8,
+        "f05_at_src_t": 0.92932,
+        "t_src": 0.775,
+        "in_country_f05": 0.98276,
+        "best_iter": 187
+      }
+    },
+    "full@43": {
+      "India->US": {
+        "f05_tuned": 0.95477,
+        "t_tuned": 0.55,
+        "f05_at_src_t": 0.9505,
+        "t_src": 0.8,
+        "in_country_f05": 0.97718,
+        "best_iter": 279
+      },
+      "US->India": {
+        "f05_tuned": 0.93008,
+        "t_tuned": 0.825,
+        "f05_at_src_t": 0.92837,
+        "t_src": 0.725,
+        "in_country_f05": 0.98285,
+        "best_iter": 215
+      }
+    },
+    "full@44": {
+      "India->US": {
+        "f05_tuned": 0.95564,
+        "t_tuned": 0.475,
+        "f05_at_src_t": 0.95091,
+        "t_src": 0.8,
+        "in_country_f05": 0.97766,
+        "best_iter": 272
+      },
+      "US->India": {
+        "f05_tuned": 0.9299,
+        "t_tuned": 0.875,
+        "f05_at_src_t": 0.92857,
+        "t_src": 0.75,
+        "in_country_f05": 0.98268,
+        "best_iter": 199
+      }
+    },
+    "combo:-B_tok+-G1_pool@42": {
+      "India->US": {
+        "f05_tuned": 0.95385,
+        "t_tuned": 0.5,
+        "f05_at_src_t": 0.95047,
+        "t_src": 0.75,
+        "in_country_f05": 0.9776,
+        "best_iter": 270
+      },
+      "US->India": {
+        "f05_tuned": 0.93173,
+        "t_tuned": 0.775,
+        "f05_at_src_t": 0.93173,
+        "t_src": 0.775,
+        "in_country_f05": 0.98293,
+        "best_iter": 186
+      }
+    },
+    "combo:-B_tok+-G1_pool@43": {
+      "India->US": {
+        "f05_tuned": 0.95352,
+        "t_tuned": 0.5,
+        "f05_at_src_t": 0.95183,
+        "t_src": 0.7,
+        "in_country_f05": 0.97705,
+        "best_iter": 267
+      },
+      "US->India": {
+        "f05_tuned": 0.93198,
+        "t_tuned": 0.775,
+        "f05_at_src_t": 0.9312,
+        "t_src": 0.75,
+        "in_country_f05": 0.9828,
+        "best_iter": 219
+      }
+    },
+    "combo:-B_tok+-G1_pool@44": {
+      "India->US": {
+        "f05_tuned": 0.95366,
+        "t_tuned": 0.5,
+        "f05_at_src_t": 0.95152,
+        "t_src": 0.725,
+        "in_country_f05": 0.97752,
+        "best_iter": 269
+      },
+      "US->India": {
+        "f05_tuned": 0.92974,
+        "t_tuned": 0.85,
+        "f05_at_src_t": 0.92943,
+        "t_src": 0.775,
+        "in_country_f05": 0.98254,
+        "best_iter": 201
+      }
+    },
+    "-G3_lfrac@42": {
+      "India->US": {
+        "f05_tuned": 0.96571,
+        "t_tuned": 0.575,
+        "f05_at_src_t": 0.96457,
+        "t_src": 0.7,
+        "in_country_f05": 0.97524,
+        "best_iter": 336
+      },
+      "US->India": {
+        "f05_tuned": 0.92557,
+        "t_tuned": 0.9,
+        "f05_at_src_t": 0.92205,
+        "t_src": 0.775,
+        "in_country_f05": 0.98212,
+        "best_iter": 178
+      }
+    },
+    "-G3_lfrac@43": {
+      "India->US": {
+        "f05_tuned": 0.96341,
+        "t_tuned": 0.6,
+        "f05_at_src_t": 0.96147,
+        "t_src": 0.75,
+        "in_country_f05": 0.97554,
+        "best_iter": 359
+      },
+      "US->India": {
+        "f05_tuned": 0.92391,
+        "t_tuned": 0.925,
+        "f05_at_src_t": 0.91735,
+        "t_src": 0.725,
+        "in_country_f05": 0.98217,
+        "best_iter": 231
+      }
+    },
+    "-G3_lfrac@44": {
+      "India->US": {
+        "f05_tuned": 0.96463,
+        "t_tuned": 0.65,
+        "f05_at_src_t": 0.96328,
+        "t_src": 0.75,
+        "in_country_f05": 0.97518,
+        "best_iter": 351
+      },
+      "US->India": {
+        "f05_tuned": 0.92579,
+        "t_tuned": 0.925,
+        "f05_at_src_t": 0.91701,
+        "t_src": 0.7,
+        "in_country_f05": 0.98197,
+        "best_iter": 195
+      }
+    },
+    "combo:-B_tok+-G1_pool+-G3_lfrac@42": {
+      "India->US": {
+        "f05_tuned": 0.96503,
+        "t_tuned": 0.625,
+        "f05_at_src_t": 0.96391,
+        "t_src": 0.75,
+        "in_country_f05": 0.9749,
+        "best_iter": 343
+      },
+      "US->India": {
+        "f05_tuned": 0.92289,
+        "t_tuned": 0.925,
+        "f05_at_src_t": 0.91676,
+        "t_src": 0.7,
+        "in_country_f05": 0.98195,
+        "best_iter": 155
+      }
+    },
+    "combo:-B_tok+-G1_pool+-G3_lfrac@43": {
+      "India->US": {
+        "f05_tuned": 0.96458,
+        "t_tuned": 0.625,
+        "f05_at_src_t": 0.96361,
+        "t_src": 0.75,
+        "in_country_f05": 0.97507,
+        "best_iter": 361
+      },
+      "US->India": {
+        "f05_tuned": 0.92517,
+        "t_tuned": 0.925,
+        "f05_at_src_t": 0.91932,
+        "t_src": 0.75,
+        "in_country_f05": 0.98212,
+        "best_iter": 194
+      }
+    },
+    "combo:-B_tok+-G1_pool+-G3_lfrac@44": {
+      "India->US": {
+        "f05_tuned": 0.96528,
+        "t_tuned": 0.625,
+        "f05_at_src_t": 0.96349,
+        "t_src": 0.75,
+        "in_country_f05": 0.97457,
+        "best_iter": 277
+      },
+      "US->India": {
+        "f05_tuned": 0.92461,
+        "t_tuned": 0.925,
+        "f05_at_src_t": 0.91817,
+        "t_src": 0.725,
+        "in_country_f05": 0.98198,
+        "best_iter": 228
+      }
+    }
+  },
+  "summary": [
+    {
+      "variant": "full",
+      "seed": 42,
+      "n_feats": 87,
+      "India->US_tuned": 0.95425,
+      "India->US_src_t": 0.95194,
+      "US->India_tuned": 0.92988,
+      "US->India_src_t": 0.92932,
+      "avg_tuned": 0.94207,
+      "avg_src_t": 0.94063,
+      "India->US_d": NaN,
+      "India->US_ci": NaN,
+      "India->US_d_src_t": NaN,
+      "US->India_d": NaN,
+      "US->India_ci": NaN,
+      "US->India_d_src_t": NaN,
+      "d_avg_tuned": 0.0,
+      "d_avg_src_t": 0.0
+    },
+    {
+      "variant": "full",
+      "seed": 43,
+      "n_feats": 87,
+      "India->US_tuned": 0.95477,
+      "India->US_src_t": 0.9505,
+      "US->India_tuned": 0.93008,
+      "US->India_src_t": 0.92837,
+      "avg_tuned": 0.94243,
+      "avg_src_t": 0.93944,
+      "India->US_d": NaN,
+      "India->US_ci": NaN,
+      "India->US_d_src_t": NaN,
+      "US->India_d": NaN,
+      "US->India_ci": NaN,
+      "US->India_d_src_t": NaN,
+      "d_avg_tuned": 0.0,
+      "d_avg_src_t": 0.0
+    },
+    {
+      "variant": "full",
+      "seed": 44,
+      "n_feats": 87,
+      "India->US_tuned": 0.95564,
+      "India->US_src_t": 0.95091,
+      "US->India_tuned": 0.9299,
+      "US->India_src_t": 0.92857,
+      "avg_tuned": 0.94277,
+      "avg_src_t": 0.93974,
+      "India->US_d": NaN,
+      "India->US_ci": NaN,
+      "India->US_d_src_t": NaN,
+      "US->India_d": NaN,
+      "US->India_ci": NaN,
+      "US->India_d_src_t": NaN,
+      "d_avg_tuned": 0.0,
+      "d_avg_src_t": 0.0
+    },
+    {
+      "variant": "combo:-B_tok+-G1_pool",
+      "seed": 42,
+      "n_feats": 80,
+      "India->US_tuned": 0.95385,
+      "India->US_src_t": 0.95047,
+      "US->India_tuned": 0.93173,
+      "US->India_src_t": 0.93173,
+      "avg_tuned": 0.94279,
+      "avg_src_t": 0.9411,
+      "India->US_d": -0.00039,
+      "India->US_ci": [
+        -0.00116,
+        0.00038
+      ],
+      "India->US_d_src_t": -0.00147,
+      "US->India_d": 0.00185,
+      "US->India_ci": [
+        0.00094,
+        0.00272
+      ],
+      "US->India_d_src_t": 0.00241,
+      "d_avg_tuned": 0.00072,
+      "d_avg_src_t": 0.00047
+    },
+    {
+      "variant": "combo:-B_tok+-G1_pool",
+      "seed": 43,
+      "n_feats": 80,
+      "India->US_tuned": 0.95352,
+      "India->US_src_t": 0.95183,
+      "US->India_tuned": 0.93198,
+      "US->India_src_t": 0.9312,
+      "avg_tuned": 0.94275,
+      "avg_src_t": 0.94151,
+      "India->US_d": -0.00126,
+      "India->US_ci": [
+        -0.00194,
+        -0.00053
+      ],
+      "India->US_d_src_t": 0.00133,
+      "US->India_d": 0.0019,
+      "US->India_ci": [
+        0.00099,
+        0.00276
+      ],
+      "US->India_d_src_t": 0.00283,
+      "d_avg_tuned": 0.00032,
+      "d_avg_src_t": 0.00207
+    },
+    {
+      "variant": "combo:-B_tok+-G1_pool",
+      "seed": 44,
+      "n_feats": 80,
+      "India->US_tuned": 0.95366,
+      "India->US_src_t": 0.95152,
+      "US->India_tuned": 0.92974,
+      "US->India_src_t": 0.92943,
+      "avg_tuned": 0.9417,
+      "avg_src_t": 0.94047,
+      "India->US_d": -0.00198,
+      "India->US_ci": [
+        -0.00262,
+        -0.00133
+      ],
+      "India->US_d_src_t": 0.00061,
+      "US->India_d": -0.00015,
+      "US->India_ci": [
+        -0.001,
+        0.00073
+      ],
+      "US->India_d_src_t": 0.00086,
+      "d_avg_tuned": -0.00107,
+      "d_avg_src_t": 0.00073
+    },
+    {
+      "variant": "-G3_lfrac",
+      "seed": 42,
+      "n_feats": 79,
+      "India->US_tuned": 0.96571,
+      "India->US_src_t": 0.96457,
+      "US->India_tuned": 0.92557,
+      "US->India_src_t": 0.92205,
+      "avg_tuned": 0.94564,
+      "avg_src_t": 0.94331,
+      "India->US_d": 0.01146,
+      "India->US_ci": [
+        0.01058,
+        0.01236
+      ],
+      "India->US_d_src_t": 0.01263,
+      "US->India_d": -0.00431,
+      "US->India_ci": [
+        -0.00552,
+        -0.00304
+      ],
+      "US->India_d_src_t": -0.00727,
+      "d_avg_tuned": 0.00357,
+      "d_avg_src_t": 0.00268
+    },
+    {
+      "variant": "-G3_lfrac",
+      "seed": 43,
+      "n_feats": 79,
+      "India->US_tuned": 0.96341,
+      "India->US_src_t": 0.96147,
+      "US->India_tuned": 0.92391,
+      "US->India_src_t": 0.91735,
+      "avg_tuned": 0.94366,
+      "avg_src_t": 0.93941,
+      "India->US_d": 0.00863,
+      "India->US_ci": [
+        0.00774,
+        0.00942
+      ],
+      "India->US_d_src_t": 0.01097,
+      "US->India_d": -0.00617,
+      "US->India_ci": [
+        -0.00748,
+        -0.00492
+      ],
+      "US->India_d_src_t": -0.01102,
+      "d_avg_tuned": 0.00123,
+      "d_avg_src_t": -3e-05
+    },
+    {
+      "variant": "-G3_lfrac",
+      "seed": 44,
+      "n_feats": 79,
+      "India->US_tuned": 0.96463,
+      "India->US_src_t": 0.96328,
+      "US->India_tuned": 0.92579,
+      "US->India_src_t": 0.91701,
+      "avg_tuned": 0.94521,
+      "avg_src_t": 0.94015,
+      "India->US_d": 0.00899,
+      "India->US_ci": [
+        0.0082,
+        0.00988
+      ],
+      "India->US_d_src_t": 0.01237,
+      "US->India_d": -0.00411,
+      "US->India_ci": [
+        -0.00536,
+        -0.00279
+      ],
+      "US->India_d_src_t": -0.01156,
+      "d_avg_tuned": 0.00244,
+      "d_avg_src_t": 0.00041
+    },
+    {
+      "variant": "combo:-B_tok+-G1_pool+-G3_lfrac",
+      "seed": 42,
+      "n_feats": 72,
+      "India->US_tuned": 0.96503,
+      "India->US_src_t": 0.96391,
+      "US->India_tuned": 0.92289,
+      "US->India_src_t": 0.91676,
+      "avg_tuned": 0.94396,
+      "avg_src_t": 0.94034,
+      "India->US_d": 0.01079,
+      "India->US_ci": [
+        0.00989,
+        0.01164
+      ],
+      "India->US_d_src_t": 0.01197,
+      "US->India_d": -0.00699,
+      "US->India_ci": [
+        -0.00824,
+        -0.00563
+      ],
+      "US->India_d_src_t": -0.01256,
+      "d_avg_tuned": 0.00189,
+      "d_avg_src_t": -0.00029
+    },
+    {
+      "variant": "combo:-B_tok+-G1_pool+-G3_lfrac",
+      "seed": 43,
+      "n_feats": 72,
+      "India->US_tuned": 0.96458,
+      "India->US_src_t": 0.96361,
+      "US->India_tuned": 0.92517,
+      "US->India_src_t": 0.91932,
+      "avg_tuned": 0.94488,
+      "avg_src_t": 0.94146,
+      "India->US_d": 0.00981,
+      "India->US_ci": [
+        0.00896,
+        0.01068
+      ],
+      "India->US_d_src_t": 0.01311,
+      "US->India_d": -0.00491,
+      "US->India_ci": [
+        -0.00614,
+        -0.00367
+      ],
+      "US->India_d_src_t": -0.00905,
+      "d_avg_tuned": 0.00245,
+      "d_avg_src_t": 0.00202
+    },
+    {
+      "variant": "combo:-B_tok+-G1_pool+-G3_lfrac",
+      "seed": 44,
+      "n_feats": 72,
+      "India->US_tuned": 0.96528,
+      "India->US_src_t": 0.96349,
+      "US->India_tuned": 0.92461,
+      "US->India_src_t": 0.91817,
+      "avg_tuned": 0.94495,
+      "avg_src_t": 0.94083,
+      "India->US_d": 0.00964,
+      "India->US_ci": [
+        0.00871,
+        0.01054
+      ],
+      "India->US_d_src_t": 0.01258,
+      "US->India_d": -0.00528,
+      "US->India_ci": [
+        -0.00645,
+        -0.00404
+      ],
+      "US->India_d_src_t": -0.0104,
+      "d_avg_tuned": 0.00218,
+      "d_avg_src_t": 0.00109
+    }
+  ],
+  "timing_min": 44.0
+}

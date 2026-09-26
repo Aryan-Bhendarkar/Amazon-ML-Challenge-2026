@@ -112,3 +112,21 @@ def test_v4_templated_twin_flag():
     F = cf.add_features(P, ctx, groups=("G6",), workers=1)
     assert F["twin_n"][0] == 1 and F["twin_house_eq"][0] == 1 and F["twin_hs_better"][0] == 1
     assert F["twin_street_ratio_margin"][0] < 0
+
+
+def test_country_keyed_biz_words():
+    # 'gestion' is a French business word: flags ex_biz for France only; 'holdings' (generic) for every country
+    rows = []
+    for ctry in ("France", "US", "Germany"):
+        P = _pairs().with_columns(pl.lit(ctry).alias("country"), pl.lit(f"s_{ctry}").alias("s1_id"),
+                                  (pl.col("cand_id") + f"_{ctry}").alias("cand_id"))
+        P = P.with_columns(pl.Series("n_core_c", ["solo co gestion", "solo co holdings", "solo cp", "acme labs"]))
+        rows.append(P)
+    s1 = pl.DataFrame({"country": ["France", "US", "Germany"], "n_core": ["solo co"] * 3, "a_full": ["9 oak rd"] * 3,
+                       "a_street": ["oak rd"] * 3, "a_house": ["9"] * 3})
+    pool = pl.DataFrame({"country": ["France"], "n_core": ["solo co"], "a_full": ["9 oak rd"]})
+    ctx = cf.SplitContext.from_frames(s1, pool, version=3)
+    F = cf.add_features(pl.concat(rows), ctx, groups=("G3",), workers=1)
+    b = dict(zip(F["cand_id"], F["ex_biz"]))
+    assert b["r0_France"] == 1 and b["r0_US"] == 0 and b["r0_Germany"] == 0
+    assert b["r1_France"] == b["r1_US"] == b["r1_Germany"] == 1

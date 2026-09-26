@@ -55,6 +55,28 @@ exports export imports import agency agencies management technologies technology
 foundation trust society network networks worldwide america india france national
 """.split())
 
+# Country-keyed additions (hand-written general knowledge; generic fallback = BIZ_WORDS only). Kept country-keyed
+# so US/India G3 features stay byte-identical (the shipped model is trained on them). France: the lead's list of
+# French generic business / distractor words (DIAG-FR: the FR uncertain band is driven by such words), as they
+# appear AFTER normalization (accents stripped; cie/compagnie are canonicalized to the legal form 'co' in norm v2).
+BIZ_WORDS_BY_COUNTRY = {
+    "france": frozenset("""
+    participations participation developpement gestion conseil conseils investissements investissement immobilier
+    immobiliere patrimoine finance finances cie compagnie fils freres associes international internationale
+    industrie industries distribution consulting solutions invest capital partenaires commerce import export
+    transports transport batiment renovation groupe holding services
+    """.split()) - BIZ_WORDS,
+}
+
+
+def biz_expr(tok: str = "tok", country: str = "country") -> pl.Expr:
+    """tok is a generic business word: BIZ_WORDS, or the row country's BIZ_WORDS_BY_COUNTRY entry."""
+    e = pl.col(tok).is_in(list(BIZ_WORDS))
+    for c, ws in BIZ_WORDS_BY_COUNTRY.items():
+        e = e | ((pl.col(country).str.to_lowercase() == c) & pl.col(tok).is_in(list(ws)))
+    return e
+
+
 S1_COLS = ["entity_id", "country", "n_core", "a_full", "a_street", "a_house", "a_numbers", "a_postcode"]
 C_COLS = ["entity_id", "n_core", "a_full", "a_street", "a_house", "a_numbers", "a_postcode", "a_empty"]
 
@@ -198,7 +220,7 @@ def g3_token_edits(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.
             ldf.min().cast(pl.Float32).alias(f"{pre}_ldf_min"), ldf.max().cast(pl.Float32).alias(f"{pre}_ldf_max"),
             lfrac.filter(common).max().cast(pl.Float32).alias(f"{pre}_lfrac_cmax"),
             lfrac.filter(common).min().cast(pl.Float32).alias(f"{pre}_lfrac_cmin"),
-            pl.col("tok").is_in(list(BIZ_WORDS)).any().cast(pl.Int8).alias(f"{pre}_biz"),
+            biz_expr().any().cast(pl.Int8).alias(f"{pre}_biz"),
             pl.col("tok").str.contains(r"\d").any().cast(pl.Int8).alias(f"{pre}_digit"),
         )
 
@@ -209,7 +231,7 @@ def g3_token_edits(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.
         return e.group_by("_r").agg(
             pl.col("idf").max().alias(f"{pre}_idf_max"), pl.col("idf").min().alias(f"{pre}_idf_min"),
             pl.col("idf").sum().alias(f"{pre}_idf_sum"),
-            pl.col("tok").is_in(list(BIZ_WORDS)).any().cast(pl.Int8).alias(f"{pre}_biz"),
+            biz_expr().any().cast(pl.Int8).alias(f"{pre}_biz"),
             pl.col("tok").str.contains(r"\d").any().cast(pl.Int8).alias(f"{pre}_digit"),
         )
 
