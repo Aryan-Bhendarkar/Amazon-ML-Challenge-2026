@@ -59,14 +59,16 @@ foundation trust society network networks worldwide america india france nationa
 # so US/India G3 features stay byte-identical (the shipped model is trained on them). France: the lead's list of
 # French generic business / distractor words (DIAG-FR: the FR uncertain band is driven by such words), as they
 # appear AFTER normalization (accents stripped; cie/compagnie are canonicalized to the legal form 'co' in norm v2).
-BIZ_WORDS_BY_COUNTRY = {
-    "france": frozenset("""
+# KILLED 26 Sep (Lane C C3): on a 20k-S1 FR test sample the flag pushed 1,384 pairs over t and 2 under; 98% of those
+# up-flips differ in house number (30%) or replace a distinctive S1 token (71%) = adversarial near-copies. The
+# unflagged rare French extras were acting as a correct negative. Kept for reference; NOT active.
+FR_BIZ_CANDIDATES = frozenset("""
     participations participation developpement gestion conseil conseils investissements investissement immobilier
     immobiliere patrimoine finance finances cie compagnie fils freres associes international internationale
     industrie industries distribution consulting solutions invest capital partenaires commerce import export
     transports transport batiment renovation groupe holding services
-    """.split()) - BIZ_WORDS,
-}
+    """.split()) - BIZ_WORDS
+BIZ_WORDS_BY_COUNTRY: dict[str, frozenset] = {}      # e.g. {"france": FR_BIZ_CANDIDATES} (killed, see above)
 
 
 def biz_expr(tok: str = "tok", country: str = "country") -> pl.Expr:

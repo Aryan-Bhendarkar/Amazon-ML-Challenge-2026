@@ -114,8 +114,9 @@ def test_v4_templated_twin_flag():
     assert F["twin_street_ratio_margin"][0] < 0
 
 
-def test_country_keyed_biz_words():
-    # 'gestion' is a French business word: flags ex_biz for France only; 'holdings' (generic) for every country
+def test_country_keyed_biz_words(monkeypatch):
+    # mechanism test ('gestion' as a France-keyed word; the France list itself is killed / inactive by default)
+    monkeypatch.setattr(cf, "BIZ_WORDS_BY_COUNTRY", {"france": cf.FR_BIZ_CANDIDATES})
     rows = []
     for ctry in ("France", "US", "Germany"):
         P = _pairs().with_columns(pl.lit(ctry).alias("country"), pl.lit(f"s_{ctry}").alias("s1_id"),

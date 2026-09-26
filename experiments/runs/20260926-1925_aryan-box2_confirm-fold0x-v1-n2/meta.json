@@ -1,0 +1,24 @@
+{
+  "run_id": "20260926-1925_aryan-box2_confirm-fold0x-v1-n2",
+  "name": "confirm-fold0x-v1_n2",
+  "author": "aryan-box2",
+  "hypothesis": "frozen models/thresholds of ['20260926-1801_aryan-box2_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-ctlrep', '20260926-1900_aryan-box2_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-noldf'] on fold0x",
+  "params": {
+    "cache": "v1_n2",
+    "tag": "fold0x",
+    "runs": "20260926-1801_aryan-box2_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-ctlrep,20260926-1900_aryan-box2_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-noldf",
+    "ctx_ver": 3,
+    "threads": 8,
+    "chunks": 16
+  },
+  "tags": [
+    "confirm"
+  ],
+  "parent": "20260926-1900_aryan-box2_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-noldf",
+  "git_commit": "04fc6ab",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T19:25:58+05:30",
+  "status": "done",
+  "duration_min": 36.11,
+  "finished_ist": "2026-09-26T20:02:05+05:30"
+}

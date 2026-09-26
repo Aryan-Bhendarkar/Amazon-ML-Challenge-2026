@@ -47,8 +47,7 @@ def sample_pairs(n_s1: int) -> tuple[pl.DataFrame, dict]:
 
 def ctx_feats(P: pl.DataFrame, nv: int, sctx, threads: int, biz: bool) -> pl.DataFrame:
     saved = cf.BIZ_WORDS_BY_COUNTRY
-    if not biz:
-        cf.BIZ_WORDS_BY_COUNTRY = {}
+    cf.BIZ_WORDS_BY_COUNTRY = {"france": cf.FR_BIZ_CANDIDATES} if biz else {}
     try:
         F = cf.add_features(cf.attach_norm(P.select("s1_id", "cand_id", "name_tset"), "test", nv), sctx, workers=threads)
     finally:
@@ -130,9 +129,16 @@ def main(a):
                          "band_mean_dprob": round(float((j.prob_n - j.prob)[band].mean()), 4),
                          "cross_t_up": int(((j.prob < t) & (j.prob_n >= t)).sum()),
                          "cross_t_down": int(((j.prob >= t) & (j.prob_n < t)).sum())}
+    flips = j[(j.prob < t) & (j.prob_n >= t)].reset_index()[["s1_id", "cand_id", "prob", "prob_n"]]
     with Run("fr-sample-report", hypothesis=a.hypothesis, params={"n_s1": a.n_s1, "model": a.model, "threshold": t},
              tags=["laneC", "france", "label-free"], parent=a.model) as run:
         run.log(summary=out, fr_shift=sh, timing_min=round((time.time() - t0) / 60, 1))
+        raw = pl.concat([pl.read_parquet(paths.PARQUET_DIR / f"test_s{i}.parquet") for i in (1, 2, 3)])
+        nm = dict(zip(raw["entity_id"], raw["business_name"] + " | " + raw["business_address"]))
+        flips = flips.assign(s1=flips.s1_id.map(nm), cand=flips.cand_id.map(nm))
+        flips.to_csv(run.art_dir / "biz_flips_up.tsv", sep="\t", index=False)
+        run.note("Biz-word up-flips (v2 -> v2biz), sample of 25:\n\n```\n%s\n```" %
+                 flips.sample(min(25, len(flips)), random_state=0)[["prob", "prob_n", "s1", "cand"]].to_string(index=False))
         df = pd.DataFrame(out).T
         print(df.to_string())
         print(json.dumps(sh, indent=1))

@@ -117,7 +117,9 @@ def cmd_run(a):
         args += ["--accelerator", GPU.get(a.gpu, a.gpu)]
     if a.timeout:
         args += ["-t", str(a.timeout)]
-    sh(*args)
+    r = sh(*args)
+    if "error" in (r.stdout + r.stderr).lower():          # the CLI exits 0 on e.g. "Maximum batch GPU session count"
+        sys.exit(f"[run] push FAILED for {user}/{a.slug}")
     print(f"[run] pushed {user}/{a.slug}  (https://www.kaggle.com/code/{user}/{a.slug})")
     if a.wait:
         cmd_wait(a)

@@ -1,0 +1,153 @@
+{
+  "run_id": "20260926-1843_aryan-box2_loco-audit-v1-n2-ctx3-r4-ldf",
+  "name": "loco-audit-v1-n2-ctx3-r4-ldf",
+  "author": "aryan-box2",
+  "hypothesis": "LOCO feature-group audit of the 0710 feature set",
+  "params": {
+    "cache": "v1_n2",
+    "ctx_ver": 3,
+    "variants": [
+      "full",
+      "-G3_ldf"
+    ],
+    "seeds": [
+      43,
+      44
+    ],
+    "ref_seeds": [],
+    "loco_n": 60000,
+    "groups": {
+      "B_name": [
+        "name_tset",
+        "name_tsort",
+        "name_ratio",
+        "name_partial",
+        "comp_jw",
+        "comp_partial",
+        "alias_tset"
+      ],
+      "B_addr": [
+        "addr_tset",
+        "addr_ratio",
+        "street_tset"
+      ],
+      "B_tok": [
+        "extra_tok",
+        "missing_tok",
+        "common_tok"
+      ],
+      "B_num": [
+        "house_rel",
+        "num_jacc"
+      ],
+      "B_legal_state": [
+        "legal_rel",
+        "state_rel"
+      ],
+      "B_rank": [
+        "name_rank_in_s1",
+        "addr_rank_in_s1",
+        "name_gap_s1",
+        "n_cand_s1"
+      ],
+      "B_len": [
+        "len_core_s1",
+        "len_core_c"
+      ],
+      "B_meta": [
+        "kmask",
+        "rbits",
+        "cand_kind",
+        "cand_native",
+        "cand_src",
+        "cand_addr_empty"
+      ],
+      "G1_s1": [
+        "s1_name_c",
+        "s1_name_self",
+        "s1_name_c_eq1",
+        "s1_name_self_eq1",
+        "n_key_equal"
+      ],
+      "G1_pool": [
+        "pool_name_c",
+        "pool_name_self",
+        "pool_name_c_eq1",
+        "pool_name_self_eq1"
+      ],
+      "G2_s1": [
+        "s1_addr_c",
+        "s1_addr_self",
+        "s1_addr_c_eq1",
+        "s1_addr_self_eq1",
+        "s1_hs_c",
+        "s1_hs_self",
+        "s1_hs_c_eq1",
+        "s1_hs_self_eq1",
+        "a_key_equal",
+        "hs_key_equal"
+      ],
+      "G2_pool": [
+        "pool_addr_c",
+        "pool_addr_self",
+        "pool_addr_c_eq1",
+        "pool_addr_self_eq1"
+      ],
+      "G3_lfrac": [
+        "ex_ldf_min",
+        "ex_ldf_max",
+        "ex_lfrac_cmax",
+        "ex_lfrac_cmin",
+        "mi_ldf_min",
+        "mi_ldf_max",
+        "mi_lfrac_cmax",
+        "mi_lfrac_cmin"
+      ],
+      "G3_edit": [
+        "ex_n",
+        "mi_n",
+        "ex_unseen_n",
+        "mi_unseen_n",
+        "ex_biz",
+        "mi_biz",
+        "ex_digit",
+        "mi_digit",
+        "sub_jw",
+        "edit_type",
+        "s1_prefix_of_c",
+        "c_prefix_of_s1",
+        "first_tok_eq"
+      ],
+      "G4": [
+        "house_lev",
+        "house_logdiff",
+        "house_reldiff",
+        "house_same_len",
+        "house_first_diff",
+        "house_last_diff",
+        "sec_num_rel",
+        "postcode_rel"
+      ],
+      "G5": [
+        "sib_n",
+        "sib_house_agree",
+        "sib_s1house_agree",
+        "sib_namekey_same",
+        "sib_house_frac",
+        "sib_s1house_frac"
+      ]
+    }
+  },
+  "tags": [
+    "features",
+    "loco",
+    "laneC"
+  ],
+  "parent": "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3",
+  "git_commit": "648a1c5",
+  "git_dirty": false,
+  "started_ist": "2026-09-26T18:43:12+05:30",
+  "status": "done",
+  "duration_min": 17.02,
+  "finished_ist": "2026-09-26T19:00:13+05:30"
+}

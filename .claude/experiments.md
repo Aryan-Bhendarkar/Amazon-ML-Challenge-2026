@@ -259,3 +259,35 @@ Orphan-sim protocol:
   2. The non-FR loss (~0.010) is split between US precision and India recall.
   3. Features that make noisy true copies score high (India) and features that separate distractors (US) are the levers. bge-m3 cosines target the India case (native / transliteration noise).
 
+
+## LANE-C C1 LOCO feature-group audit (box2; runs 20260926-1452 r1, -1642 r2, -1717 r3, -1843 r4; branch laneC)
+- change: drop one group at a time from the 0710 feature set (87 feats); LOCO pair (60k source S1, lr 0.1) on target mini S1; paired per-S1 bootstrap; full-set seed spread 0.0007 (tuned) / 0.0012 (source t)
+- results (Δ LOCO-avg tuned / src-t; IN→US, US→IN): **−G3_ldf +0.0022 / +0.0028 (3 seeds; IN→US +0.0001, US→IN +0.0043)**; −G3_lfrac +0.0024 avg but IN→US +0.0097 / US→IN −0.0049 (fails US→IN guardrail −0.003; same for q05 −0.0054, lfrac_raw −0.0068); B_tok/G1_pool/B_fmt/B_retr ±0.001 (noise); keep B_legal_state (−0.009), B_num (−0.004), G1_s1 (−0.0025), G3_edit (−0.0028), B_addr (−0.0021)
+- confirm (runs 20260926-1900 noldf, 20260926-1925 fold0x vs box2 0710 repro 20260926-1801): clean mini −0.0002 [−0.0004, +0.00003]; **fold0x frozen −0.00007 [−0.00017, +0.00004]**
+- verdict: **PASS Lane C gate** (LOCO-avg +0.0022 ≥ +0.002, clean ≥ −0.001). Transfer-safe list = current features minus {ex_ldf_min, ex_ldf_max, mi_ldf_min, mi_ldf_max}; rescorable from test_feats (column drop). Caveat: gain is on US→IN (+0.0043); IN→US (lead's primary FR proxy) +0.0001 = neutral. Measured on the 0710 base: Lane A should re-check on ps/psemb (`features_v1 --drop-feats ...`)
+- test cost: `--from-feats` rescore (minutes)
+
+## LANE-C C2 norm v2: French normalization + legal forms (ACCEPTED by lead 16:45)
+- change: France-keyed region/department→state, bis/ter, strip "(France)", cie/compagnie→co, et→and, frs→freres, st→saint, 5arl/5as/5asu, legal `ei`; US/IN byte-identical (0 changed train rows)
+- clean Δ 0 / LOCO Δ 0 exactly. FR test sample (20k S1, 0710 repro): strong-candidate S1 0.908→0.976 (US .961/IN .968); FR band records/S1 0.358→0.297 (US 0.234, IN 0.181); pred/S1 3.215→3.229; empty 6.19%→6.08%; 1,863 pairs cross t up, 1,667 down
+- verdict: KEEP; apply per docs/france_norm_v2.md (refeat_norm → predict_test_v1 --src-tag test_n2 --norm 2)
+- test cost: France ≈ 24M pairs re-featurized
+
+## LANE-C C3 France-keyed French BIZ words (G3 ex_biz/mi_biz)
+- change: `BIZ_WORDS_BY_COUNTRY["france"]` (lead's list minus words already in BIZ_WORDS); US/IN ctx3 identical (143k mini pairs, all columns)
+- FR test sample on top of norm v2: biz flag changes on 13.9% of FR pairs; band mean Δp +0.038; **1,384 pairs cross t upward, 2 downward** (+0.069 matches/S1, one-directional); FR band/S1 0.297→0.333. US/IN val reference: extra-biz-word pairs at same address are 17.8% positive (vs 28.6% non-biz), but calibrated at p ≥ 0.3 (99.4% positive)
+- flip audit (all 1,384 up-flips, run 20260926-1928_aryan-box2_fr-sample-report): **98% are near-copy-like**: house number differs 29.6%, a distinctive S1 core token replaced/missing 70.6% (e.g. "Nantes Sportif SAS" → "Nantes SAS Et Fils", "XX Medico" 8 → "XX Medico Développement" 13)
+- verdict: **KILL**. Flagging French generic words makes the model lenient on French distractors; the unflagged rare extras were a correct negative. Mechanism kept (`BIZ_WORDS_BY_COUNTRY`), France list inactive (`FR_BIZ_CANDIDATES`)
+- test cost: none extra if applied with norm v2 (same ctx pass)
+
+## LANE-C C4 France test-pool / density shift (0710 repro on 20k test S1 per country)
+- FR co-located S1 19% vs US 5.3% / IN 6.4%; FR median max-token lfrac −3.77 vs −4.49 (IN) / −5.27 (US) → LOCO cannot see these G2/G3 shifts
+- over-rejection check: FR S1 with a strong candidate but zero predicted 3.7% (v1) vs US 4.3% / IN 4.5% → no FR over-rejection; FR non-empty rate co-located S1 0.940 vs single-address 0.938 (US 0.953/0.945) → co-location does not suppress FR acceptance
+- FR uncertain band (0.3 ≤ p < t) per S1: 0.358 vs US 0.234 / IN 0.181: the FR excess is ambiguity, not rejection; norm v2 removes ~17% of it
+- verdict: no France-specific density fix indicated beyond norm v2; FR loss is band ambiguity (twins/generic names), consistent with probe F_FR ≈ 0.944
+
+
+## LANE-G G1/G2 cross-encoder training (box2, launched 26 Sep 21:33 IST)
+- G1 export `pipelines/xenc_g1_export.py` → data/kaggle/g1 (train 8.01M rows: all 512k positives + 5.5M hardest + 2M random hard negatives, pos 6.4%, cf = md5(s1_id)%2 halves 4.00M/4.01M; valid = 300k fold-1 rows). Text `[COL] name [VAL] … [COL] address [VAL] … [NUM] house` on norm_v2. No entity ids uploaded.
+- G2 kernel `kaggle/xenc_g2.py` (+ generated per-job copies): BCE, fp16 AMP, max_len 96, 1 epoch time-boxed after a 200-step throughput probe, ckpt + val logloss every 30 min, best ckpt kept; aug p=0.15 on positives (token drop except first token, adjacent swap, legal drop; no digit edits). Models MIT: FacebookAI/xlm-roberta-base, microsoft/Multilingual-MiniLM-L12-H384.
+- pushed: acc2 xlmr half 0 (L4X1, 420 min), acc3 xlmr half 1 (L4X1, 420 min), acc5 MiniLM both halves (T4x2, 150 min each in parallel). Stale queued smoke kernels + truncated first pushes deleted (they held the 2 GPU-session slots).

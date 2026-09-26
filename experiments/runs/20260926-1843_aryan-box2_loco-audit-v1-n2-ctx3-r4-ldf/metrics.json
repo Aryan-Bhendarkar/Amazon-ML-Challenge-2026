@@ -1,0 +1,167 @@
+{
+  "loco_raw": {
+    "full@43": {
+      "India->US": {
+        "f05_tuned": 0.95477,
+        "t_tuned": 0.55,
+        "f05_at_src_t": 0.9505,
+        "t_src": 0.8,
+        "in_country_f05": 0.97718,
+        "best_iter": 279
+      },
+      "US->India": {
+        "f05_tuned": 0.93008,
+        "t_tuned": 0.825,
+        "f05_at_src_t": 0.92837,
+        "t_src": 0.725,
+        "in_country_f05": 0.98285,
+        "best_iter": 215
+      }
+    },
+    "full@44": {
+      "India->US": {
+        "f05_tuned": 0.95564,
+        "t_tuned": 0.475,
+        "f05_at_src_t": 0.95091,
+        "t_src": 0.8,
+        "in_country_f05": 0.97766,
+        "best_iter": 272
+      },
+      "US->India": {
+        "f05_tuned": 0.9299,
+        "t_tuned": 0.875,
+        "f05_at_src_t": 0.92857,
+        "t_src": 0.75,
+        "in_country_f05": 0.98268,
+        "best_iter": 199
+      }
+    },
+    "-G3_ldf@43": {
+      "India->US": {
+        "f05_tuned": 0.95291,
+        "t_tuned": 0.525,
+        "f05_at_src_t": 0.95002,
+        "t_src": 0.775,
+        "in_country_f05": 0.97738,
+        "best_iter": 311
+      },
+      "US->India": {
+        "f05_tuned": 0.93629,
+        "t_tuned": 0.825,
+        "f05_at_src_t": 0.93422,
+        "t_src": 0.7,
+        "in_country_f05": 0.98265,
+        "best_iter": 192
+      }
+    },
+    "-G3_ldf@44": {
+      "India->US": {
+        "f05_tuned": 0.95697,
+        "t_tuned": 0.5,
+        "f05_at_src_t": 0.95424,
+        "t_src": 0.725,
+        "in_country_f05": 0.97744,
+        "best_iter": 296
+      },
+      "US->India": {
+        "f05_tuned": 0.93299,
+        "t_tuned": 0.85,
+        "f05_at_src_t": 0.93129,
+        "t_src": 0.75,
+        "in_country_f05": 0.98256,
+        "best_iter": 196
+      }
+    }
+  },
+  "summary": [
+    {
+      "variant": "full",
+      "seed": 43,
+      "n_feats": 87,
+      "India->US_tuned": 0.95477,
+      "India->US_src_t": 0.9505,
+      "US->India_tuned": 0.93008,
+      "US->India_src_t": 0.92837,
+      "avg_tuned": 0.94243,
+      "avg_src_t": 0.93944,
+      "India->US_d": NaN,
+      "India->US_ci": NaN,
+      "India->US_d_src_t": NaN,
+      "US->India_d": NaN,
+      "US->India_ci": NaN,
+      "US->India_d_src_t": NaN,
+      "d_avg_tuned": 0.0,
+      "d_avg_src_t": 0.0
+    },
+    {
+      "variant": "full",
+      "seed": 44,
+      "n_feats": 87,
+      "India->US_tuned": 0.95564,
+      "India->US_src_t": 0.95091,
+      "US->India_tuned": 0.9299,
+      "US->India_src_t": 0.92857,
+      "avg_tuned": 0.94277,
+      "avg_src_t": 0.93974,
+      "India->US_d": NaN,
+      "India->US_ci": NaN,
+      "India->US_d_src_t": NaN,
+      "US->India_d": NaN,
+      "US->India_ci": NaN,
+      "US->India_d_src_t": NaN,
+      "d_avg_tuned": 0.0,
+      "d_avg_src_t": 0.0
+    },
+    {
+      "variant": "-G3_ldf",
+      "seed": 43,
+      "n_feats": 83,
+      "India->US_tuned": 0.95291,
+      "India->US_src_t": 0.95002,
+      "US->India_tuned": 0.93629,
+      "US->India_src_t": 0.93422,
+      "avg_tuned": 0.9446,
+      "avg_src_t": 0.94212,
+      "India->US_d": -0.00187,
+      "India->US_ci": [
+        -0.00249,
+        -0.00118
+      ],
+      "India->US_d_src_t": -0.00048,
+      "US->India_d": 0.00621,
+      "US->India_ci": [
+        0.0052,
+        0.00727
+      ],
+      "US->India_d_src_t": 0.00585,
+      "d_avg_tuned": 0.00217,
+      "d_avg_src_t": 0.00268
+    },
+    {
+      "variant": "-G3_ldf",
+      "seed": 44,
+      "n_feats": 83,
+      "India->US_tuned": 0.95697,
+      "India->US_src_t": 0.95424,
+      "US->India_tuned": 0.93299,
+      "US->India_src_t": 0.93129,
+      "avg_tuned": 0.94498,
+      "avg_src_t": 0.94276,
+      "India->US_d": 0.00133,
+      "India->US_ci": [
+        0.0007,
+        0.00199
+      ],
+      "India->US_d_src_t": 0.00333,
+      "US->India_d": 0.00309,
+      "US->India_ci": [
+        0.00218,
+        0.00409
+      ],
+      "US->India_d_src_t": 0.00272,
+      "d_avg_tuned": 0.00221,
+      "d_avg_src_t": 0.00302
+    }
+  ],
+  "timing_min": 17.3
+}

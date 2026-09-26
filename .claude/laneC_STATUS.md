@@ -1,30 +1,18 @@
-Updated: 26 Sep 15:55 IST (amlc-box2, Lane C; branch `laneC`)
+Updated: 26 Sep 21:36 IST (amlc-box2, Lanes C + G; branch `laneC`)
 
-Lane-specific file on purpose: `.claude/STATUS.md` / `.claude/experiments.md` do not exist in origin, so writing
-them on `laneC` would collide with box1's local copies at merge time. Box1: fold these into the shared files.
+## Lane G (GPU): per-account status (live: `logs/lane_g_status.log`, tmux `gpoll` polls every 2 min and pulls outputs on completion)
+| account | job (slug) | accelerator | state | ETA |
+|---|---|---|---|---|
+| acc2 ashu273k | XLM-R half 0 (amlc-g2-xlmr-h0) | L4X1 | pushed 21:33, QUEUED | 7 h train after start (budget 420 min) |
+| acc3 darshanbagade | XLM-R half 1 (amlc-g2-xlmr-h1) | L4X1 | pushed 21:33, QUEUED | 7 h after start |
+| acc5 darshanbagadeycce | MiniLM 5× data, both halves (amlc-g2-minilm) | T4x2 | pushed 21:33, QUEUED | 2.5 h after start |
+- Rule: if an L4 job is still QUEUED at 21:53 IST, re-push it on T4x2 (queue = not a failure).
+- Fixed on the way: generated job scripts were truncated (regex bug) in the first push; the "Maximum batch GPU session count of 2" push error was reported as success by `kaggle_gpu.py` (now exits non-zero). Stale queued `amlc-smoke` kernels on acc2/acc3 were deleted to free the 2 GPU slots.
+- G3 (scoring kernels) waits for box1's pair-text export (psemb p ≥ 0.005) + the G2 checkpoints.
 
-Current: LOCO audit round 1 running (tmux `audit`, 14 drop-one-group variants @ seed 42 + full @ 42/43/44), round 2
-queued (tmux `audit2`: -B_name, -B_addr, -B_retr, -B_fmt, q05, -G3_lfrac_raw, -G3_ldf). ETA r1 ≈ 17:30, r2 ≈ 18:30 IST.
-Then: clean mini + LOCO confirmation of the transfer-safe list via `features_v1.py --drop-feats/--lfrac-q` (≈ 19:15).
+## Lane C results
+- **Transfer-safe feature list (C1, gate PASS):** drop {ex_ldf_min, ex_ldf_max, mi_ldf_min, mi_ldf_max}. LOCO-avg +0.0022 (3 seeds), clean mini −0.0002, fold0x −0.00007 (n.s.). Rescorable from test_feats. Measured on the 0710 base → Lane A to re-check on psemb.
+- **norm v2** ACCEPTED (lead 16:45). **French BIZ words KILLED** (98% of 1,384 FR up-flips are near-copies).
+- France density report: no FR over-rejection; FR loss is band ambiguity (band records/S1 0.358 vs US 0.234 / IN 0.181), norm v2 removes ~17% of it.
 
-Done:
-- LOCO reference reproduced on box2 exactly: India→US 0.95425, US→India 0.92988 (avg 0.94207). Seed noise of the
-  LOCO-avg (seeds 42/43/44): tuned 0.94207/0.94243/0.94277 (spread 0.0007), at source t 0.94063/0.93944/0.93974
-  (spread 0.0012). The +0.002 Lane C gate is > 2× the seed spread.
-- **norm v2 (French normalization + legal forms)**: code + tests on `laneC`; US/India byte-identical (0 changed train
-  rows, exact) → LOCO Δ = 0, clean Δ = 0 by construction; label-free FR report `docs/france_norm_v2.md`
-  (S1 with a strong candidate 0.908 → 0.976; US 0.961, India 0.968). Apply path for Lane A's overnight batch:
-  `build_norm_cache.py --split test` → `refeat_norm.py --tag test` → `predict_test_v1 --src-tag test_n2 --norm 2`.
-  `refeat_norm` verified: full-mini recompute IDENTICAL to the cache (8.38M pairs).
-- Test-pool statistics (priority 3): France is 3× more co-located (S1 address shared 0.19 vs 0.05–0.07) and has
-  3–6× denser generic name tokens (median max token df/n 0.027 vs 0.005–0.010) than US/India, which look alike →
-  LOCO cannot see the G2/G3-lfrac shifts. Table in `docs/france_norm_v2.md`.
-
-NEEDS-LEAD:
-1. Monitor notes 14 and 15 are not on box2 / origin (latest pushed note is 8 in `claude/STATUS.md`; commits mention
-   10). I worked from `.claude/DIRECTIVES.md` (Lane C items) + HANDOFF EXP-F. If note 15's French list has items
-   beyond docs/france_norm_v2.md, push it and I will add them.
-2. norm v2 cannot pass the literal Lane C gate "LOCO-avg Δ ≥ +0.002": it is LOCO-neutral by construction (it does not
-   touch US/India). Evidence is the label-free FR report. Proposed: accept on "LOCO = 0 exactly + FR report".
-
-Submission requests: none.
+NEEDS-LEAD: none blocking. (Transfer-safe list gain is US→IN-only; accept or not for the final stack.)

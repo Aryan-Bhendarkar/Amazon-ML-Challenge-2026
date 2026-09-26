@@ -1,0 +1,304 @@
+{
+  "summary": {
+    "France/v1": {
+      "n_s1": 20000,
+      "pred_per_s1": 3.215,
+      "empty_rate": 0.0619,
+      "share_1match": 0.0821,
+      "share_4plus": 0.4156,
+      "strong_cand_S1": 0.908,
+      "strong_but_empty": 0.0368,
+      "band_records_per_s1": 0.358,
+      "coloc_S1_nonempty": 0.9397,
+      "single_addr_S1_nonempty": 0.9377,
+      "coloc_S1_share": 0.189,
+      "s1_addr_self": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "s1_addr_c": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "s1_hs_self": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "pool_addr_c": [
+        0.0,
+        1.0,
+        5.0
+      ],
+      "s1_name_self": [
+        1.0,
+        2.0,
+        20.0
+      ],
+      "ex_lfrac_cmax": [
+        -4.971,
+        -3.773,
+        -2.524
+      ],
+      "mi_lfrac_cmax": [
+        -4.787,
+        -3.661,
+        -2.524
+      ],
+      "ex_ldf_max": [
+        0.0,
+        3.932,
+        3.932
+      ],
+      "ex_biz_rate": 0.1771,
+      "mi_biz_rate": 0.1133
+    },
+    "India/v1": {
+      "n_s1": 20000,
+      "pred_per_s1": 3.281,
+      "empty_rate": 0.0592,
+      "share_1match": 0.0777,
+      "share_4plus": 0.4345,
+      "strong_cand_S1": 0.9677,
+      "strong_but_empty": 0.0454,
+      "band_records_per_s1": 0.181,
+      "coloc_S1_nonempty": 0.9502,
+      "single_addr_S1_nonempty": 0.9402,
+      "coloc_S1_share": 0.0642,
+      "s1_addr_self": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "s1_addr_c": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "s1_hs_self": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "pool_addr_c": [
+        0.0,
+        1.0,
+        2.0
+      ],
+      "s1_name_self": [
+        1.0,
+        2.0,
+        20.0
+      ],
+      "ex_lfrac_cmax": [
+        -7.132,
+        -4.487,
+        -3.595
+      ],
+      "mi_lfrac_cmax": [
+        -8.248,
+        -4.548,
+        -3.721
+      ],
+      "ex_ldf_max": [
+        0.0,
+        3.932,
+        3.932
+      ],
+      "ex_biz_rate": 0.4323,
+      "mi_biz_rate": 0.3042
+    },
+    "US/v1": {
+      "n_s1": 20000,
+      "pred_per_s1": 3.409,
+      "empty_rate": 0.0546,
+      "share_1match": 0.0666,
+      "share_4plus": 0.4654,
+      "strong_cand_S1": 0.9608,
+      "strong_but_empty": 0.0434,
+      "band_records_per_s1": 0.234,
+      "coloc_S1_nonempty": 0.9528,
+      "single_addr_S1_nonempty": 0.9449,
+      "coloc_S1_share": 0.053,
+      "s1_addr_self": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "s1_addr_c": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "s1_hs_self": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "pool_addr_c": [
+        0.0,
+        0.0,
+        3.0
+      ],
+      "s1_name_self": [
+        1.0,
+        1.0,
+        20.0
+      ],
+      "ex_lfrac_cmax": [
+        -7.694,
+        -5.267,
+        -3.726
+      ],
+      "mi_lfrac_cmax": [
+        -7.899,
+        -5.42,
+        -3.726
+      ],
+      "ex_ldf_max": [
+        0.0,
+        3.932,
+        3.932
+      ],
+      "ex_biz_rate": 0.2626,
+      "mi_biz_rate": 0.1329
+    },
+    "France/v2": {
+      "n_s1": 20000,
+      "pred_per_s1": 3.229,
+      "empty_rate": 0.0608,
+      "share_1match": 0.0813,
+      "share_4plus": 0.4222,
+      "strong_cand_S1": 0.976,
+      "strong_but_empty": 0.0465,
+      "band_records_per_s1": 0.297,
+      "coloc_S1_nonempty": 0.9418,
+      "single_addr_S1_nonempty": 0.9385,
+      "coloc_S1_share": 0.1968,
+      "s1_addr_self": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "s1_addr_c": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "s1_hs_self": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "pool_addr_c": [
+        0.0,
+        1.0,
+        6.0
+      ],
+      "s1_name_self": [
+        1.0,
+        2.0,
+        20.0
+      ],
+      "ex_lfrac_cmax": [
+        -5.352,
+        -3.874,
+        -2.807
+      ],
+      "mi_lfrac_cmax": [
+        -4.971,
+        -3.773,
+        -2.807
+      ],
+      "ex_ldf_max": [
+        -1.0,
+        3.932,
+        3.932
+      ],
+      "ex_biz_rate": 0.1227,
+      "mi_biz_rate": 0.0507
+    },
+    "France/v2biz": {
+      "n_s1": 20000,
+      "pred_per_s1": 3.298,
+      "empty_rate": 0.0586,
+      "share_1match": 0.076,
+      "share_4plus": 0.4404,
+      "strong_cand_S1": 0.976,
+      "strong_but_empty": 0.0447,
+      "band_records_per_s1": 0.333,
+      "coloc_S1_nonempty": 0.9433,
+      "single_addr_S1_nonempty": 0.9409,
+      "coloc_S1_share": 0.1968,
+      "s1_addr_self": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "s1_addr_c": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "s1_hs_self": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "pool_addr_c": [
+        0.0,
+        1.0,
+        6.0
+      ],
+      "s1_name_self": [
+        1.0,
+        2.0,
+        20.0
+      ],
+      "ex_lfrac_cmax": [
+        -5.352,
+        -3.874,
+        -2.807
+      ],
+      "mi_lfrac_cmax": [
+        -4.971,
+        -3.773,
+        -2.807
+      ],
+      "ex_ldf_max": [
+        -1.0,
+        3.932,
+        3.932
+      ],
+      "ex_biz_rate": 0.2148,
+      "mi_biz_rate": 0.102
+    }
+  },
+  "fr_shift": {
+    "v2": {
+      "pairs": 1865359,
+      "biz_flag_changed": 0.1205,
+      "band_pairs": 7617,
+      "band_mean_dprob": -0.1113,
+      "cross_t_up": 1863,
+      "cross_t_down": 1667
+    },
+    "v2biz": {
+      "pairs": 1865359,
+      "biz_flag_changed": 0.2402,
+      "band_pairs": 7617,
+      "band_mean_dprob": -0.082,
+      "cross_t_up": 3216,
+      "cross_t_down": 1638
+    },
+    "v2biz_vs_v2": {
+      "biz_flag_changed": 0.1389,
+      "band_mean_dprob": 0.0381,
+      "cross_t_up": 1384,
+      "cross_t_down": 2
+    }
+  },
+  "timing_min": 14.1
+}
