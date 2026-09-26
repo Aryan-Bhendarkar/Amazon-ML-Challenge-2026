@@ -1,0 +1,125 @@
+{
+  "orphan": {
+    "clean": {
+      "info": {
+        "rate": 0.0,
+        "variant": "uniform",
+        "removed_frac_all": 0.0,
+        "eval_survivors": 87952,
+        "records_per_s1": {
+          "India": 4.68,
+          "US": 4.674
+        },
+        "records_per_s1_all": 4.677
+      },
+      "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3": {
+        "f05": 0.98129,
+        "P": 0.99633,
+        "R": 0.9537,
+        "by_country": {
+          "India": 0.97779,
+          "US": 0.98369
+        },
+        "singleton_acc": 0.9792213032075853,
+        "t": 0.775,
+        "t_opt": 0.775,
+        "f05_at_t_opt": 0.98129,
+        "loss_total": 0.01871,
+        "loss_fp_singleton": 0.00117,
+        "loss_fp_nonsingleton": 0.0023,
+        "loss_fn": 0.01524,
+        "fp_total": 1070,
+        "fp_orphan": 0,
+        "fp_owned_other": 555,
+        "fp_unmatched": 515
+      }
+    },
+    "u19": {
+      "info": {
+        "rate": 0.19,
+        "variant": "uniform",
+        "removed_frac_all": 0.1897,
+        "eval_survivors": 71270,
+        "records_per_s1": {
+          "India": 5.775,
+          "US": 5.768
+        },
+        "records_per_s1_all": 5.771
+      },
+      "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3": {
+        "f05": 0.9776,
+        "P": 0.99484,
+        "R": 0.94725,
+        "by_country": {
+          "India": 0.97119,
+          "US": 0.98199
+        },
+        "singleton_acc": 0.9708713897803012,
+        "t": 0.775,
+        "t_opt": 0.75,
+        "f05_at_t_opt": 0.97763,
+        "loss_total": 0.0224,
+        "loss_fp_singleton": 0.00166,
+        "loss_fp_nonsingleton": 0.00322,
+        "loss_fn": 0.01752,
+        "fp_total": 1212,
+        "fp_orphan": 297,
+        "fp_owned_other": 352,
+        "fp_unmatched": 563,
+        "vs_clean_same_S1": {
+          "n": 71270,
+          "delta": -0.0037359526695208757,
+          "ci95": [
+            -0.004068613683913671,
+            -0.0034288209311120334
+          ],
+          "p_not_better": 1.0
+        }
+      }
+    },
+    "b19": {
+      "info": {
+        "rate": 0.19,
+        "variant": "biased",
+        "removed_frac_all": 0.1905,
+        "eval_survivors": 71348,
+        "records_per_s1": {
+          "India": 5.832,
+          "US": 5.741
+        },
+        "records_per_s1_all": 5.777
+      },
+      "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3": {
+        "f05": 0.97739,
+        "P": 0.99489,
+        "R": 0.94711,
+        "by_country": {
+          "India": 0.97345,
+          "US": 0.98006
+        },
+        "singleton_acc": 0.9709216362740266,
+        "t": 0.775,
+        "t_opt": 0.725,
+        "f05_at_t_opt": 0.97768,
+        "loss_total": 0.02261,
+        "loss_fp_singleton": 0.00165,
+        "loss_fp_nonsingleton": 0.00319,
+        "loss_fn": 0.01776,
+        "fp_total": 1202,
+        "fp_orphan": 388,
+        "fp_owned_other": 323,
+        "fp_unmatched": 491,
+        "vs_clean_same_S1": {
+          "n": 71348,
+          "delta": -0.004789383484112824,
+          "ci95": [
+            -0.005121531398396384,
+            -0.00445339903279127
+          ],
+          "p_not_better": 1.0
+        }
+      }
+    }
+  },
+  "timing_min": 19.6
+}
