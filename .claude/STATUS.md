@@ -1,16 +1,13 @@
-Updated: 26 Sep 16:05 IST (amlc-49, Lane A; /loop running)
-Current best (val): **20260926-1511_…-ctx3-ps** (0710 + per-source competition features), t_DM = 0.825
-  - vs 0710, paired: DM-fold0x 0.97999 (**+0.00036 [+0.0002, +0.0005]**); clean fold0x −0.00004 n.s.
-  - LOCO IN→US 0.95504 / US→IN 0.93508 (avg **+0.003**)
-  - LB model: 0710 (0.967)
+Updated: 26 Sep 18:55 IST (amlc-49, Lane A; /loop running; executing "Lead decisions 18:50")
+New base: **20260926-1737_…-psemb** (ps + frozen bge-m3 band cosines), t = 0.775
+  - clean fold0x 0.98192, DM-fold0x 0.98101
+  - LOCO 0.95383 / 0.93387
 Running now:
-  - tmux psSub: test rescore of ps (--from-feats, t = 0.825) + make_submission. Prepared only.
-  - tmux kgemb: Kaggle bge-m3 kernel (running ~40 min)
-  - tmux qEMB (queued): emb split → ps+emb train + LOCO → DM-mini → DM-fold0x
-Next:
-  1. emb verdict
-  2. 21:30 submission-#2 candidate
-  3. 23:00 overnight test featurization (only if a new non-rescorable group is kept; ps and emb need none)
+  - tmux c0: C0 test rescore (psemb, --from-feats + emb join, t = 0.775; 7 threads, ~90 min → ~20:25)
+  - tmux frprep (2 threads): norm v2 test cache → refeat_norm test (France pairs)
+  - tmux qC1 (queued): France-only filter → France scoring on norm v2 (ctx on v2) → splice → make_submission C0 and C1 → checks. ETA ~21:30.
+  - laneC merged into main (d26c5d6); tests 46 pass.
+Next: SUBMIT-REQUEST with C0 + C1 when files validate; India recall (token-map coverage on test, skeleton-similarity feature) at ≤1 thread meanwhile.
 **FR-probe uploaded: public 0.834 → F_France ≈ 0.944, F_non-France ≈ 0.971 (val 0.981).** The non-FR gap is the larger part (≈ 0.0086 of the 0.014).
 - US test = extra band negatives (precision); India test = true copies shifted from >0.999 into the band (recall). See LB-PROBE in experiments.md.
 Blockers / needs human:
