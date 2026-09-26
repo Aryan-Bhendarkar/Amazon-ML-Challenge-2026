@@ -4,7 +4,7 @@ Updated: 27 Sep 05:00 IST (amlc-49 HEADLESS, lead prompt 04:50)
   - DM-mini → DM-fold0x → paired vs XB (clean, DM, per country)
   - **Result:** C DM-fold0x **+0.00035**, D **+0.00038** vs XB (both countries up, significant). **Both below the +0.001 gate: not kept; XB stays the candidate** (SUBMIT-REQUEST XB / HEDGE unchanged).
   - mlm5x halves verified OOF: md5(s1_id) % 2; each train-role pair in exactly one file, 0 in-sample, es rows in both.
-  - XLM-R logits: watching s3://…/share/g3logits (lead ETA 06:30–07:30).
+  - XLM-R: tmux qE (`logs/chainE.sh`) polls s3://…/share/g3logits/xlmr_h{0,1}/ every 5 min until 08:30 IST. On arrival: sync → `xenc_verify_halves` (aborts on any in-sample pair) → `xenc_join` → **E = XB + xenc_xlmr**, evaluated vs XB (DM-fold0x, clean, per country).
 Base: **psemb 20260926-1737**, t = 0.775 (C1 = psemb + FR norm v2 = **LB 0.968**, current best)
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
