@@ -1,0 +1,20 @@
+{
+ "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3": {
+  "file": "test_matches.parquet",
+  "fr_matches": 824391,
+  "fr_s1_with_match": 243522,
+  "nkey_only_matches": 14696,
+  "both_have_sig_street": 13952,
+  "diff_street": 4985,
+  "diff_street_rate": 0.3573
+ },
+ "20260926-1028_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-g6-ctx4": {
+  "file": "test_matches_slice.parquet",
+  "fr_matches": 836781,
+  "fr_s1_with_match": 244013,
+  "nkey_only_matches": 15030,
+  "both_have_sig_street": 14298,
+  "diff_street": 5331,
+  "diff_street_rate": 0.3728
+ }
+}
