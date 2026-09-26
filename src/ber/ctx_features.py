@@ -27,19 +27,20 @@ from dataclasses import dataclass
 
 import numpy as np
 import polars as pl
-from rapidfuzz import process
+from rapidfuzz import fuzz, process
 from rapidfuzz.distance import JaroWinkler, Levenshtein
 
 from . import paths
 
 NORM_V = 0                               # default normalization cache (ctx v1/v2)
-NORM_OF_VER = {1: 0, 2: 0, 3: 1}         # ctx version -> norm cache version (v3 = v2 features on norm_v1:
+NORM_OF_VER = {1: 0, 2: 0, 3: 1, 4: 1}         # ctx version -> norm cache version (v3 = v2 features on norm_v1:
                                          # learned token map, native-script names transliterated to Latin)
 
 
 def norm_of(version: int) -> int:
     return NORM_OF_VER.get(version, max(NORM_OF_VER.values()))
-GROUPS = ("G1", "G2", "G3", "G4", "G5")
+GROUPS = ("G1", "G2", "G3", "G4", "G5", "G6")   # G6 only computed for ctx version >= 4
+TWIN_MAX = 30           # G6: name keys shared by more S1 than this are too generic to compare addresses
 DF_CAP = 50             # v2 token rarity: raw df saturates here (rare tokens keep their df at any density)
 CNT_CAP = 20            # counts are capped: test density differs from train (US test S1 ~0.5x)
 
@@ -91,11 +92,14 @@ class SplitContext:
     df: pl.DataFrame | None = None     # country, tok, df   (#S1 whose core name has the token)  [v2 G3]
     n_s1: pl.DataFrame | None = None   # country, n_s1
     version: int = 1
+    s1_twins: pl.DataFrame | None = None  # v4 G6: entity_id, country, n_key, a_full, a_street, a_house of S1 whose
+                                          # name key is shared by <= TWIN_MAX S1 (all S1 of the split)
 
     @classmethod
     def from_frames(cls, s1: pl.DataFrame, pool: pl.DataFrame, version: int = 1) -> "SplitContext":
         """s1: country, n_core, a_full, a_street, a_house; pool: country, n_core, a_full (all records of a split)."""
-        s1 = s1.select("country", "n_core", "a_full", "a_street", "a_house").with_columns(key_exprs())
+        keep = ["entity_id"] if "entity_id" in s1.columns else []
+        s1 = s1.select(keep + ["country", "n_core", "a_full", "a_street", "a_house"]).with_columns(key_exprs())
         pool = pool.select("country", "n_core", "a_full").with_columns(key_exprs()[:2]).select("country", "n_key", "a_key")
         cnt = lambda df, k: df.filter(pl.col(k) != "").group_by("country", k).len("cnt")  # noqa: E731
         n_s1 = s1.group_by("country").len("n_s1")
@@ -103,13 +107,19 @@ class SplitContext:
                 .drop_nulls("tok").group_by("country", "tok").len("df"))
         idf = (df.join(n_s1, on="country")
                  .select("country", "tok", (pl.col("n_s1") / pl.col("df")).log().cast(pl.Float32).alias("idf")))
+        twins = None
+        if version >= 4 and "entity_id" in s1.columns:
+            nk = cnt(s1, "n_key").filter(pl.col("cnt") <= TWIN_MAX).select("country", "n_key")
+            twins = s1.join(nk, on=["country", "n_key"]).select("entity_id", "country", "n_key", "a_full", "a_street",
+                                                                  "a_house")
         return cls(cnt(s1, "n_key"), cnt(s1, "a_key"), cnt(s1, "hs_key"),
-                   cnt(pool, "n_key"), cnt(pool, "a_key"), idf, df, n_s1, version)
+                   cnt(pool, "n_key"), cnt(pool, "a_key"), idf, df, n_s1, version, twins)
 
     @classmethod
     def build(cls, split: str, version: int = 1) -> "SplitContext":
         nv = norm_of(version)
-        s1 = pl.scan_parquet(_norm_file(split, 1, nv)).select("country", "n_core", "a_full", "a_street", "a_house").collect()
+        s1 = (pl.scan_parquet(_norm_file(split, 1, nv))
+                .select("entity_id", "country", "n_core", "a_full", "a_street", "a_house").collect())
         pool = pl.concat([pl.scan_parquet(_norm_file(split, s, nv)).select("country", "n_core", "a_full").collect()
                           for s in (2, 3)])
         return cls.from_frames(s1, pool, version)
@@ -300,6 +310,52 @@ def g5_siblings(X: pl.DataFrame, name_col: str = "name_tset", sib_min: float = 8
     return X.drop("_sib", "_nsib", "_nsib_h", "_nsib_s1h", "_nkey")
 
 
+def g6_twins(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.DataFrame:
+    """Name-twin competition: the OTHER S1 of the split sharing the candidate's exact name key. Does one of them fit
+    the candidate's address better than this S1? (A templated same-name record on a different street belongs to its
+    twin, not to us.) Computed over ALL S1 of the split -> identical meaning on val (mini queries) and test."""
+    X = X.with_row_index("_r")
+    T = ctx.s1_twins.rename({"entity_id": "_tid", "n_key": "n_key_c", "a_full": "_ta", "a_street": "_ts",
+                             "a_house": "_th"})
+    J = (X.select("_r", "s1_id", "country", "n_key_c", "a_full_c", "a_street_c", "a_house_c")
+          .filter(pl.col("n_key_c") != "")
+          .join(T, on=["country", "n_key_c"]).filter(pl.col("_tid") != pl.col("s1_id")))
+    W = dict(workers=workers, dtype=np.float32)
+    if J.height:
+        J = J.with_columns(
+            pl.Series("_asim", process.cpdist(J["_ta"].fill_null("").to_list(), J["a_full_c"].fill_null("").to_list(),
+                                              scorer=fuzz.token_set_ratio, **W)),
+            pl.Series("_ssim", process.cpdist(J["_ts"].fill_null("").to_list(), J["a_street_c"].fill_null("").to_list(),
+                                              scorer=fuzz.token_set_ratio, **W)),
+            ((pl.col("_th").fill_null("") == pl.col("a_house_c").fill_null("")) & (pl.col("_th").fill_null("") != ""))
+            .alias("_heq"))
+        A = J.group_by("_r").agg(pl.len().cast(pl.Int16).alias("twin_n"), pl.col("_asim").max().alias("twin_addr_best"),
+                                 pl.col("_ssim").max().alias("twin_street_best"),
+                                 pl.col("_heq").any().cast(pl.Int8).alias("twin_house_eq"))
+        X = X.join(A, on="_r", how="left")
+    else:
+        X = X.with_columns(pl.lit(None, pl.Int16).alias("twin_n"), pl.lit(None, pl.Float32).alias("twin_addr_best"),
+                           pl.lit(None, pl.Float32).alias("twin_street_best"), pl.lit(None, pl.Int8).alias("twin_house_eq"))
+    own_a = process.cpdist(X["a_full"].fill_null("").to_list(), X["a_full_c"].fill_null("").to_list(),
+                           scorer=fuzz.token_set_ratio, **W)
+    own_s = process.cpdist(X["a_street"].fill_null("").to_list(), X["a_street_c"].fill_null("").to_list(),
+                           scorer=fuzz.token_set_ratio, **W)
+    X = X.with_columns(pl.Series("_own_a", own_a), pl.Series("_own_s", own_s))
+    has = pl.col("twin_n").fill_null(0) > 0
+    return X.with_columns(
+        pl.col("twin_n").fill_null(0).cast(pl.Int16),
+        pl.col("twin_house_eq").fill_null(0).cast(pl.Int8),
+        # >0: this S1 fits the candidate's address better than every twin; <0: some twin fits better. NaN: no twin.
+        pl.when(has).then(pl.col("_own_a") - pl.col("twin_addr_best")).otherwise(None).cast(pl.Float32)
+          .alias("twin_addr_margin"),
+        pl.when(has).then(pl.col("_own_s") - pl.col("twin_street_best")).otherwise(None).cast(pl.Float32)
+          .alias("twin_street_margin"),
+        pl.col("twin_addr_best").cast(pl.Float32),
+        # the key was too generic to compare (more than TWIN_MAX S1 share the candidate's name key)
+        pl.lit(0, pl.Int8).alias("twin_generic"),
+    ).drop("_r", "_own_a", "_own_s", "twin_street_best")
+
+
 def add_features(X: pl.DataFrame, ctx: SplitContext, groups=GROUPS, workers: int = -1) -> pl.DataFrame:
     """X = attach_norm(pairs) (+ base features incl. name_tset for G5). Returns X + new feature columns."""
     X = X.with_columns(key_exprs() + key_exprs("_c"))
@@ -313,6 +369,11 @@ def add_features(X: pl.DataFrame, ctx: SplitContext, groups=GROUPS, workers: int
         X = g4_house(X, workers)
     if "G5" in groups:
         X = g5_siblings(X)
+    if "G6" in groups and ctx.version >= 4:
+        X = g6_twins(X, ctx, workers)
+        raw = ctx.s1_name.rename({"n_key": "n_key_c", "cnt": "_raw"})       # uncapped S1 count of the name key
+        X = (X.join(raw, on=["country", "n_key_c"], how="left")
+              .with_columns((pl.col("_raw").fill_null(0) > TWIN_MAX).cast(pl.Int8).alias("twin_generic")).drop("_raw"))
     return X
 
 

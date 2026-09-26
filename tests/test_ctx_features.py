@@ -75,3 +75,23 @@ def test_v2_rarity_is_density_invariant():
     ctx2 = cf.SplitContext.from_frames(pl.concat([s1, s1.with_columns(pl.lit("Y").alias("country"))]), pool, version=2)
     F2 = cf.add_features(_pairs(), ctx2, groups=("G3",), workers=1).sort("cand_id")
     assert F2["ex_ldf_max"].to_list() == r["ex_ldf_max"]
+
+
+def test_v4_name_twins():
+    s1 = pl.DataFrame({"entity_id": ["c", "t1", "t2"], "country": ["X"] * 3,
+                       "n_core": ["solo co", "solo co", "acme labs"],
+                       "a_full": ["9 oak rd", "8 elm st", "1 main st"], "a_street": ["oak rd", "elm st", "main st"],
+                       "a_house": ["9", "8", "1"]})
+    pool = pl.DataFrame({"country": ["X"], "n_core": ["solo co"], "a_full": ["9 oak rd"]})
+    ctx = cf.SplitContext.from_frames(s1, pool, version=4)
+    P = _pairs().with_columns(pl.Series("a_full_c", ["9 oak rd", "8 elm st", "", "1 main st"]),
+                              pl.Series("a_street_c", ["oak rd", "elm st", "", "main st"]),
+                              pl.Series("a_house_c", ["9", "8", "", "1"]))
+    F = cf.add_features(P, ctx, groups=("G1", "G6"), workers=1).sort("cand_id")
+    r = {c: F[c].to_list() for c in F.columns}
+    # r0 'co solo' (key of c and t1): twin t1 at 8 elm st; own address matches -> positive margin
+    assert r["twin_n"][0] == 1 and r["twin_addr_margin"][0] > 0 and r["twin_house_eq"][0] == 0
+    # r1 'solo co holdings' has no twins; r3 'acme labs' twin t2 sits exactly at the candidate's address
+    assert r["twin_n"][1] == 0 and r["twin_addr_margin"][1] is None
+    assert r["twin_n"][3] == 1 and r["twin_addr_margin"][3] < 0 and r["twin_house_eq"][3] == 1
+    assert r["twin_generic"] == [0, 0, 0, 0]

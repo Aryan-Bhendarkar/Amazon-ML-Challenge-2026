@@ -229,7 +229,8 @@ _PREFIX = {"G1": ("s1_name", "pool_name", "n_key_equal"),
            "G2": ("s1_addr", "s1_hs", "pool_addr", "a_key_equal", "hs_key_equal"),
            "G3": ("ex_", "mi_", "sub_jw", "edit_type", "s1_prefix", "c_prefix", "first_tok"),
            "G4": ("house_", "sec_num", "postcode"),
-           "G5": ("sib_",)}
+           "G5": ("sib_",),
+           "G6": ("twin_",)}
 
 
 def _group_of(col: str) -> str:
