@@ -1,8 +1,8 @@
-Updated: 27 Sep 02:45 IST (amlc-49 HEADLESS, lead prompt 02:35)
+Updated: 27 Sep 04:55 IST (amlc-49 HEADLESS, lead prompt 02:35)
 Base: **psemb 20260926-1737**, t = 0.775 (C1 = psemb + FR norm v2 = **LB 0.968**, current best)
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
-Running now: tmux xs (`logs/chainXS.sh`): xenc stack
+Running now: nothing (box idle). Done (tmux xs, `logs/chainXS.sh`): xenc stack
   - **A** = psemb + `xenc_minilm` (existing cross-fitted MiniLM logits as a LightGBM feature; NaN where not scored, i.e. stage-1 p < 0.01)
   - **B** = A minus the 4 ldf features (ex/mi_ldf_min/max)
   - per variant: train + LOCO → DM-mini (frozen ρ/w, t re-tuned) → DM-fold0x (frozen t) → paired vs psemb on mini + fold0x (clean, DM, per country)
@@ -32,7 +32,11 @@ Running now: tmux xs (`logs/chainXS.sh`): xenc stack
     - matches/S1 3.166 → 3.239; empty 6.26% → 5.93%; 21.9% of FR rows change
     - US 3.404 → 3.371 (net pruning); IN 3.242 → 3.308 (net recall)
   - **expected LB ≈ 0.971** (0.968 + 0.85 × ~0.0037). France is unmeasured: ±0.0005 on LB.
-  - alternative **HEDGE** (building, logs/bx_hedge_sub.log): the same US/IN rows, France rows = psemb-C1. Expected ≈ 0.971 with the France risk removed. Uploading both tells us the France effect of xenc (LB XB − LB HEDGE).
+  - alternative **SUBMIT-REQUEST: HEDGE** = `submissions/files/20260927-0401_aryan-bhendarkar/`
+    - US/IN rows = XB (0 differ), France rows = psemb-C1 (0 differ)
+    - validator **PASS**; matches ⊆ candidates 5,736,247/5,736,247
+    - expected ≈ 0.971 with the France risk removed
+    - Uploading both gives the France effect of xenc directly (LB XB − LB HEDGE, ×1/0.15).
   - After upload: `python scripts/record_lb.py <sub_id> --score 0.XXX`
 Done: EXP-NL (psemb − lfrac) KILL: DM-fold0x −0.0009, LOCO direction-flip.
 **Lane G handoff (box2): G3 pair set ready.**
@@ -282,3 +286,10 @@ Submissions used: today 2/5 on the counter (2 left today), tomorrow 0/5
      2. **French normalization:** street types, œ/æ, St/Ste vs Sté, legal forms incl. SCI, "(France)", N°/bis/ter, CEDEX, and 5-digit postcode vs house number. Measure how many FR test pairs change (label-free) plus LOCO neutrality.
      3. **Test-pool statistics:** G1/G3 counts and IDF are computed per data-derived country on the test pool. Verify they are for France (FR has 19% shared addresses: check co-location feature distributions FR vs US/IN on test).
    - **Incident noted:** the `rm -rf experiments/runs/` glob. Recovery looks complete. **Rule:** no `rm -rf` with command substitution; delete explicit paths only.
+
+## Headless run 02:35
+1. Stacked the existing cross-fitted MiniLM xenc logits into psemb as a GBDT feature `xenc_minilm`: NaN where unscored; train OOF-verified (train-role AUC 0.9932 = es 0.9934; 99.4% of positives covered). `pipelines/xenc_join.py` takes several sources (Lane G: `name=dir`, then `--xenc minilm,xlmr`).
+2. A (+xenc): DM-fold0x **+0.00361**. **B (+xenc − 4 ldf, chosen): DM-fold0x +0.00367 [+0.0035, +0.0039]**, clean fold0x +0.00323, India +0.0055 / US +0.0025. No per-country drop; t_DM = 0.825.
+3. Transfer: xenc LOCO is contaminated (ckpts saw both countries); the ldf drop in the presence of xenc is LOCO-neutral (−0.0001 / +0.0004). FR test: matches/S1 3.166 → 3.239, empty 6.26% → 5.93%, 21.9% of FR rows change. US net-prunes, IN net-adds, matching LB-PROBE.
+4. SUBMIT-REQUEST **XB** = submissions/files/20260927-0354_aryan-bhendarkar (C1 path, validator PASS, expected LB ≈ 0.971) and **HEDGE** = …/20260927-0401_aryan-bhendarkar (XB for US/IN + psemb-C1 France, PASS, ≈ 0.971 without the France risk). Nothing uploaded.
+5. Also: EXP-NL (psemb − lfrac) KILLED (DM-fold0x −0.0009, LOCO direction-flip). Box idle; all results in experiments.md; commits local (no push).
