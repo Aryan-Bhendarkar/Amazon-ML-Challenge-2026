@@ -1,17 +1,25 @@
 ---
 name: error-buckets-baseline
-description: Stable error structure of this dataset (first analysis, baseline v0, mini 0.9057) - name-only records, S1 name-sharing, co-location, competition bias in val; which rules paid off
+description: Stable error structure of this dataset across runs (baseline v0 0.9057 -> ctx2 0.9800) - irreducible floor, name-only ambiguity, blocking gaps, what paid off and what hurt
 metadata:
   type: project
 ---
-Stable patterns found on 2026-09-25 (run 20260925-1236_aryan_baseline-v0-keys-lgbm, mini):
-- Blocking misses were 75% of the loss (0.070 of 0.094). 2,941 of 3,439 empty-pred non-singletons had no true match in candidates.
-- In-candidate loss (0.0275) is mostly calibration, not ranking: oracle top-k with the current order gave +0.0243.
-- About 50% of S1 share their exact sorted core name with another S1 (FR test 52.5%). Name-only records (empty cand address, 3% of pool) are ambiguous unless the name is unique among S1. In the biggest FP bucket, 966 of 987 cases were exact feature ties with the true owner.
-- Random-name TRUE matches exist at the identical S1 address (co-location). If exactly one S1 sits at that address and name_tset < 50, the pair is true about 80% of the time.
-- Business words (services/center/partners/group) get injected into both true matches and distractors. House ±k / edit-1 noise likewise hits both. Both are partly irreducible.
-- Measured fixes: rules using S1-side counts (ruleA exact name + unique + empty addr; dropA empty addr + name shared; ruleB same addr key + unique + name < 50) gave +0.0044 (CI 0.0041–0.0048). A top-1 fallback for empty predictions HURT at every threshold. A token_set=100 instead of exact name key HURT (−0.0049).
-- Val bias: 55% of FPs were owned by non-mini S1s that never compete in val assign_best_s1.
+**Run 20260925-1236 baseline v0 (mini 0.9057), 25 Sep:**
+- Blocking was 75% of the loss.
+- S1 name-sharing is 50% (FR test 52.5%).
+- Measured S1-uniqueness rules gave +0.0044. These became the ctx G1–G5 features: +0.0189.
 
-**Why:** these recur regardless of model; the next analyses should check whether EXP-016/017 closed them.
-**How to apply:** start each new analysis by re-measuring these buckets on the new run and comparing against [[error-analysis-method]].
+**Run 20260926-0426 ctx2 (mini 0.9800), 26 Sep.** Loss 0.020 = in-cand FN 0.0107 + blocking 0.0059 + FP 0.0038.
+- **Irreducible floor ≈ 0.011.** Don't spend more on it:
+  - Name-only records: 5,415 of 5,666 FNs have another S1 with an identical or at-least-as-close name (reverse TF-IDF over all S1). Margin add-rules hurt.
+  - House edit1/near: P(true) 0.68, and the model is calibrated per house_rel.
+  - Co-location with random names: set-based and fuzzy address keys don't separate.
+- Oracle top-k with the current order: +0.012. This is calibration inside ambiguous cells, which is why the decision layers failed.
+- The val competition artifact is real but small: owner-dominated FPs +0.0009. The optimal t does not move.
+- **Reducible, still open:**
+  - Blocking of native-script records (4.1% miss vs 1.4% Latin). The `nkey_num` key (sorted name key + number) recovers 938 misses (+0.0015 upper bound).
+  - ctx_features.NORM_V=0 (native names untransliterated in G1/G3).
+- No ID leakage (Spearman S1 id vs match id ≈ 0).
+
+**Why:** future analyses should start by checking whether EXP-030/031 were run and whether the floor estimate still holds.
+**How to apply:** re-measure only the reducible buckets. Report the floor explicitly so the team doesn't chase name-only/house noise. See [[error-analysis-method]].

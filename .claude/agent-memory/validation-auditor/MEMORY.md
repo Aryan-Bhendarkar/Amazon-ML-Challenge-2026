@@ -1,0 +1,1 @@
+- [Recurring audit checks](recurring_audit_checks.md) — val-vs-test competition bracket, France drift, density-dependent idf/counts sim, fold0x confirm, dup-match WARN, LB gap
