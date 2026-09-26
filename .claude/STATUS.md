@@ -1,21 +1,22 @@
-Updated: 26 Sep 15:30 IST (amlc-49, Lane A; /loop running)
-Current best: 20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3 (LB 0.967, t = 0.775)
-  - clean mini 0.98129 / fold0x 0.98117
-  - DM-mini 0.97966 / DM-fold0x 0.97963
-  - LOCO IN→US 0.95425 / US→IN 0.92988
+Updated: 26 Sep 16:05 IST (amlc-49, Lane A; /loop running)
+Current best (val): **20260926-1511_…-ctx3-ps** (0710 + per-source competition features), t_DM = 0.825
+  - vs 0710, paired: DM-fold0x 0.97999 (**+0.00036 [+0.0002, +0.0005]**); clean fold0x −0.00004 n.s.
+  - LOCO IN→US 0.95504 / US→IN 0.93508 (avg **+0.003**)
+  - LB model: 0710 (0.967)
 Running now:
-  - tmux chainPS (Lane A.3): per-source competition features (`--ps`, 13 feats), train + LOCO, then DM-mini (frozen ρ/w, t re-tuned), then DM-fold0x. ETA ~16:30 IST. Early-stopping logloss 0.00370 (0710 recipe ~0.0039).
-  - tmux kgemb (Lane B): Kaggle kernel amlc-emb-bgem3, frozen bge-m3 (MIT) cosines on 1.81M band pairs / 2.61M records. ETA printed after the 1% probe (logs/kaggle_emb_run.log).
-Done this loop:
-  - FR-probe prepared (SUBMIT-REQUEST below)
-  - note 13 per-source t: KILL (optimum = global t)
-  - B0b: KILL (logged earlier)
+  - tmux psSub: test rescore of ps (--from-feats, t = 0.825) + make_submission. Prepared only.
+  - tmux kgemb: Kaggle bge-m3 kernel (running ~40 min)
+  - tmux qEMB (queued): emb split → ps+emb train + LOCO → DM-mini → DM-fold0x
 Next:
-  1. ps verdict (DM-fold0x gate +0.002)
-  2. join bge-m3 cosines → retrain → DM/LOCO gate (cutoff 27 Sep 12:00)
-  3. 21:30 submission-#2 candidate build
-  4. 23:00 overnight test featurization
-Blockers / needs human: none new. Twin/decoy-pair features are deprioritised: the structure is 78–95% positive in train (DIAG-TWIN2), so a feature learned from train cannot flip it.
+  1. emb verdict
+  2. 21:30 submission-#2 candidate
+  3. 23:00 overnight test featurization (only if a new non-rescorable group is kept; ps and emb need none)
+Blockers / needs human:
+  **NEEDS-LEAD: which gate governs ps?**
+  - It fails the model gate (DM-fold0x +0.00036 < +0.002) but passes the transfer gate (LOCO-avg +0.003 ≥ +0.002, clean −0.00004 ≥ −0.001).
+  - Its test files will be ready in `submissions/files/<sub_id>` (see `logs/ps_sub.log`; validator result logged).
+  - Expected LB: small positive (≈ +0.0004 from DM, plus France transfer).
+  - If you approve, it becomes submission #2 today, or the base for 21:30 with emb on top.
 Submission requests:
   **SUBMIT-REQUEST: FR-probe** (diagnostic, lead-approved; DIRECTIVES Lane A.1)
   - file: `submissions/files/20260926-probe-fr-empty/matching_results.tsv` (candidate_pairs.tsv = hard link to 0953's, unchanged)

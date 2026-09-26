@@ -220,3 +220,18 @@ Orphan-sim protocol:
 - DM-mini optimum: **t_S2 = t_S3 = 0.775**, the global t. DM-mini, DM-fold0x, clean mini and clean fold0x Δ are all exactly 0.
 - verdict: **KILL** (no gain; the source split carries no threshold signal).
 
+## EXP-A3a Per-source competition features "ps" (20260926-1511_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-ps, commit 1b9b1ba, 26 Sep 15:11–16:10 IST)
+- change: 0710 recipe + 13 features from `ctx_features.PS_FEATS`, computed per S1 within each candidate source (S2 / S3) from existing scores:
+  - rank and gap-to-best of name_tset / addr_tset / cos_na
+  - count of same-source candidates ≥ 90 on name / address; same-source list size
+  - the other source's best name / address score
+  - Rescorable from the saved test_feats (no test re-featurization).
+- clean mini 0.98135 @ t = 0.775 (0710: 0.98129).
+- **DM (frozen ρ/w; t_DM = 0.825 from mini, 1538)**, paired vs 0710 @ 0.775:
+  - DM-mini 0.97990 vs 0.97966: **+0.00024 [−0.0001, +0.0005]**
+  - **DM-fold0x 0.97999 vs 0.97963: +0.00036 [+0.00019, +0.00053]** (p ≈ 0)
+- clean at t_DM, paired: mini −0.00017 (n.s.); fold0x **−0.00004 [−0.0002, +0.0001]**. At t = 0.775, clean fold0x is 0.98152 (+0.0004).
+- LOCO vs the 0710 reference: IN→US 0.95504 (+0.0008), US→IN 0.93508 (**+0.0052**), **avg +0.003**.
+- verdict: **KEEP as the new base; submission status NEEDS-LEAD.** It fails the model gate (DM-fold0x +0.00036 < +0.002) but passes the transfer gate (LOCO-avg ≥ +0.002, clean ≥ −0.001). Expected LB effect is small positive (≈ +0.0004 non-FR plus the FR transfer share).
+- test cost: `--from-feats` rescore (minutes). Prepared as a submission (below; not requested).
+
