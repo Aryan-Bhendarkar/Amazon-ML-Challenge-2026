@@ -10,3 +10,6 @@ mini F0.5=0.9813 ({'India': 0.9777940414934029, 'US': 0.9836882589874294}), grou
 - vs the pending submission model (ctx v1 on v1_n1, 0.9800): +0.0013, CI [0.0010, 0.0016], p 0.
 - Blocking recall mini 0.98404 → 0.98712 (b6 run 20260926-0635_aryan-bhendarkar_blocking-nkey-num-v1-n2).
 - Next: fold0x confirmation; if confirmed, replace the not-yet-uploaded sub3 (don't spend an extra submission: the gain is < 0.005).
+## CONFIRMED on fold0x (run 20260926-0734_aryan-bhendarkar_confirm-fold0x-v1-n2, frozen model and t=0.775)
+- fold0x 0.98117 (India 0.9782, US 0.9832) vs the pending sub3 model 0.97989: **+0.00128, CI [0.00114, 0.00142], p 0, n 353,503**. The fold0x-optimal t is 0.75 → 0.98123 (the frozen t is fine).
+- Plan: test inference on v1_n2/test.parquet, then make_submission with --candidates data/cands/v1_n2/test.parquet, then an auditor delta check, then offer it to the user as the REPLACEMENT for the not-yet-uploaded sub3.
