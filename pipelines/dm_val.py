@@ -61,10 +61,12 @@ def main(a):
     ctx = harness.EvalContext.load(a.tag)
     ids = sorted(ctx.ids)
     src = a.freeze or a.freeze_w
-    frozen = json.loads((paths.EXP_DIR / src / "metrics.json").read_text())["dm"] if src else None
+    frozen = json.loads((paths.EXP_DIR / src / "metrics.json").read_text())["dm_params"] if src else None
     with Run(f"dm-val-{a.tag}", hypothesis=a.hypothesis or f"DM-val threshold for {a.run} on {a.tag}",
              params=vars(a), tags=["dm-val", "decision"], parent=a.run) as run:
-        if a.tag == "mini" and (art / "val_pred.parquet").exists():
+        if a.pred:
+            pred = pd.read_parquet(a.pred)
+        elif a.tag == "mini" and (art / "val_pred.parquet").exists():
             pred = pd.read_parquet(art / "val_pred.parquet")
         else:
             print(f"[score] {a.tag} with {a.run}", flush=True)
@@ -111,7 +113,7 @@ def main(a):
         curve.to_csv(run.art_dir / "dm_curve.csv", index=False)
         t_dm = frozen["t_dm"] if a.freeze else float(curve.t[curve.dm.idxmax()])
         dm["t_dm"] = t_dm
-        res = {"dm": dm}
+        res = {"dm_params": dm}
         for name, fn in (("clean", lambda t: dmval.entity_f05(asg, n_true, t)),
                          ("dm", lambda t: dmval.dm_entity_f05(asg, n_true, t, w, lo, hi, a.draws))):
             s_ship, s_dm = fn(t_ship), fn(t_dm)
@@ -137,6 +139,7 @@ if __name__ == "__main__":
     ap.add_argument("--draws", type=int, default=5)
     ap.add_argument("--freeze", default="", help="dm-val mini run id: reuse its rho / w / t_dm (confirmation)")
     ap.add_argument("--freeze-w", default="", help="dm-val run id: reuse its rho / w, re-tune t (new models)")
+    ap.add_argument("--pred", default="", help="reuse a saved predictions parquet (s1_id, cand_id, prob) for this tag")
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--hypothesis", default="")
     main(ap.parse_args())

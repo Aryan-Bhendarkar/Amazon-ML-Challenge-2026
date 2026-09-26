@@ -1,8 +1,8 @@
 {
-  "run_id": "20260926-1349_aryan-bhendarkar_dm-val-mini",
+  "run_id": "20260926-1413_aryan-bhendarkar_dm-val-mini",
   "name": "dm-val-mini",
   "author": "aryan-bhendarkar",
-  "hypothesis": "DM-val: global t for 0710 under test's band density (monitor note 10); re-run of lost 1342 record",
+  "hypothesis": "DM-val 0710 mini (re-run with dm_params stored)",
   "params": {
     "run": "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3",
     "cache": "v1_n2",
@@ -11,18 +11,19 @@
     "draws": 5,
     "freeze": "",
     "freeze_w": "",
+    "pred": "",
     "threads": 2,
-    "hypothesis": "DM-val: global t for 0710 under test's band density (monitor note 10); re-run of lost 1342 record"
+    "hypothesis": "DM-val 0710 mini (re-run with dm_params stored)"
   },
   "tags": [
     "dm-val",
     "decision"
   ],
   "parent": "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3",
-  "git_commit": "37c33a4",
+  "git_commit": "2b1a4f4",
   "git_dirty": true,
-  "started_ist": "2026-09-26T13:49:50+05:30",
+  "started_ist": "2026-09-26T14:13:58+05:30",
   "status": "done",
-  "duration_min": 1.85,
-  "finished_ist": "2026-09-26T13:51:41+05:30"
+  "duration_min": 4.69,
+  "finished_ist": "2026-09-26T14:18:40+05:30"
 }
