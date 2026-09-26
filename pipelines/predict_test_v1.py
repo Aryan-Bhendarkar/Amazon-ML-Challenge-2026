@@ -103,7 +103,7 @@ def main(a):
                 fw["writer"] = pq.ParquetWriter(str(ftmp), tb.schema, compression="zstd")
             fw["writer"].write_table(tb.select(fw["schema"].names).cast(fw["schema"]), row_group_size=tb.num_rows)
             del tb
-        Xp = cf.add_derived(X, feats).select(["s1_id", "cand_id"] + feats).to_pandas()
+        Xp = cf.add_derived(cf.join_emb(X, a.cache, "test", feats), feats).select(["s1_id", "cand_id"] + feats).to_pandas()
         p = model.predict(Xp[feats], num_threads=a.threads).astype(np.float32)
         keep = p >= PMIN
         parts.append(Xp.loc[keep, ["s1_id", "cand_id"]].assign(prob=p[keep]))

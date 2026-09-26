@@ -44,7 +44,7 @@ def score_tag(run: str, cache: str, tag: str, ids: list, threads: int) -> pd.Dat
     if ctx_cols:
         X = X.join(pl.read_parquet(fv.ctx_path(cache, tag)).select(["s1_id", "cand_id"] + ctx_cols),
                    on=["s1_id", "cand_id"], how="left")
-    X = cf.add_derived(X, feats)
+    X = cf.add_derived(cf.join_emb(X, cache, tag, feats), feats)
     out = []
     for o in range(0, X.height, 4_000_000):
         P = X.slice(o, 4_000_000).select(["s1_id", "cand_id"] + feats).to_pandas()

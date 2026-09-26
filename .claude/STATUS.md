@@ -1,24 +1,21 @@
-Updated: 26 Sep 15:05 IST (amlc-49)
+Updated: 26 Sep 15:30 IST (amlc-49, Lane A; /loop running)
 Current best: 20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3 (LB 0.967, t = 0.775)
-  - clean mini 0.98129, fold0x 0.98117
-  - **DM-mini 0.97966** (20260926-1413); **DM-fold0x 0.97963** (20260926-1441; flat, +0.0001 at t = 0.80)
+  - clean mini 0.98129 / fold0x 0.98117
+  - DM-mini 0.97966 / DM-fold0x 0.97963
   - LOCO IN→US 0.95425 / US→IN 0.92988
-Running now: nothing (box idle).
-Next (needs a decision, see below): France track, or EXP-E2 reverse retrieval (27 Sep morning).
-Blockers / needs human:
-  1. **No submission candidate today.**
-     - DM re-threshold is a no-op: t_DM = 0.775 = the current t.
-     - B0a (drop lfrac) and B0b (lfrac q05) are both KILLED: DM-mini −0.0006 or worse, clean −0.0006/−0.0012, LOCO mixed.
-     - I recommend holding today's 2 submissions.
-  2. **Gap budget:** normal ≈ 0.005 + band/twin density ≈ 0.002 (DM) leaves ≈ 0.006 unexplained, most likely France.
-     Label-free France audit found:
-     (a) Templated-name twins in the same city with the same house number and a different street, scored 0.95–0.97. Example: "Lille Club | 17 Rue Desaix" ↔ "Lille Club SARL | 17 R. Gustave Denory" / "(SCI) 17 R Leonard Danel" / "EURL 17 Rue du Chemin Vert". amlc-07's check puts them at ~35% of 14.7k name-key-only FR matches (~5k likely FPs, ≈ −0.0006 overall).
-     (b) House shifts of +1…+20 accepted at 0.83–0.95 (10↔11, 14↔19, 99↔104, 37↔48).
-     (c) Business-word swaps ("Groupe", "& Associés", "Participations", "France").
-     (a) and (b) are ~99% true in train (street/house typos), so no feature learned from train will reject them. The only lever is a hand-written structural rule, which cannot be validated with labels.
-     **Question:** do you want a label-free, France-only-in-effect but country-agnostic rule, such as "same generic name key + same house + street tokens disjoint → require p ≥ 0.99"? It would be checked for neutrality on clean/DM val and LOCO, with its test effect measured only by counts.
-  3. The twin-structure DM (a second ρ_twin = 2.7) is sized at ≲ +0.001. Not pursued unless you approve a second ratio.
-  4. EXP-E2 reverse retrieval: +0.0005–0.0008 expected, 3–4 h of box time. Proposed for 27 Sep morning if you want it.
+Running now:
+  - tmux chainPS (Lane A.3): per-source competition features (`--ps`, 13 feats), train + LOCO, then DM-mini (frozen ρ/w, t re-tuned), then DM-fold0x. ETA ~16:30 IST. Early-stopping logloss 0.00370 (0710 recipe ~0.0039).
+  - tmux kgemb (Lane B): Kaggle kernel amlc-emb-bgem3, frozen bge-m3 (MIT) cosines on 1.81M band pairs / 2.61M records. ETA printed after the 1% probe (logs/kaggle_emb_run.log).
+Done this loop:
+  - FR-probe prepared (SUBMIT-REQUEST below)
+  - note 13 per-source t: KILL (optimum = global t)
+  - B0b: KILL (logged earlier)
+Next:
+  1. ps verdict (DM-fold0x gate +0.002)
+  2. join bge-m3 cosines → retrain → DM/LOCO gate (cutoff 27 Sep 12:00)
+  3. 21:30 submission-#2 candidate build
+  4. 23:00 overnight test featurization
+Blockers / needs human: none new. Twin/decoy-pair features are deprioritised: the structure is 78–95% positive in train (DIAG-TWIN2), so a feature learned from train cannot flip it.
 Submission requests:
   **SUBMIT-REQUEST: FR-probe** (diagnostic, lead-approved; DIRECTIVES Lane A.1)
   - file: `submissions/files/20260926-probe-fr-empty/matching_results.tsv` (candidate_pairs.tsv = hard link to 0953's, unchanged)

@@ -405,6 +405,18 @@ PS_FEATS = ([f"ps_rank_{k}" for k in PS_KEYS] + [f"ps_gap_{k}" for k in PS_KEYS]
 PS_SRC = ["s1_id", "cand_src", *PS_KEYS]
 
 
+EMB_FEATS = ["emb_cos_name", "emb_cos_addr", "emb_cos_full"]   # Lane B: frozen bge-m3 band cosines (NaN outside band)
+
+
+def join_emb(X: pl.DataFrame, cache: str, tag: str, feats: list[str]) -> pl.DataFrame:
+    """Left-join the band cosines data/cands/<cache>/emb_<tag>.parquet (s1_id, cand_id, emb_cos_*) when requested."""
+    need = [f for f in EMB_FEATS if f in feats and f not in X.columns]
+    if not need:
+        return X
+    E = pl.read_parquet(paths.DATA_DIR / "cands" / cache / f"emb_{tag}.parquet", columns=["s1_id", "cand_id"] + need)
+    return X.join(E, on=["s1_id", "cand_id"], how="left")
+
+
 def expand_derived(feats: list[str]) -> list[str]:
     """Feature list with derived names replaced by their source columns (dedup, order kept)."""
     out = []
@@ -413,6 +425,8 @@ def expand_derived(feats: list[str]) -> list[str]:
             out.append(DERIVED[f][0])
         elif f in PS_FEATS:
             out.extend(PS_SRC)
+        elif f in EMB_FEATS:                     # joined from emb_<tag>.parquet, not a cache column
+            continue
         else:
             out.append(f)
     return list(dict.fromkeys(out))
