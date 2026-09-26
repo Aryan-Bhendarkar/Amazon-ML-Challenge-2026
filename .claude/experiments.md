@@ -336,3 +336,18 @@ Orphan-sim protocol:
 - LOCO IN→US 0.98379 / US→IN 0.98114: **not a transfer measure**. The xenc ckpts were trained on both countries, so the LOCO models get a feature fitted on the held-out country. Info only.
 - verdict: **PASSES the model gate** (DM-fold0x ≥ +0.002, both countries up). The transfer risk for France is unmeasured: the ckpts never saw France. The earlier LOCO for an xenc trained on one country was −0.0015…−0.0026, but France is 15% vs +0.0036 on the 85%. Check the FR test diagnostics before the request.
 
+## EXP-XS-B xenc stack minus the 4 ldf features (20260927-0257_…-ctx3-b; DM 0312 / 0313; 27 Sep 02:57–03:50 IST)
+- change: A (psemb + xenc_minilm) with ex_ldf_min, ex_ldf_max, mi_ldf_min, mi_ldf_max dropped (Lane C transfer-safe list; Lane C LOCO for the ldf drop without xenc: +0.0022).
+- clean mini 0.9856 @ t = 0.75 (IN 0.98455, US 0.98639). t_DM = 0.825.
+- **paired vs psemb (0.775) at t_DM = 0.825:**
+
+| | overall | India | US |
+|---|---|---|---|
+| **DM-fold0x** | **+0.00367 [+0.00347, +0.00389]** | +0.00549 | +0.00246 |
+| clean fold0x | +0.00323 [+0.00306, +0.00343] | +0.00488 | +0.00214 |
+| DM-mini | +0.00407 | +0.00598 | +0.00276 |
+
+  - Absolute DM-fold0x 0.98447, clean fold0x 0.98516.
+- LOCO (contaminated by xenc; the ldf-drop effect only, B − A): IN→US 0.98367 (−0.0001), US→IN 0.98156 (+0.0004).
+- verdict: **KEEP. B is the submission candidate** (DM ≥ A and transfer-safer). C1-path test build started 03:52 (tmux bxB, logs/buildC1x.sh).
+

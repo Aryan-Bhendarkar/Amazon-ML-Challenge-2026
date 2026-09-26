@@ -17,7 +17,10 @@ Running now: tmux xs (`logs/chainXS.sh`): xenc stack
   - clean fold0x +0.00318 (IN +0.0049, US +0.0021)
   - absolute: DM-fold0x 0.98441, clean fold0x 0.98511
   - LOCO is not a transfer measure here (the xenc ckpts saw both countries).
-B (A − ldf) is training (20260927-0257). Then: build the C1-path test files for the better of A/B (B preferred if DM is within noise, since it is transfer-safer), check the FR diagnostics, SUBMIT-REQUEST. ETA of files ~06:30 IST. Nothing will be uploaded.
+**Result B (03:50): GATE PASS, chosen.** 20260927-0257_…-ctx3-b, t_DM = 0.825
+  - DM-fold0x **+0.00367 [+0.0035, +0.0039]** (IN +0.0055, US +0.0025); clean fold0x +0.00323
+  - absolute: DM-fold0x 0.98447, clean fold0x 0.98516
+Running: tmux bxB = the C1-path test build for B (full rescore + FR norm v2 rows + splice + make_submission). ETA ~05:00 IST. Then FR diagnostics + SUBMIT-REQUEST.
 Done: EXP-NL (psemb − lfrac) KILL: DM-fold0x −0.0009, LOCO direction-flip.
 **Lane G handoff (box2): G3 pair set ready.**
   - `aws s3 sync s3://amlc26-699191579023/share/g3 data/kaggle/g3`
