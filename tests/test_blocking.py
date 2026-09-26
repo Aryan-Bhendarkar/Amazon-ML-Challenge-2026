@@ -29,3 +29,10 @@ def test_union_ors_bits():
     u = B.union({"tf_name": pl.DataFrame({"i": [0, 1], "j": [5, 6]}),
                  "akey": pl.DataFrame({"i": [0], "j": [5]})}).sort("i").rows()
     assert u == [(0, 5, B.RBITS["tf_name"] | B.RBITS["akey"]), (1, 6, B.RBITS["tf_name"])]
+
+
+def test_nkey_num():
+    q = pl.DataFrame({"n_core": ["ram marketing", "x"], "a_numbers": ["570/13", ""]})
+    p = pl.DataFrame({"n_core": ["marketing ram", "ram marketing", "ram marketing ram"], "a_numbers": ["013 9", "571", "570"]})
+    got = B.multikey_join(B.nkey_num_keys(q, "i"), B.nkey_num_keys(p, "j"), cap=50).sort("i", "j").rows()
+    assert got == [(0, 0), (0, 2)]      # shared 13 (zero-stripped) / 570 via unique tokens; 571 differs; no number -> none

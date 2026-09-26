@@ -10,6 +10,8 @@ has a bit in RBITS. `union` ORs the bits and keeps the max score. Retrievers:
   tf_empty    tf_name top-k restricted to pool records with an EMPTY address (name-only records)
   skel        phonetic consonant skeleton of the first two core tokens (native-script transliterations)
   nkey_empty  exact sorted-name key -> pool records with an EMPTY address (name ties defeat top-k there)
+  nkey_num    exact sorted-unique name key + any shared address number (leading zeros stripped), block cap 50;
+              exempt from the per-S1 cap (EXP-030: native-script generic names with short addresses)
   rev         reverse: each pool record -> top-k S1 over ALL S1 of the country (tf_name)
 """
 from __future__ import annotations
@@ -26,7 +28,7 @@ import scipy.sparse as sp
 from . import paths, tfidf
 from .normalize import STREET_CANON
 
-RBITS = {"keys_v0": 1, "tf_name": 2, "tf_na": 4, "akey": 8, "hskey": 16, "tf_empty": 32, "skel": 64, "rev": 128, "nkey_empty": 256}
+RBITS = {"keys_v0": 1, "tf_name": 2, "tf_na": 4, "akey": 8, "hskey": 16, "tf_empty": 32, "skel": 64, "rev": 128, "nkey_empty": 256, "nkey_num": 512}
 
 POOL_COLS = ["entity_id", "country", "n_core", "n_compact", "n_alias", "n_legal", "n_kind", "n_script",
              "a_full", "a_street", "a_numbers", "a_house", "a_state", "a_empty"]
@@ -183,6 +185,25 @@ def key_join(qk: pl.Series, pk: pl.Series, cap: int, min_len: int = 1) -> pl.Dat
     ok = p.group_by("key").len().filter(pl.col("len") <= cap).select("key")
     p = p.join(ok, on="key", how="semi")
     return q.join(p, on="key").select("i", "j")
+
+
+def nkey_num_keys(df: pl.DataFrame, idx: str = "i") -> pl.DataFrame:
+    """(idx, key) rows: sorted unique n_core tokens | one address number (split on space / -, leading zeros
+    stripped). One row per distinct number. Needs columns n_core, a_numbers."""
+    nk = (pl.col("n_core").fill_null("").str.split(" ").list.eval(pl.element().filter(pl.element() != ""))
+          .list.unique().list.sort().list.join(" "))
+    nums = (pl.col("a_numbers").fill_null("").str.replace_all(r"[/\-]", " ").str.split(" ")
+            .list.eval(pl.element().str.strip_chars_start("0").filter(pl.element() != "")).list.unique())
+    return (df.with_row_index(idx).select(idx, nk.alias("nk"), nums.alias("num")).filter(pl.col("nk") != "")
+              .explode("num").filter(pl.col("num").is_not_null())
+              .select(idx, (pl.col("nk") + "|" + pl.col("num")).alias("key")))
+
+
+def multikey_join(qk: pl.DataFrame, pk: pl.DataFrame, cap: int) -> pl.DataFrame:
+    """qk (i, key), pk (j, key) -> unique (i, j); pool blocks with more than `cap` distinct records dropped."""
+    pk = pk.unique()
+    ok = pk.group_by("key").len().filter(pl.col("len") <= cap).select("key")
+    return qk.unique().join(pk.join(ok, on="key", how="semi"), on="key").select("i", "j").unique()
 
 
 # ============================================================================ TF-IDF
