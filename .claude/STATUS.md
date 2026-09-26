@@ -2,7 +2,18 @@ Updated: 26 Sep 20:50 IST (amlc-49, Lane A; /loop running)
 Base: **20260926-1737_…-psemb** (ps + frozen bge-m3 band cosines), t = 0.775
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
-Running now: nothing (box idle).
+Running now:
+  - tmux kgx2: Kaggle acc1 `amlc-xenc2-score`. The EXISTING MiniLM ckpts (sha256 in data/kaggle/xenc2_map/ckpt_sha256.txt) score 10.76M pairs at p ≥ 0.01:
+    - train 794,573 (OOF by the verified cf halves, 0 mismatches), mini 379,807, fold0x 1,523,883, test 8,064,341
+    - Then join `xenc_logit` into psemb → DM-fold0x / clean / LOCO (keep if DM-fold0x ≥ +0.001; IN→US ≥ −0.003). Deadline 27 Sep 10:00.
+  - Next on CPU: D1 adversarial validation (val vs test, US+IN and India-only).
+**Lane G handoff (box2): G3 pair set ready.**
+  - `aws s3 sync s3://amlc26-699191579023/share/g3 data/kaggle/g3`
+  - pairs.parquet: pair_id, tag ∈ {train, mini, fold0x, test}, cf, k1, k2; 10.76M pairs at stage-1 p ≥ 0.01
+    - p ≥ 0.01 rather than 0.005, because the saved test preds are floored at 0.01
+    - train cf = s1_id.hash(42) % 2 for role 'train' (= the old ckpt halves), −1 = es rows
+  - records.parquet: key "<split>|<entity_id>", name (n_full), addr (a_full), house (a_house), norm_v1
+  - Pair ids map back to entity ids only on box1 (data/kaggle/xenc2_map). Return logits keyed by pair_id.
 **SUBMIT-REQUEST: C0 and C1** (submission #4, today's last slot; the lead picks one)
   - **C0**: `submissions/files/20260926-2034_aryan-bhendarkar/{matching_results.tsv,candidate_pairs.tsv}`
     - psemb, t = 0.775
