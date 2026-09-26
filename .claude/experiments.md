@@ -215,3 +215,8 @@ Orphan-sim protocol:
   - That is flat (+0.0001 at 0.80), so the mini decision (no threshold change) is confirmed.
 - This is the **reference for the submission gate** (DM-fold0x Δ ≥ +0.002).
 
+## NOTE13 Per-source thresholds t_S2 / t_S3 (20260926-1512_aryan-bhendarkar_dm-persource, 26 Sep 15:12–15:25 IST)
+- change: decision layer only. Separate global thresholds for S2 and S3 candidates (grid 0.70–0.90 × 0.70–0.90, step 0.025) on the 0710 predictions. Tuned on DM-mini (frozen ρ/w from 1413); frozen for DM-fold0x.
+- DM-mini optimum: **t_S2 = t_S3 = 0.775**, the global t. DM-mini, DM-fold0x, clean mini and clean fold0x Δ are all exactly 0.
+- verdict: **KILL** (no gain; the source split carries no threshold signal).
+
