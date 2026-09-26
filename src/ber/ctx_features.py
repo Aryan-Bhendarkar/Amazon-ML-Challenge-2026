@@ -32,7 +32,13 @@ from rapidfuzz.distance import JaroWinkler, Levenshtein
 
 from . import paths
 
-NORM_V = 0
+NORM_V = 0                               # default normalization cache (ctx v1/v2)
+NORM_OF_VER = {1: 0, 2: 0, 3: 1}         # ctx version -> norm cache version (v3 = v2 features on norm_v1:
+                                         # learned token map, native-script names transliterated to Latin)
+
+
+def norm_of(version: int) -> int:
+    return NORM_OF_VER.get(version, max(NORM_OF_VER.values()))
 GROUPS = ("G1", "G2", "G3", "G4", "G5")
 DF_CAP = 50             # v2 token rarity: raw df saturates here (rare tokens keep their df at any density)
 CNT_CAP = 20            # counts are capped: test density differs from train (US test S1 ~0.5x)
@@ -52,8 +58,8 @@ S1_COLS = ["entity_id", "country", "n_core", "a_full", "a_street", "a_house", "a
 C_COLS = ["entity_id", "n_core", "a_full", "a_street", "a_house", "a_numbers", "a_postcode", "a_empty"]
 
 
-def _norm_file(split: str, source: int):
-    return paths.FEATURE_DIR / f"norm_v{NORM_V}_{split}_s{source}.parquet"
+def _norm_file(split: str, source: int, norm_v: int = NORM_V):
+    return paths.FEATURE_DIR / f"norm_v{norm_v}_{split}_s{source}.parquet"
 
 
 def _tokens(col: str) -> pl.Expr:
@@ -102,8 +108,9 @@ class SplitContext:
 
     @classmethod
     def build(cls, split: str, version: int = 1) -> "SplitContext":
-        s1 = pl.scan_parquet(_norm_file(split, 1)).select("country", "n_core", "a_full", "a_street", "a_house").collect()
-        pool = pl.concat([pl.scan_parquet(_norm_file(split, s)).select("country", "n_core", "a_full").collect()
+        nv = norm_of(version)
+        s1 = pl.scan_parquet(_norm_file(split, 1, nv)).select("country", "n_core", "a_full", "a_street", "a_house").collect()
+        pool = pl.concat([pl.scan_parquet(_norm_file(split, s, nv)).select("country", "n_core", "a_full").collect()
                           for s in (2, 3)])
         return cls.from_frames(s1, pool, version)
 
@@ -112,12 +119,12 @@ class SplitContext:
         return self.idf.group_by("country").agg(pl.col("idf").max().alias("idf_max"))
 
 
-def attach_norm(pairs: pl.DataFrame, split: str) -> pl.DataFrame:
+def attach_norm(pairs: pl.DataFrame, split: str, norm_v: int = NORM_V) -> pl.DataFrame:
     """Join normalized S1 columns (plain names + country) and candidate columns (suffix _c)."""
     s1_ids = pairs.select(pl.col("s1_id").unique().alias("entity_id"))
     c_ids = pairs.select(pl.col("cand_id").unique().alias("entity_id"))
-    s1 = pl.scan_parquet(_norm_file(split, 1)).select(S1_COLS).join(s1_ids.lazy(), on="entity_id").collect()
-    cs = pl.concat([pl.scan_parquet(_norm_file(split, s)).select(C_COLS).join(c_ids.lazy(), on="entity_id").collect()
+    s1 = pl.scan_parquet(_norm_file(split, 1, norm_v)).select(S1_COLS).join(s1_ids.lazy(), on="entity_id").collect()
+    cs = pl.concat([pl.scan_parquet(_norm_file(split, s, norm_v)).select(C_COLS).join(c_ids.lazy(), on="entity_id").collect()
                     for s in (2, 3)])
     s1 = s1.rename({"entity_id": "s1_id"})
     cs = cs.rename({c: (c + "_c" if c != "entity_id" else "cand_id") for c in cs.columns})

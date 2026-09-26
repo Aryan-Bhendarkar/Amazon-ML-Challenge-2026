@@ -76,7 +76,7 @@ def featurize_tag(ver: str, tag: str, df: pl.DataFrame, sctx: cf.SplitContext, n
     parts = []
     for ch in range(n_chunks):
         P = keys.filter(pl.col("_ch") == ch).drop("_ch")
-        X = cf.add_features(cf.attach_norm(P, split), sctx, workers=workers)
+        X = cf.add_features(cf.attach_norm(P, split, cf.norm_of(CTX_VER)), sctx, workers=workers)
         new = cf.new_feature_cols(X, ["name_tset"])
         parts.append(X.select(["s1_id", "cand_id"] + new))
         log(f"  [{tag}] chunk {ch + 1}/{n_chunks} {P.height:,} pairs {time.time() - t0:.0f}s")
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     ap.add_argument("--chunks", type=int, default=8)
     ap.add_argument("--loco", action="store_true")
     ap.add_argument("--extra-base", default=",".join(EXTRA_BASE), help="cache columns added to the base features")
-    ap.add_argument("--ctx-ver", type=int, default=1, help="ber.ctx_features version (2 = density-invariant G3)")
+    ap.add_argument("--ctx-ver", type=int, default=1, help="ber.ctx_features version (2 = density-invariant G3, 3 = v2 on norm_v1)")
     ap.add_argument("--loco-only", action="store_true", help="skip the main model; LOCO reference only")
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)

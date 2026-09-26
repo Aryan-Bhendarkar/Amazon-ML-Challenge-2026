@@ -44,14 +44,14 @@ def main(a):
         art = paths.ART_DIR / r
         models[r] = (lgb.Booster(model_file=str(art / "model.lgb")), json.loads((art / "features.json").read_text()),
                      json.loads((art / "decision.json").read_text())["threshold"], v)
-    s1n = pl.scan_parquet(cf._norm_file("train", 1)).select("entity_id", "country", "n_core", "a_full", "a_street",
+    s1n = pl.scan_parquet(cf._norm_file("train", 1, cf.norm_of(a.ctx_ver))).select("entity_id", "country", "n_core", "a_full", "a_street",
                                                              "a_house").collect()
-    pooln = pl.concat([pl.scan_parquet(cf._norm_file("train", s)).select("entity_id", "country", "n_core", "a_full")
+    pooln = pl.concat([pl.scan_parquet(cf._norm_file("train", s, cf.norm_of(a.ctx_ver))).select("entity_id", "country", "n_core", "a_full")
                        .collect() for s in (2, 3)])
     gt = pl.from_pandas(io.load_gt_pairs()[["s1_id", "match_id"]])
     matched = set(gt["match_id"].to_list())
     allmini = sorted(ctx.ids)
-    Xn = cf.attach_norm(base.select("s1_id", "cand_id", "name_tset"), "train")
+    Xn = {v: cf.attach_norm(base.select("s1_id", "cand_id", "name_tset"), "train", cf.norm_of(v)) for _, v in runs}
     res = {}
     with Run("density-sim", hypothesis=f"density robustness of {[r for r, _ in runs]}", params=vars(a),
              tags=["robustness"], parent=a.run) as run:
@@ -73,7 +73,7 @@ def main(a):
             # ownerless look-alikes ('orphans'), which cannot exist on test (every true copy's owner is present).
             keep_rows = ~pl.col("cand_id").is_in(dm.to_list()) if a.clean else pl.lit(True)
             for rid, (model, feats, t, v) in models.items():
-                F = cf.add_features(Xn, cf.SplitContext.from_frames(s1k, pk, v), workers=a.threads)
+                F = cf.add_features(Xn[v], cf.SplitContext.from_frames(s1k, pk, v), workers=a.threads)
                 have = [f for f in feats if f in base.columns]
                 X = base.filter(keep_rows).select(["s1_id", "cand_id"] + have).join(
                     F.select(["s1_id", "cand_id"] + [f for f in feats if f not in have]), on=["s1_id", "cand_id"])

@@ -39,8 +39,15 @@ PMIN = 0.01
 FEATS_NAME = "test_feats_g15"
 
 
-def feats_path(cache: str, sliced: bool):
-    return paths.DATA_DIR / "cands" / cache / f"{FEATS_NAME}{'_slice' if sliced else ''}.parquet"
+def feats_path(cache: str, sliced: bool, ctx_ver: int = 1):
+    ver = "" if ctx_ver == 1 else f"_ctx{ctx_ver}"          # v1 name kept for the existing matrix
+    return paths.DATA_DIR / "cands" / cache / f"{FEATS_NAME}{ver}{'_slice' if sliced else ''}.parquet"
+
+
+def run_ctx_ver(run_id: str) -> int:
+    """ctx_features version the run was trained with (meta params.ctx_ver; runs before v2 have none -> 1)."""
+    meta = paths.EXP_DIR / run_id / "meta.json"
+    return int(json.loads(meta.read_text()).get("params", {}).get("ctx_ver", 1)) if meta.exists() else 1
 
 
 def main(a):
@@ -49,8 +56,10 @@ def main(a):
     feats = json.loads((art / "features.json").read_text())
     t = json.loads((art / "decision.json").read_text())["threshold"] if a.threshold is None else a.threshold
     model = lgb.Booster(model_file=str(art / "model.lgb"))
+    cv = run_ctx_ver(a.run)                                   # never mix ctx versions between train and test
+    print(f"ctx_features version {cv} (norm_v{cf.norm_of(cv)})")
     if a.from_feats:
-        src = feats_path(a.cache, False) if not a.feats_file else paths.ROOT / a.feats_file
+        src = feats_path(a.cache, False, cv) if not a.feats_file else paths.ROOT / a.feats_file
     else:
         src = paths.DATA_DIR / "cands" / a.cache / "test.parquet"
     pf = pq.ParquetFile(src)
@@ -65,11 +74,11 @@ def main(a):
     featurize = not a.from_feats
     save = featurize and not a.no_save_feats
     # featurizing runs compute ALL ctx groups anyway (add_features), so build the context whenever saving
-    sctx = cf.SplitContext.build("test") if featurize and (need_ctx or save) else None
+    sctx = cf.SplitContext.build("test", cv) if featurize and (need_ctx or save) else None
     print(f"  test context built {time.time() - t0:.0f}s")
     seen, parts, n_done, batch = set(), [], 0, []
     fw = {"writer": None, "schema": None}
-    fpath = feats_path(a.cache, bool(a.limit_rows))
+    fpath = feats_path(a.cache, bool(a.limit_rows), cv)
     ftmp = fpath.with_suffix(".tmp")
 
     def flush(batch):
@@ -80,7 +89,7 @@ def main(a):
         assert not (ids & seen), "an S1 spans row-group batches -> G5/rank features would be wrong"
         seen.update(ids)
         if sctx is not None:
-            F = cf.add_features(cf.attach_norm(X.select("s1_id", "cand_id", "name_tset"), "test"), sctx,
+            F = cf.add_features(cf.attach_norm(X.select("s1_id", "cand_id", "name_tset"), "test", cf.norm_of(cv)), sctx,
                                 workers=a.threads)
             new = cf.new_feature_cols(F, ["name_tset"]) if save else need_ctx
             X = X.join(F.select(["s1_id", "cand_id"] + [c for c in new if c not in X.columns]),
