@@ -306,5 +306,6 @@ Orphan-sim protocol:
 - top gain shares: mi_lfrac_cmax 0.206, ex_lfrac_cmax 0.164, ex_lfrac_cmin 0.086, mi_lfrac_cmin 0.044 (**lfrac = 50%**); then sib_n 0.040, emb_cos_full 0.034 (band NaN rate 0.94 vs 0.89), ex_ldf_max 0.034, s1_name_self 0.027.
 - The lfrac quantiles are nearly identical between val and test, so the classifier uses the *exact* log(df/n) values as a split fingerprint. This is direct evidence for the memorization hypothesis (lead 19:00), consistent with EXP-A's brittleness.
 - action: psemb without lfrac (tmux qNL): train + LOCO → DM-mini → DM-fold0x → D1 on the new feature set. Keep if DM/LOCO hold and the AUC drops.
-- India-only / US-only D1: running.
+- India-only: **AUC 0.799** (120k val vs 300k test). lfrac = 60% of gain (mi_lfrac_cmax 0.31); ex_ldf_max/min 0.10 (token df, also split-specific).
+- US-only: **AUC 0.834** (177k vs 300k). lfrac = 47%; then sib_n 0.056, s1_name_self 0.049, sib_s1house_frac 0.033.
 
