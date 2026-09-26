@@ -1,0 +1,59 @@
+{
+  "dm_ref": "20260926-1413_aryan-bhendarkar_dm-val-mini",
+  "t_global": 0.775,
+  "t_s2": 0.775,
+  "t_s3": 0.775,
+  "mini_dm": {
+    "global": 0.97966,
+    "per_source": 0.97966,
+    "delta": {
+      "n": 87952,
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_not_better": 1.0
+    }
+  },
+  "mini_clean": {
+    "global": 0.98129,
+    "per_source": 0.98129,
+    "delta": {
+      "n": 87952,
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_not_better": 1.0
+    }
+  },
+  "fold0x_dm": {
+    "global": 0.97963,
+    "per_source": 0.97963,
+    "delta": {
+      "n": 353503,
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_not_better": 1.0
+    }
+  },
+  "fold0x_clean": {
+    "global": 0.98117,
+    "per_source": 0.98117,
+    "delta": {
+      "n": 353503,
+      "delta": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "p_not_better": 1.0
+    }
+  },
+  "timing_min": 8.6
+}

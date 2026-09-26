@@ -1,0 +1,23 @@
+{
+  "run_id": "20260926-1512_aryan-bhendarkar_dm-persource",
+  "name": "dm-persource",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "per-source thresholds (t_S2, t_S3) beat the global t on DM-val (note 13)",
+  "params": {
+    "dm_ref": "20260926-1413_aryan-bhendarkar_dm-val-mini",
+    "mini_pred": "artifacts/20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3/val_pred.parquet",
+    "fold0x_pred": "artifacts/20260926-1441_aryan-bhendarkar_dm-val-fold0x/fold0x_pred.parquet",
+    "draws": 5
+  },
+  "tags": [
+    "dm-val",
+    "decision"
+  ],
+  "parent": "20260926-1413_aryan-bhendarkar_dm-val-mini",
+  "git_commit": "c1a68d4",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T15:12:46+05:30",
+  "status": "done",
+  "duration_min": 8.6,
+  "finished_ist": "2026-09-26T15:21:22+05:30"
+}

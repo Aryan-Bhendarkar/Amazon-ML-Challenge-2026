@@ -420,15 +420,65 @@ def add_features(X: pl.DataFrame, ctx: SplitContext, groups=GROUPS, workers: int
 DERIVED = {f"{p}_lfrac_{k}_q05": (f"{p}_lfrac_{k}", 0.5) for p in ("ex", "mi") for k in ("cmax", "cmin")}
 
 
+# Per-source competition features (G7 "ps", monitor note 11): computed per S1 over its COMPLETE candidate list,
+# separately for each candidate source (S2 vs S3), from existing pair scores. Group-level, so every consumer must pass
+# whole S1 groups (all do: caches and test batches hold complete S1 candidate lists).
+PS_KEYS = ("name_tset", "addr_tset", "cos_na")
+PS_FEATS = ([f"ps_rank_{k}" for k in PS_KEYS] + [f"ps_gap_{k}" for k in PS_KEYS] +
+            ["ps_n90_name_tset", "ps_n90_addr_tset", "ps_n_src", "xs_max_name_tset", "xs_max_addr_tset"])
+PS_SRC = ["s1_id", "cand_src", *PS_KEYS]
+
+
+EMB_FEATS = ["emb_cos_name", "emb_cos_addr", "emb_cos_full"]   # Lane B: frozen bge-m3 band cosines (NaN outside band)
+
+
+def join_emb(X: pl.DataFrame, cache: str, tag: str, feats: list[str]) -> pl.DataFrame:
+    """Left-join the band cosines data/cands/<cache>/emb_<tag>.parquet (s1_id, cand_id, emb_cos_*) when requested."""
+    need = [f for f in EMB_FEATS if f in feats and f not in X.columns]
+    if not need:
+        return X
+    E = pl.read_parquet(paths.DATA_DIR / "cands" / cache / f"emb_{tag}.parquet", columns=["s1_id", "cand_id"] + need)
+    return X.join(E, on=["s1_id", "cand_id"], how="left")
+
+
 def expand_derived(feats: list[str]) -> list[str]:
     """Feature list with derived names replaced by their source columns (dedup, order kept)."""
-    return list(dict.fromkeys(DERIVED[f][0] if f in DERIVED else f for f in feats))
+    out = []
+    for f in feats:
+        if f in DERIVED:
+            out.append(DERIVED[f][0])
+        elif f in PS_FEATS:
+            out.extend(PS_SRC)
+        elif f in EMB_FEATS:                     # joined from emb_<tag>.parquet, not a cache column
+            continue
+        else:
+            out.append(f)
+    return list(dict.fromkeys(out))
+
+
+def _add_ps(X: pl.DataFrame) -> pl.DataFrame:
+    g = ["s1_id", "cand_src"]
+    X = X.with_columns([pl.col(k).fill_null(-1.0).cast(pl.Float32).alias(f"_{k}") for k in PS_KEYS])
+    X = X.with_columns(
+        [pl.col(f"_{k}").rank("min", descending=True).over(g).cast(pl.Int16).alias(f"ps_rank_{k}") for k in PS_KEYS] +
+        [(pl.col(f"_{k}").max().over(g) - pl.col(f"_{k}")).cast(pl.Float32).alias(f"ps_gap_{k}") for k in PS_KEYS] +
+        [(pl.col(f"_{k}") >= 90).sum().over(g).cast(pl.Int16).alias(f"ps_n90_{k}") for k in ("name_tset", "addr_tset")] +
+        [pl.len().over(g).cast(pl.Int16).alias("ps_n_src")])
+    mx = X.group_by(g).agg([pl.col(f"_{k}").max().alias(f"xs_max_{k}") for k in ("name_tset", "addr_tset")]) \
+          .with_columns((1 - pl.col("cand_src")).cast(X.schema["cand_src"]).alias("cand_src"))   # other source's best
+    X = X.join(mx, on=g, how="left").with_columns([pl.col(f"xs_max_{k}").fill_null(-1.0).cast(pl.Float32)
+                                                   for k in ("name_tset", "addr_tset")])
+    return X.drop([f"_{k}" for k in PS_KEYS])
 
 
 def add_derived(X: pl.DataFrame, feats: list[str]) -> pl.DataFrame:
     add = [(pl.col(DERIVED[f][0]) / DERIVED[f][1]).round(0) * DERIVED[f][1] for f in feats if f in DERIVED]
     names = [f for f in feats if f in DERIVED]
-    return X.with_columns([e.cast(pl.Float32).alias(n) for e, n in zip(add, names)]) if add else X
+    if add:
+        X = X.with_columns([e.cast(pl.Float32).alias(n) for e, n in zip(add, names)])
+    if any(f in PS_FEATS for f in feats) and "ps_n_src" not in X.columns:
+        X = _add_ps(X)
+    return X
 
 
 NORM_COLS = [c for c in S1_COLS if c != "entity_id"] + [c + "_c" for c in C_COLS if c != "entity_id"] + \

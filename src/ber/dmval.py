@@ -41,7 +41,7 @@ def copies(assigned: pd.DataFrame, w: float, lo: float, hi: float, seed: int) ->
     return np.where(band_neg, fl + extra, 1.0)
 
 
-def entity_f05(assigned: pd.DataFrame, n_true: pd.Series, t: float, c: np.ndarray | None = None) -> pd.Series:
+def entity_f05(assigned: pd.DataFrame, n_true: pd.Series, t, c: np.ndarray | None = None) -> pd.Series:
     """Per-entity F0.5 at threshold t with FP replication counts c (None = clean). assigned: s1_id, prob, lab (bool:
     the row's record truly belongs to its S1). n_true: index = ALL eval S1, value = #true records."""
     sel = assigned["prob"].to_numpy() >= t
@@ -57,6 +57,6 @@ def entity_f05(assigned: pd.DataFrame, n_true: pd.Series, t: float, c: np.ndarra
     return pd.Series(f, index=n_true.index)
 
 
-def dm_entity_f05(assigned: pd.DataFrame, n_true: pd.Series, t: float, w: float, lo: float, hi: float,
+def dm_entity_f05(assigned: pd.DataFrame, n_true: pd.Series, t, w: float, lo: float, hi: float,
                   draws: int = 5) -> pd.Series:
     return sum(entity_f05(assigned, n_true, t, copies(assigned, w, lo, hi, seed=42 + d)) for d in range(draws)) / draws
