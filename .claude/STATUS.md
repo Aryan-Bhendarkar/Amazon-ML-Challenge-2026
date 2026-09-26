@@ -1,12 +1,19 @@
-Updated: 26 Sep 20:50 IST (amlc-49, Lane A; /loop running)
-Base: **20260926-1737_…-psemb** (ps + frozen bge-m3 band cosines), t = 0.775
+Updated: 27 Sep 02:45 IST (amlc-49 HEADLESS, lead prompt 02:35)
+Base: **psemb 20260926-1737**, t = 0.775 (C1 = psemb + FR norm v2 = **LB 0.968**, current best)
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
-Running now:
-  - tmux kgx2: Kaggle acc1 `amlc-xenc2-score`. The EXISTING MiniLM ckpts (sha256 in data/kaggle/xenc2_map/ckpt_sha256.txt) score 10.76M pairs at p ≥ 0.01:
-    - train 794,573 (OOF by the verified cf halves, 0 mismatches), mini 379,807, fold0x 1,523,883, test 8,064,341
-    - Then join `xenc_logit` into psemb → DM-fold0x / clean / LOCO (keep if DM-fold0x ≥ +0.001; IN→US ≥ −0.003). Deadline 27 Sep 10:00.
-  - Next on CPU: D1 adversarial validation (val vs test, US+IN and India-only).
+Running now: tmux xs (`logs/chainXS.sh`): xenc stack
+  - **A** = psemb + `xenc_minilm` (existing cross-fitted MiniLM logits as a LightGBM feature; NaN where not scored, i.e. stage-1 p < 0.01)
+  - **B** = A minus the 4 ldf features (ex/mi_ldf_min/max)
+  - per variant: train + LOCO → DM-mini (frozen ρ/w, t re-tuned) → DM-fold0x (frozen t) → paired vs psemb on mini + fold0x (clean, DM, per country)
+  - ETA: A ~03:40, B ~04:40 IST
+  - xenc coverage/leakage checks:
+    - 99.4% of train positives scored; 100% of pairs in every OOF-prob band
+    - train-role OOF AUC 0.9932 = never-trained es rows 0.9934 → no in-sample leak
+  - Stack choice: **feature in the GBDT** (preferred path; coverage adequate). The 3-parameter sigmoid fallback is not needed.
+  - Multi-source ready: `pipelines/xenc_join.py name=dir …` → feature `xenc_<name>`. Lane G logits plug in as `features_v1 --xenc minilm,xlmr,…`.
+Next: gate (DM-fold0x ≥ +0.002 vs psemb, no per-country drop, FR diagnostics) → C1-path test build (~2 h) → SUBMIT-REQUEST. Nothing will be uploaded.
+Done: EXP-NL (psemb − lfrac) KILL: DM-fold0x −0.0009, LOCO direction-flip.
 **Lane G handoff (box2): G3 pair set ready.**
   - `aws s3 sync s3://amlc26-699191579023/share/g3 data/kaggle/g3`
   - pairs.parquet: pair_id, tag ∈ {train, mini, fold0x, test}, cf, k1, k2; 10.76M pairs at stage-1 p ≥ 0.01
