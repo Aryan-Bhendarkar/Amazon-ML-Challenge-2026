@@ -1,14 +1,19 @@
-Updated: 26 Sep 21:36 IST (amlc-box2, Lanes C + G; branch `laneC`)
+Updated: 27 Sep 00:25 IST (amlc-box2, Lanes C + G; branch `laneC`)
 
-## Lane G (GPU): per-account status (live: `logs/lane_g_status.log`, tmux `gpoll` polls every 2 min and pulls outputs on completion)
-| account | job (slug) | accelerator | state | ETA |
-|---|---|---|---|---|
-| acc2 ashu273k | XLM-R half 0 (amlc-g2-xlmr-h0) | L4X1 | pushed 21:33, QUEUED | 7 h train after start (budget 420 min) |
-| acc3 darshanbagade | XLM-R half 1 (amlc-g2-xlmr-h1) | L4X1 | pushed 21:33, QUEUED | 7 h after start |
-| acc5 darshanbagadeycce | MiniLM 5× data, both halves (amlc-g2-minilm) | T4x2 | pushed 21:33, QUEUED | 2.5 h after start |
-- Rule: if an L4 job is still QUEUED at 21:53 IST, re-push it on T4x2 (queue = not a failure).
-- Fixed on the way: generated job scripts were truncated (regex bug) in the first push; the "Maximum batch GPU session count of 2" push error was reported as success by `kaggle_gpu.py` (now exits non-zero). Stale queued `amlc-smoke` kernels on acc2/acc3 were deleted to free the 2 GPU slots.
-- G3 (scoring kernels) waits for box1's pair-text export (psemb p ≥ 0.005) + the G2 checkpoints.
+## Lane G (GPU): per-account status (live: `logs/lane_g_status.log`; tmux `gpoll` = kaggle/poll_lane_g2.sh, every 3 min:
+## training COMPLETE -> pull ckpts + sha256 -> push the G3 scoring kernel once its amlc-g3 dataset is ready -> pull logits)
+| account | G2 training | state | G3 scoring (amlc-g3-*) |
+|---|---|---|---|
+| acc2 ashu273k | XLM-R half 0 (amlc-g2-xlmr-h0, v2 by lead) | RUNNING since ~23:30 IST (420 min budget) → ETA ~06:30 IST | auto-push after training (L4, T4x2 fallback) |
+| acc3 darshanbagade | XLM-R half 1 (amlc-g2-xlmr-h1) | RUNNING (L4) → ETA ~06:30 IST | auto-push after training |
+| acc5 darshanbagadeycce | MiniLM both halves (amlc-g2-minilm) | **COMPLETE** 00:01 IST: full epoch in 128 min on 2×T4, 492 pairs/s/GPU; best val logloss **h0 0.00629, h1 0.00614** (still falling at every 30-min ckpt); ckpts pulled to artifacts/kaggle/amlc-g2-minilm | auto-push as soon as acc5's amlc-g3 upload is ready (~00:40 IST); est. 10.8M pairs × 2 models |
+- **G3 inputs** (`pipelines/xenc_g3_prep.py`, data/kaggle/g3_up): box1's 10.76M-pair set (test 8.06M, fold0x 1.52M, mini 0.38M, train 0.79M) with
+  - **halves recomputed as md5(s1_id) % 2**: the G2 models trained on these; box1's `cf` is hash(42), the OLD ckpts' halves. Checked 0 mismatches vs the G1 export over 146k S1.
+  - text rebuilt on norm_v2 in the training serialization.
+- **Kernel** `kaggle/xenc_g3.py` (variants via `kaggle/gen_g3_variants.py`, compile + line-count checked). A half-k model scores the half-(1−k) train pairs + all other pairs, 1M-pair parts. CPU smoke-tested (strict ckpt load, own-half exclusion, finite logits).
+- **Outputs for box1:** `logits_h{k}_{tag}.parquet` (pair_id, xenc_h{k}). Map pair_id → (tag, k1, k2) via data/kaggle/g3_up_map.parquet, or box1's own pairs.parquet (same pair_id).
+- **Stacking rule:** train uses the other half's model; mini/fold0x/test use the mean of both.
+- **Incident:** an early G3 minilm push had no dataset attached (Kaggle only warns: "not valid dataset sources"). It was deleted before running; `kaggle_gpu.py run` now fails on that warning.
 
 ## Lane C results
 - **Transfer-safe feature list (C1, gate PASS):** drop {ex_ldf_min, ex_ldf_max, mi_ldf_min, mi_ldf_max}. LOCO-avg +0.0022 (3 seeds), clean mini −0.0002, fold0x −0.00007 (n.s.). Rescorable from test_feats. Measured on the 0710 base → Lane A to re-check on psemb.

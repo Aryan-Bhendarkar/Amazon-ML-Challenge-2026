@@ -291,3 +291,9 @@ Orphan-sim protocol:
 - G1 export `pipelines/xenc_g1_export.py` → data/kaggle/g1 (train 8.01M rows: all 512k positives + 5.5M hardest + 2M random hard negatives, pos 6.4%, cf = md5(s1_id)%2 halves 4.00M/4.01M; valid = 300k fold-1 rows). Text `[COL] name [VAL] … [COL] address [VAL] … [NUM] house` on norm_v2. No entity ids uploaded.
 - G2 kernel `kaggle/xenc_g2.py` (+ generated per-job copies): BCE, fp16 AMP, max_len 96, 1 epoch time-boxed after a 200-step throughput probe, ckpt + val logloss every 30 min, best ckpt kept; aug p=0.15 on positives (token drop except first token, adjacent swap, legal drop; no digit edits). Models MIT: FacebookAI/xlm-roberta-base, microsoft/Multilingual-MiniLM-L12-H384.
 - pushed: acc2 xlmr half 0 (L4X1, 420 min), acc3 xlmr half 1 (L4X1, 420 min), acc5 MiniLM both halves (T4x2, 150 min each in parallel). Stale queued smoke kernels + truncated first pushes deleted (they held the 2 GPU-session slots).
+
+## LANE-G G2 MiniLM 5× (acc5, amlc-g2-minilm) — DONE 27 Sep 00:01 IST
+- change: MiniLM-L12 (MIT) on the G1 8.0M-pair cross-fit set (vs the old xenc's smaller set), one model per md5 half, 2×T4 in parallel
+- result: full epoch 31.2k steps × 128 in 128 min (492 pairs/s/GPU); fold-1 val logloss h0 0.00629 / h1 0.00614 (pos rate 3.75%), monotone improvement 0.0096 → 0.0063 over 4 ckpts
+- verdict: ckpts OK → G3 scoring (amlc-g3-minilm) queued automatically; stacking verdict is box1's (DM-fold0x / LOCO)
+- test cost: G3 kernel ~10.8M pairs per model on Kaggle GPU
