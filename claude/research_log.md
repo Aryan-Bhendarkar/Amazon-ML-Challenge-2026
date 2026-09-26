@@ -7,3 +7,6 @@
 - **Plan:** HANDOFF EXP-A → H (see `claude/HANDOFF.md`). Primary metric = orphan-sim fold0x; guardrails = clean + LOCO.
 - **Already killed** (don't re-open): set-level decision layer (+0.0003); ctx v4 G6 twins (mini n.s.; FR diff-street 35.7 → 37.3%); cross-encoder as a feature (LOCO −).
 - **Running:** bmono (monotone constraints, EXP-H item), started 11:22 IST.
+
+## 11:55 IST: density_sim read
+- r = fraction of non-query S1 kept; features were not recomputed after removal. Uniform 19% prior is about -0.003, so orphans may explain only about a third of the excess gap, and France is the likely rest. Told Claude Code to pull EXP-F steps 1-2 forward if EXP-A confirms roughly -0.003.

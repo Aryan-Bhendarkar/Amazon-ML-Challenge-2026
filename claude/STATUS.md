@@ -21,3 +21,11 @@ Updated: 26 Sep 11:50 IST (placeholder written by Cowork monitor; Claude Code ov
    - FP on true singletons vs FP on non-singletons vs FN
 6. **bmono** (monotone constraints, EXP-H) can finish, but must not delay EXP-A. Log it in `claude/experiments.md` as EXP-H1.
 7. **Any gain > +0.01 from one change gets a validation-auditor pass before you report it.**
+﻿
+8. **(11:55) density_sim semantics, checked in code:** `r` = fraction of the NON-query S1 **kept**. All eval S1 are kept, and the dropped S1's GT copies stay as orphans unless `--clean`.
+   - Two points in the file need correcting:
+     - Line 72's comment says orphans "cannot exist on test". The records/S1 evidence (5.76 test vs 4.67 train) contradicts that; fix the comment.
+     - The sim appears to reuse precomputed features (`base`), so the S1-side counts were NOT recomputed after removal. EXP-A must recompute them.
+   - Implied prior for EXP-A (uniform 19% removal ≈ r=0.81): about −0.0028 (linear from r=0.5 → −0.0073). If EXP-A confirms roughly −0.003, orphans explain only about a third of the −0.009 excess gap. The rest is probably France.
+     - In that case, **start EXP-F step 1–2 (test-pool statistics + French normalization audit) immediately** instead of waiting for tomorrow, and log it under "needs human".
+     - Still run EXP-B if the biased variant is ≥ 0.004.
