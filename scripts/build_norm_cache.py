@@ -21,7 +21,7 @@ from ber import paths, tokenmap
 from ber.normalize import normalize_address, normalize_name, script_of
 
 # v0: hand rules only. v1: + learned native-script token map (scripts/build_token_map.py, folds 1-4 pairs)
-NORM_VERSION = 1
+NORM_VERSION = 2          # v2 (26 Sep, Lane C): France-keyed name/address rules; US/India byte-identical to v1
 TOKEN_MAP_PATH = paths.FEATURE_DIR / "token_map_v1.json"
 _TMAP = None
 
@@ -39,7 +39,8 @@ def norm_path(split: str, source: int):
 
 
 def _work(rows: dict) -> pa.Table:
-    names = [normalize_name(x, token_map=_TMAP) for x in rows["business_name"]]
+    names = [normalize_name(x, token_map=_TMAP, country=c if NORM_VERSION >= 2 else "")
+             for x, c in zip(rows["business_name"], rows["country"])]
     addrs = [normalize_address(a, c) for a, c in zip(rows["business_address"], rows["country"])]
     out = pd.DataFrame(names, columns=NAME_COLS)
     out[ADDR_COLS] = pd.DataFrame(addrs, columns=ADDR_COLS)

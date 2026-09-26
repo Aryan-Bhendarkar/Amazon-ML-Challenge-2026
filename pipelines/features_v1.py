@@ -99,14 +99,14 @@ MONO_UP = ["name_tset", "name_tsort", "name_ratio", "name_partial", "comp_jw", "
 MONOTONE = False                           # set from --monotone
 
 
-def train_lgb(tr: pd.DataFrame, feats: list[str], cats: list[str], threads: int, lr=0.05, rounds=3000):
+def train_lgb(tr: pd.DataFrame, feats: list[str], cats: list[str], threads: int, lr=0.05, rounds=3000, seed=SEED):
     es = tr["is_es"].to_numpy()
     dtr = lgb.Dataset(tr.loc[~es, feats], tr.loc[~es, "label"].astype(int), categorical_feature=cats,
                       free_raw_data=True)
     des = lgb.Dataset(tr.loc[es, feats], tr.loc[es, "label"].astype(int), reference=dtr)
     params = dict(objective="binary", learning_rate=lr, num_leaves=127, min_data_in_leaf=100,
                   feature_fraction=0.8, bagging_fraction=0.8, bagging_freq=1, lambda_l2=1.0,
-                  verbose=-1, seed=SEED, num_threads=threads, deterministic=True, force_row_wise=True)
+                  verbose=-1, seed=seed, num_threads=threads, deterministic=True, force_row_wise=True)
     if MONOTONE:
         params.update(monotone_constraints=[1 if f in MONO_UP else 0 for f in feats],
                       monotone_constraints_method="advanced")

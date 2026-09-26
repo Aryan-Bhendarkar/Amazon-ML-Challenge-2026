@@ -72,6 +72,21 @@ LEGAL_CANON = {
 }
 NAME_STOP = {"the", "and", "of", "m/s", "ms", "sri", "shri", "shree", "a", "an", "de", "la", "le", "les", "du", "des"}
 
+# Country-keyed NAME rules (hand-written; generic fallback = no rule). Kept country-keyed so that the
+# US/India train normalization stays byte-identical (the model is trained on it). Evidence for France
+# (label-free, test S1 vs pool records sharing house + street, 26 Sep): cie<->compagnie 503 swaps,
+# and<->et 384, freres<->frs 232, saint<->st 155, 5arl/5as OCR typos 243, 'ei' as a lone extra token 755,
+# '(France)' insertions in 8% of S1 names.
+COUNTRY_NAME_RULES = {
+    "france": {
+        "strip": re.compile(r"\(\s*france\s*\)"),
+        "tokens": {"et": "and", "frs": "freres", "st": "saint", "cie": "co", "compagnie": "co",
+                   "5arl": "sarl", "5as": "sas", "5asu": "sasu"},
+        "legal": {"ei": "ei"},                 # entreprise individuelle
+    },
+}
+_NO_RULES = {"strip": None, "tokens": {}, "legal": {}}
+
 _ID_TAG = re.compile(r"\(\s*id\s*:?\s*\d+\s*\)|\bid\s*:\s*\d+|#\s*\d+\s*$")
 _ALIAS_SPLIT = re.compile(r"\b(?:formerly known as|formerly|f/k/a|fka|a/k/a|aka|d/b/a|dba|doing business as|trading as|t/a)\b")
 _DOMAIN = re.compile(r"^(?:https?://)?(?:www\.)?([a-z0-9][a-z0-9\-]*)\.(?:co\.in|com|net|org|in|fr|biz|info|co|us|io)$")
@@ -87,12 +102,16 @@ class NameNorm(NamedTuple):
     kind: str          # 'name' | 'domain' | 'handle' | 'empty'
 
 
-def normalize_name(raw: str, token_map: dict | None = None) -> NameNorm:
+def normalize_name(raw: str, token_map: dict | None = None, country: str = "") -> NameNorm:
     """token_map (ber.tokenmap, learned from train pairs) is applied only when the raw name is in a
-    non-Latin script, before legal-form canonicalization. None -> v0 behaviour."""
+    non-Latin script, before legal-form canonicalization. None -> v0 behaviour.
+    country: selects COUNTRY_NAME_RULES (norm v2); '' / unknown country -> generic behaviour."""
     if token_map and script_of(raw or "") == "latin":
         token_map = None
+    rules = COUNTRY_NAME_RULES.get((country or "").strip().lower(), _NO_RULES)
     s = to_ascii(raw or "")
+    if rules["strip"] is not None:
+        s = rules["strip"].sub(" ", s)
     s = _squash(s)
     if s in ("", "na", "n/a", "null", "<null>", "none", "-"):
         return NameNorm("", "", "", "", "", "empty")
@@ -115,7 +134,8 @@ def normalize_name(raw: str, token_map: dict | None = None) -> NameNorm:
     for t in _NONALNUM.sub(" ", s).split():
         if token_map:
             t = token_map.get(t, t)
-        c = LEGAL_CANON.get(t)
+        t = rules["tokens"].get(t, t)
+        c = LEGAL_CANON.get(t) or rules["legal"].get(t)
         if c is not None:
             full_toks.append(c)
             legal.extend(c.split())
@@ -123,7 +143,7 @@ def normalize_name(raw: str, token_map: dict | None = None) -> NameNorm:
             full_toks.append(t)
             if t not in NAME_STOP:
                 core_toks.append(t)
-    alias_n = normalize_name(alias, token_map).core if alias else ""
+    alias_n = normalize_name(alias, token_map, country).core if alias else ""
     core = " ".join(core_toks)
     return NameNorm(" ".join(full_toks), core, " ".join(sorted(set(legal))),
                     core.replace(" ", ""), alias_n, kind)
@@ -173,6 +193,45 @@ IN_STATES = {
 }
 IN_STATE_CODE_ALIASES = {"ts": "tg", "or": "od", "ct": "cg", "ut": "uk"}
 
+# France: metropolitan regions (2016) + pre-2016 region names + the 96 departments -> region code, so
+# that 'Pays de la Loire' (every test S1) and 'Loire-Atlantique' (31% of test pool records) become the
+# same `state` instead of unmatched street tokens. Hand-written general knowledge (like US_STATES).
+_FR_REGION_DEPTS = {
+    "ara": ("auvergne-rhone-alpes", "auvergne", "rhone-alpes", "ain", "allier", "ardeche", "cantal", "drome",
+            "isere", "loire", "haute-loire", "puy-de-dome", "rhone", "savoie", "haute-savoie"),
+    "bfc": ("bourgogne-franche-comte", "bourgogne", "franche-comte", "cote-d'or", "doubs", "jura", "nievre",
+            "haute-saone", "saone-et-loire", "yonne", "territoire de belfort"),
+    "bre": ("bretagne", "cotes-d'armor", "finistere", "ille-et-vilaine", "morbihan"),
+    "cvl": ("centre-val de loire", "cher", "eure-et-loir", "indre", "indre-et-loire", "loir-et-cher", "loiret"),
+    "cor": ("corse", "corse-du-sud", "haute-corse"),
+    "ges": ("grand est", "alsace", "lorraine", "champagne-ardenne", "ardennes", "aube", "marne", "haute-marne",
+            "meurthe-et-moselle", "meuse", "moselle", "bas-rhin", "haut-rhin", "vosges"),
+    "hdf": ("hauts-de-france", "nord-pas-de-calais", "picardie", "aisne", "nord", "oise", "pas-de-calais",
+            "somme"),
+    "idf": ("ile-de-france", "paris", "seine-et-marne", "yvelines", "essonne", "hauts-de-seine",
+            "seine-saint-denis", "val-de-marne", "val-d'oise"),
+    "nor": ("normandie", "basse-normandie", "haute-normandie", "calvados", "eure", "manche", "orne",
+            "seine-maritime"),
+    "naq": ("nouvelle-aquitaine", "aquitaine", "poitou-charentes", "limousin", "charente", "charente-maritime",
+            "correze", "creuse", "dordogne", "gironde", "landes", "lot-et-garonne", "pyrenees-atlantiques",
+            "deux-sevres", "vienne", "haute-vienne"),
+    "occ": ("occitanie", "midi-pyrenees", "languedoc-roussillon", "ariege", "aude", "aveyron", "gard",
+            "haute-garonne", "gers", "herault", "lot", "lozere", "hautes-pyrenees", "pyrenees-orientales",
+            "tarn", "tarn-et-garonne"),
+    "pdl": ("pays de la loire", "loire-atlantique", "maine-et-loire", "mayenne", "sarthe", "vendee"),
+    "pac": ("provence-alpes-cote d'azur", "paca", "alpes-de-haute-provence", "hautes-alpes", "alpes-maritimes",
+            "bouches-du-rhone", "var", "vaucluse"),
+}
+
+
+def _fr_key(name: str) -> str:
+    return _squash(re.sub(r"[^a-z]+", " ", name))       # same transform as the component in _state_of
+
+
+FR_STATES = {_fr_key(n): code for code, names in _FR_REGION_DEPTS.items() for n in names}
+FR_STATES.update({k.replace("saint", "st"): v for k, v in list(FR_STATES.items()) if "saint" in k})
+_FR_NUM_SUFFIX = re.compile(r"(\d+)\s*(?:bis|ter|quater)\b")      # 1bis / 15 bis / 3 ter -> house number only
+
 _NUM = re.compile(r"\d+[a-z]?(?:[-/]\d+[a-z]?)*")
 
 
@@ -200,12 +259,16 @@ def _state_of(component: str, country: str) -> str:
         c2 = IN_STATE_CODE_ALIASES.get(c, c)
         if len(c2) == 2 and c2 in IN_STATES.values():
             return c2
+    elif country == "france":
+        return FR_STATES.get(c, "")
     return ""
 
 
 def normalize_address(raw: str, country: str = "") -> AddrNorm:
     ctry = (country or "").strip().lower()
     s = to_ascii(raw or "").replace("<null>", " ")
+    if ctry == "france":
+        s = _FR_NUM_SUFFIX.sub(r"\1", s)
     s = _squash(s)
     if not s:
         return AddrNorm("", "", "", "", "", "", 0, True)
