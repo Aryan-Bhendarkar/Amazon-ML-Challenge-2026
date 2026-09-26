@@ -26,7 +26,7 @@ import polars as pl
 
 import features_v1 as fv
 from ber import ctx_features as cf
-from ber import harness, io
+from ber import harness, io, paths
 from ber.decision import assign_best_s1, threshold_matches, tune_threshold
 from ber.metric import paired_bootstrap, per_entity_scores
 from ber.tracking import Run
@@ -156,12 +156,20 @@ def main(a):
     ref_seeds = [int(s) for s in a.ref_seeds.split(",") if s]
     jobs = [("full", s) for s in seeds + [s for s in ref_seeds if s not in seeds]] + \
            [(v, s) for v in variants if v != "full" for s in seeds]
+    res, per = {}, {}
+    if a.ref_from:                                   # reuse the 'full' reference of an earlier audit run
+        rdir = paths.ART_DIR / a.ref_from
+        raw = json.loads((paths.EXP_DIR / a.ref_from / "metrics.json").read_text())["loco_raw"]
+        for s in seeds:
+            pe = pd.read_parquet(rdir / f"per_full@{s}.parquet")
+            per[("full", s)] = {k: g.drop(columns="dir") for k, g in pe.groupby("dir")}
+            res[f"full@{s}"] = raw[f"full@{s}"]
+        jobs = [j for j in jobs if j[0] != "full"]
     name = "loco-audit-v1-n2-ctx3" + (f"-{a.tag}" if a.tag else "")
     with Run(name, hypothesis=a.hypothesis or "LOCO feature-group audit of the 0710 feature set",
              params={"cache": "v1_n2", "ctx_ver": 3, "variants": variants, "seeds": seeds, "ref_seeds": ref_seeds,
                      "loco_n": a.loco_n, "groups": GROUPS}, tags=["features", "loco", "laneC"],
              parent="20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3") as run:
-        res, per = {}, {}
         for v, s in jobs:
             t1 = time.time()
             fl = parse_variant(v, feats)
@@ -211,6 +219,7 @@ if __name__ == "__main__":
     ap.add_argument("--ref-seeds", default="", help="extra seeds for the 'full' reference (noise estimate)")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--threads", type=int, default=8)
+    ap.add_argument("--ref-from", default="", help="run_id of an earlier audit whose full@<seed> reference to reuse")
     ap.add_argument("--tag", default="")
     ap.add_argument("--hypothesis", default="")
     main(ap.parse_args())

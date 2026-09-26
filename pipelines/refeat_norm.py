@@ -82,63 +82,96 @@ def _n_diff(a: pl.Series, b: pl.Series) -> int:
     return int((~same).sum())
 
 
-def main(a):
+def check(a, split: str, cs: list[str]) -> None:
+    """Recompute every row of countries `cs` (load-all) and assert equality with the cache."""
     t0 = time.time()
-    split = "test" if a.tag.startswith("test") else "train"
-    src = CANDS / a.cache / f"{a.tag}.parquet"
-    cache = pl.read_parquet(src)
+    cache = pl.read_parquet(CANDS / a.cache / f"{a.tag}.parquet")
     schema = cache.schema
-    ctry = pl.concat([pl.scan_parquet(norm_file(split, 1, a.old)).select("entity_id", "country").collect()])
-    cache = cache.join(ctry.rename({"entity_id": "s1_id", "country": "_ctry"}), on="s1_id", how="left")
-    cs = a.countries.split(",") if a.countries else changed_countries(split, a.old, a.new)
-    print(f"[{a.tag}] {cache.height:,} pairs; re-featurize countries {cs} on norm_v{a.new} "
-          f"(norm_v{a.old} -> v{a.new} diff) {time.time() - t0:.0f}s", flush=True)
-    todo = cache.filter(pl.col("_ctry").is_in(cs))
+    ctry = pl.scan_parquet(norm_file(split, 1, a.old)).select("entity_id", "country").collect()
+    todo = cache.join(ctry.rename({"entity_id": "s1_id", "country": "_ctry"}), on="s1_id", how="left") \
+                .filter(pl.col("_ctry").is_in(cs))
     if a.limit_s1:
         keep = todo["s1_id"].unique().sort().sample(min(a.limit_s1, todo["s1_id"].n_unique()), seed=42)
         todo = todo.filter(pl.col("s1_id").is_in(keep.implode()))
-    rest = cache.filter(~pl.col("_ctry").is_in(cs)) if not a.check else None
     feat_cols = [c for c in schema if c not in KEEP]
     todo = todo.with_columns((pl.col("s1_id").hash(seed=7) % a.chunks).alias("_ch"))
-    out_parts = []
     for ch in range(a.chunks):
         P = todo.filter(pl.col("_ch") == ch)
         if not P.height:
             continue
-        F = refeat(P, split, a.new)
-        new = P.select([c for c in schema if c in KEEP]).join(F, on=["s1_id", "cand_id"], how="left")
-        new = new.select(list(schema)).cast(dict(schema))
-        if a.check:
-            old = P.select(list(schema)).sort(["s1_id", "cand_id"])
-            nw = new.sort(["s1_id", "cand_id"])
-            bad = {c: n for c in feat_cols if (n := _n_diff(old[c], nw[c]))}
-            print(f"  chunk {ch}: {P.height:,} pairs, mismatching cols {bad or 'NONE'}", flush=True)
-            assert not bad, f"recompute differs from cache: {bad}"
-        else:
-            out_parts.append(new)
-            print(f"  chunk {ch + 1}/{a.chunks}: {P.height:,} pairs {time.time() - t0:.0f}s", flush=True)
-        del F, P
-        gc.collect()
+        new = recompute(P.select(list(schema)), schema, split, a.new)
+        old = P.select(list(schema)).sort(["s1_id", "cand_id"])
+        nw = new.sort(["s1_id", "cand_id"])
+        bad = {c: n for c in feat_cols if (n := _n_diff(old[c], nw[c]))}
+        print(f"  chunk {ch}: {P.height:,} pairs, mismatching cols {bad or 'NONE'}", flush=True)
+        assert not bad, f"recompute differs from cache: {bad}"
+    print(f"CHECK PASSED: recompute == cache for {todo.height:,} pairs of {cs} ({time.time() - t0:.0f}s)")
+
+
+def recompute(P: pl.DataFrame, schema, split: str, v: int) -> pl.DataFrame:
+    """Rows P (complete S1 lists) with base features recomputed on norm v; KEEP columns from the cache."""
+    F = refeat(P, split, v)
+    new = P.select([c for c in schema if c in KEEP]).join(F, on=["s1_id", "cand_id"], how="left")
+    return new.select(list(schema)).cast(dict(schema))
+
+
+def main(a):
+    t0 = time.time()
+    split = "test" if a.tag.startswith("test") else "train"
+    cs = a.countries.split(",") if a.countries else changed_countries(split, a.old, a.new)
+    print(f"[{a.tag}] re-featurize countries {cs} on norm_v{a.new} {time.time() - t0:.0f}s", flush=True)
     if a.check:
-        print(f"CHECK PASSED: recompute == cache for {todo.height:,} pairs of {cs} ({time.time() - t0:.0f}s)")
-        return
-    dst = CANDS / a.cache / f"{a.tag}_n{a.new}.parquet"
+        return check(a, split, cs)
+    # streaming write: row-group batches of complete S1 lists (the layout predict_test_v1 relies on)
+    src = CANDS / a.cache / f"{a.tag}.parquet"
+    pf = pq.ParquetFile(src)
+    ctry = pl.scan_parquet(norm_file(split, 1, a.old)).select("entity_id", "country").collect() \
+             .rename({"entity_id": "s1_id", "country": "_ctry"})
+    dst = CANDS / a.cache / f"{a.tag}_n{a.new}{'_slice' if a.limit_rows else ''}.parquet"
     tmp = dst.with_suffix(".tmp")
-    w = None
-    rest = rest.drop("_ctry").with_columns((pl.col("s1_id").hash(seed=7) % a.chunks).alias("_ch"))
-    groups = out_parts + [rest.filter(pl.col("_ch") == ch).drop("_ch") for ch in range(a.chunks)]
-    for g in groups:                                   # every group = complete S1 candidate lists
-        if not g.height:
-            continue
-        tb = g.select(list(schema)).to_arrow()
+    w, schema, seen, n_in, n_re, batch, rows = None, None, set(), 0, 0, [], 0
+
+    def flush(batch):
+        nonlocal w, schema, n_in, n_re
+        X = pl.from_arrow(pf.read_row_groups(batch))
+        schema = schema or X.schema
+        ids = set(X["s1_id"].unique().to_list())
+        assert not (ids & seen), "an S1 spans row-group batches -> per-S1 rank features would be wrong"
+        seen.update(ids)
+        X = X.join(ctry, on="s1_id", how="left")
+        P = X.filter(pl.col("_ctry").is_in(cs)).drop("_ctry")
+        inc = P.group_by("s1_id").agg(pl.len().alias("n"), pl.col("n_cand_s1").first()).filter(pl.col("n") != pl.col("n_cand_s1"))
+        assert not inc.height, f"{inc.height} S1 with incomplete candidate lists in this batch (row groups not S1-aligned)"
+        R = X.filter(~pl.col("_ctry").is_in(cs) | pl.col("_ctry").is_null()).drop("_ctry")
+        out = pl.concat([recompute(P, schema, split, a.new), R]) if P.height else R
+        assert out.height == X.height
+        tb = out.select(list(schema)).to_arrow()
         if w is None:
             w = pq.ParquetWriter(str(tmp), tb.schema, compression="zstd")
-        w.write_table(tb, row_group_size=tb.num_rows)
+        w.write_table(tb.cast(w.schema), row_group_size=tb.num_rows)
+        n_in += X.height
+        n_re += P.height
+        print(f"  {n_in:,} pairs ({n_re:,} re-featurized) {time.time() - t0:.0f}s", flush=True)
+        del X, P, R, out, tb
+        gc.collect()
+
+    for rg in range(pf.num_row_groups):
+        batch.append(rg)
+        rows += pf.metadata.row_group(rg).num_rows
+        if rows >= a.batch_rows:
+            flush(batch)
+            batch, rows = [], 0
+            if a.limit_rows and n_in >= a.limit_rows:
+                break
+    if batch and not (a.limit_rows and n_in >= a.limit_rows):
+        flush(batch)
     w.close()
     n = pq.ParquetFile(tmp).metadata.num_rows
-    assert n == cache.height, f"row count {n} != cache {cache.height}"
+    if not a.limit_rows:
+        assert n == pf.metadata.num_rows, f"row count {n} != cache {pf.metadata.num_rows}"
     os.replace(tmp, dst)
-    print(f"wrote {dst} ({n:,} pairs, candidate set unchanged) in {(time.time() - t0) / 60:.1f} min")
+    print(f"wrote {dst} ({n:,} pairs, {n_re:,} re-featurized, candidate set unchanged) in "
+          f"{(time.time() - t0) / 60:.1f} min")
 
 
 if __name__ == "__main__":
@@ -150,5 +183,7 @@ if __name__ == "__main__":
     ap.add_argument("--countries", default="", help="override the data-derived changed-country list")
     ap.add_argument("--check", action="store_true", help="assert recompute == cache (use unchanged countries)")
     ap.add_argument("--limit-s1", type=int, default=0)
-    ap.add_argument("--chunks", type=int, default=16)
+    ap.add_argument("--chunks", type=int, default=16, help="--check only")
+    ap.add_argument("--batch-rows", type=int, default=3_000_000)
+    ap.add_argument("--limit-rows", type=int, default=0, help="stream only a slice (writes <tag>_n<v>_slice)")
     main(ap.parse_args())
