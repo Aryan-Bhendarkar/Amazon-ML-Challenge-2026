@@ -64,7 +64,7 @@ def featurize(base: pl.DataFrame, sctx: cf.SplitContext, nv: int, need: list[str
         gc.collect()
         log(f"    chunk {ch + 1}/{n_chunks}")
     F = pl.concat(parts)
-    return base.select(["s1_id", "cand_id"] + have).join(F, on=["s1_id", "cand_id"], how="inner")
+    return base.select(list(dict.fromkeys(["s1_id", "cand_id"] + have))).join(F, on=["s1_id", "cand_id"], how="inner")
 
 
 def main(a):
@@ -84,7 +84,7 @@ def main(a):
     base_all = pl.read_parquet(paths.DATA_DIR / "cands" / a.cache / f"{a.tag}.parquet")
     base_all = base_all.filter(pl.col("s1_id").is_in(ids))
     keep = [c for c in dict.fromkeys(feats_raw + ["name_tset"]) if c in base_all.columns]
-    base_all = base_all.select(["s1_id", "cand_id"] + keep)
+    base_all = base_all.select(list(dict.fromkeys(["s1_id", "cand_id"] + keep)))
     log(f"eval {a.tag}: {len(ids):,} S1, {base_all.height:,} pairs")
 
     nvs = sorted({cf.norm_of(v) for v in vers})

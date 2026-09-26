@@ -39,7 +39,7 @@ def score_tag(run: str, cache: str, tag: str, ids: list, threads: int) -> pd.Dat
     fv.CTX_VER = 3
     X = fv.load_cache(cache, tag).filter(pl.col("s1_id").is_in(ids))
     raw = cf.expand_derived(feats)
-    X = X.select(["s1_id", "cand_id"] + [f for f in raw if f in X.columns])
+    X = X.select(list(dict.fromkeys(["s1_id", "cand_id"] + [f for f in raw if f in X.columns])))
     ctx_cols = [f for f in raw if f not in X.columns]
     if ctx_cols:
         X = X.join(pl.read_parquet(fv.ctx_path(cache, tag)).select(["s1_id", "cand_id"] + ctx_cols),

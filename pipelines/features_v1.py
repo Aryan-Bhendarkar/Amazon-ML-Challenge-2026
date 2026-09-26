@@ -199,6 +199,9 @@ def main(a):
     if a.lfrac_q:                                  # coarsened lfrac (ber.ctx_features.DERIVED) replaces the raw columns
         qmap = {src: n for n, (src, _) in cf.DERIVED.items()}
         feats = [qmap.get(f, f) for f in feats]
+    if a.ps:                                       # per-source competition features (G7, ctx_features.PS_FEATS)
+        feats = feats + cf.PS_FEATS
+    if a.lfrac_q or a.ps:
         tr_pl, ev_pl = cf.add_derived(tr_pl, feats), cf.add_derived(ev_pl, feats)
     cats = [c for c in CAT_BASE + [c for c in CAT_NEW if c in new] if c in feats]
     tr = to_pandas(tr_pl, ["s1_id", "cand_id", "label", "is_es"] + feats)
@@ -208,7 +211,7 @@ def main(a):
     name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}" + (f"-ctx{CTX_VER}" if CTX_VER != 1 else "") \
         + ("-mono" if MONOTONE else "") + (f"-{a.tag}" if a.tag else "")
     with Run(name, hypothesis=a.hypothesis or f"ctx feature groups {groups or 'none'} on {a.cache} cache",
-             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "drop_feats": drop, "lfrac_q": a.lfrac_q, "subset": a.subset, "n_train_s1": a.n_train_s1,
+             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "drop_feats": drop, "lfrac_q": a.lfrac_q, "ps": a.ps, "subset": a.subset, "n_train_s1": a.n_train_s1,
                      "threads": a.threads, "n_feats": len(feats), "new_feats": new},
              tags=["features"], parent=a.parent) as run:
         run.log(train_pairs=int((~tr.is_es).sum()), es_pairs=int(tr.is_es.sum()), eval_pairs=len(ev))
@@ -274,6 +277,7 @@ if __name__ == "__main__":
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--drop-feats", default="", help="comma list of features to exclude (ablation)")
+    ap.add_argument("--ps", action="store_true", help="add per-source competition features (ctx_features.PS_FEATS)")
     ap.add_argument("--lfrac-q", action="store_true", help="use lfrac rounded to 0.5 (ctx_features.DERIVED)")
     ap.add_argument("--tag", default="", help="suffix for the run name")
     ap.add_argument("--parent", default=BASE_RUN)
