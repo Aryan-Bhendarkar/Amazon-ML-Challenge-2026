@@ -1,0 +1,29 @@
+{
+  "run_id": "20260927-0459_aryan-bhendarkar_dm-val-fold0x",
+  "name": "dm-val-fold0x",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "DM-fold0x for 20260927-0449_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-c",
+  "params": {
+    "run": "20260927-0449_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-c",
+    "cache": "v1_n2",
+    "tag": "fold0x",
+    "lo": 0.2,
+    "draws": 5,
+    "freeze": "20260927-0458_aryan-bhendarkar_dm-val-mini",
+    "freeze_w": "",
+    "pred": "",
+    "threads": 7,
+    "hypothesis": "DM-fold0x for 20260927-0449_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-c"
+  },
+  "tags": [
+    "dm-val",
+    "decision"
+  ],
+  "parent": "20260927-0449_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-c",
+  "git_commit": "b26c564",
+  "git_dirty": true,
+  "started_ist": "2026-09-27T04:59:33+05:30",
+  "status": "done",
+  "duration_min": 7.37,
+  "finished_ist": "2026-09-27T05:06:56+05:30"
+}

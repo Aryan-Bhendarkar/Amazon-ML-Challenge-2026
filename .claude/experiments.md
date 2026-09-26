@@ -367,3 +367,32 @@ Orphan-sim protocol:
   - France churns most and is unmeasured (the ckpts never saw France).
 - **HEDGE** = B for US/IN, France rows = psemb-C1 (the LB 0.968 file's France predictions); building (logs/bx_hedge_sub.log). It isolates the France effect of xenc.
 
+## EXP-XS-C XB + Lane G MiniLM-5x as a second xenc feature (20260927-0449_…-ctx3-c; DM 0458 / 0459; 27 Sep 04:49–05:40 IST)
+- change: XB (psemb + xenc_minilm − ldf) + `xenc_mlm5x`.
+  - Lane G MiniLM (MIT) trained on 8M pairs, Ditto-style "[COL] name [VAL] … [NUM] house" on norm_v2, light augmentation.
+  - Cross-fit halves md5(s1_id) % 2; verified every train-role pair is in exactly one file with 0 in-sample; es rows = mean of both, val/test = mean.
+- clean mini 0.9859 @ t = 0.825; t_DM = 0.825.
+- **paired vs XB (0.825):**
+
+| | overall | India | US |
+|---|---|---|---|
+| **DM-fold0x** | **+0.00035 [+0.00025, +0.00045]** | +0.00052 | +0.00025 |
+| clean fold0x | +0.00031 [+0.00021, +0.00039] | +0.00045 | +0.00022 |
+| DM-mini | +0.00046 | +0.00069 | +0.00031 |
+
+- verdict: **below the +0.001 keep gate** (a significant but small gain, both countries up). D (mlm5x replacing minilm) is pending.
+
+## EXP-XS-D XB with Lane G MiniLM-5x replacing the old MiniLM (20260927-0508_…-ctx3-d; DM 0518 / 0519; 27 Sep 05:08–05:55 IST)
+- change: psemb + `xenc_mlm5x` (no `xenc_minilm`) − ldf.
+- clean mini 0.9858 @ t = 0.75; t_DM = 0.825.
+- **paired vs XB (0.825):**
+
+| | overall | India | US |
+|---|---|---|---|
+| **DM-fold0x** | **+0.00038 [+0.00026, +0.00051]** | +0.00044 | +0.00035 |
+| clean fold0x | +0.00032 [+0.00021, +0.00042] | +0.00037 | +0.00028 |
+| DM-mini | +0.00030 (n.s. per country) | | |
+
+- verdict: **below the +0.001 gate. XB stays the candidate.** C ≈ D ≈ +0.0004. The new MiniLM-5x alone matches the old MiniLM + a small gain, so the two cross-encoders are largely redundant.
+- Note for the lead: D's cross-encoder was trained on norm_v2 text with augmentation, so it may transfer to France better than the old MiniLM (which XB uses). That is unmeasurable label-free; D is a reasonable swap if the lead weighs France robustness over the n.s. difference (D − C ≈ 0).
+

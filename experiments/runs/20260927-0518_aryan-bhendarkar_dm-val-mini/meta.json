@@ -1,0 +1,29 @@
+{
+  "run_id": "20260927-0518_aryan-bhendarkar_dm-val-mini",
+  "name": "dm-val-mini",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "DM-mini for 20260927-0508_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-d",
+  "params": {
+    "run": "20260927-0508_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-d",
+    "cache": "v1_n2",
+    "tag": "mini",
+    "lo": 0.2,
+    "draws": 5,
+    "freeze": "",
+    "freeze_w": "20260926-1413_aryan-bhendarkar_dm-val-mini",
+    "pred": "",
+    "threads": 4,
+    "hypothesis": "DM-mini for 20260927-0508_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-d"
+  },
+  "tags": [
+    "dm-val",
+    "decision"
+  ],
+  "parent": "20260927-0508_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-d",
+  "git_commit": "b26c564",
+  "git_dirty": true,
+  "started_ist": "2026-09-27T05:18:04+05:30",
+  "status": "done",
+  "duration_min": 1.1,
+  "finished_ist": "2026-09-27T05:19:10+05:30"
+}

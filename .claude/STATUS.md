@@ -1,7 +1,8 @@
 Updated: 27 Sep 05:00 IST (amlc-49 HEADLESS, lead prompt 04:50)
 **Running (lead 04:50): tmux xs2** = Lane G MiniLM-5x on top of XB
   - C = XB + xenc_mlm5x; D = XB with mlm5x replacing minilm
-  - DM-mini → DM-fold0x → paired vs XB (clean, DM, per country). ETA C ~05:30, D ~06:05 IST.
+  - DM-mini → DM-fold0x → paired vs XB (clean, DM, per country)
+  - **Result:** C DM-fold0x **+0.00035**, D **+0.00038** vs XB (both countries up, significant). **Both below the +0.001 gate: not kept; XB stays the candidate** (SUBMIT-REQUEST XB / HEDGE unchanged).
   - mlm5x halves verified OOF: md5(s1_id) % 2; each train-role pair in exactly one file, 0 in-sample, es rows in both.
   - XLM-R logits: watching s3://…/share/g3logits (lead ETA 06:30–07:30).
 Base: **psemb 20260926-1737**, t = 0.775 (C1 = psemb + FR norm v2 = **LB 0.968**, current best)
