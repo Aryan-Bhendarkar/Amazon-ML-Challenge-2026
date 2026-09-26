@@ -41,3 +41,18 @@ Status: `todo` · `doing(<who>)` · `done(<run_id>, Δ)` · `killed(<reason>)`
 - [x] done(same run as EXP-016: ber.ctx_features G3/G4/G5) **EXP-018 Number + extra-token features**: house digit-edit distance / abs diff / other-number agreement; max S1-doc-freq of cand-only name tokens. Targets house noise (0.0058) and business-word edits (0.0044); expected +0.001–0.002.
 - [ ] **NORM v1 (small)**: honorific stopwords (mr/dr/smt/m s/www/com) + fuzzy legal canonicalization (praibhet/piraivet/limirrd/PRlVATE/lnc). ≤ +0.0005. Add French honorifics/legal typos too.
 - Killed on arrival: top-1 fallback for empty predictions (−0.0045 … −0.00002 at every t2); these are blocking misses or singletons.
+
+## From error analysis of 20260926-0426_aryan-bhendarkar_feat-v1-v1-n1-g1-g2-g3-g4-g5-ctx2 (26 Sep, see its error_analysis.md)
+Loss 0.0200 = in-candidate FN 0.0107 + blocking 0.0059 + FP 0.0038. About 0.011 of it is a calibrated, ambiguous floor: name-only records whose name is shared or tied with another S1, house ±k, and co-location.
+- [x] done(20260926-0635_aryan-bhendarkar_blocking-nkey-num-v1-n2, recall mini +0.0031 / fold0x +0.0034; model Δ pending) **EXP-030 `nkey_num` blocking key** (TOP): exact join on (country, sorted unique n_core tokens [norm_v1], any a_numbers token split on space, / and -, with leading zeros stripped), pool block cap 50. Add it as a new rbits bit, exempt from the 100/S1 cap.
+  - Measured on mini, no model run: it recovers **938 of 4,862 blocking misses** (914 India, mostly native-script generic names with short addresses). The upper bound is **+0.0015** (India +0.0037).
+  - Cost: +1.09 new pairs/S1 (+1.2% scoring). On test: +2.7/S1 India, +0.76/S1 France.
+  - The key is language-agnostic, so it should transfer to France.
+- [ ] **EXP-031 ctx features on norm_v1**: `ber.ctx_features.NORM_V` is still 0 (only `baseline_v0.NORM_V` is patched). For TRUE native-script pairs with name_tset=100, `n_key_equal` is 1.4% (Latin: 84%) and `ex_n>0` is 98.6%.
+  - Expected +0.0002 to +0.0005 alone. It is also needed so the native pairs added by EXP-030 score correctly.
+  - Run it together with EXP-030. France is neutral (Latin v0 = v1).
+- [ ] EXP-017 re-scoped: the FP side of the val competition artifact is measured at +0.0009, with the optimal t unchanged (0.70–0.75 flat once owner-dominated negatives are removed). The remaining value is measuring TP stealing on test before the final threshold choice.
+- Killed on arrival (measured on 20260926-0426 val):
+  - name-only reverse-margin add rules: −0.00003 to −0.00019. 5,415 of 5,666 name-only FNs have another S1 with an equal or closer name.
+  - set-based or fuzzy co-location keys: no separation.
+  - per-country thresholds: both are 0.75.

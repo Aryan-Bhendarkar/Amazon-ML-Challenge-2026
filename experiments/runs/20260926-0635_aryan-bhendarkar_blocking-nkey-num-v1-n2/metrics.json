@@ -1,0 +1,42 @@
+{
+  "files": {
+    "train": {
+      "queries": 180000,
+      "old_pairs": 16951437,
+      "new_pairs": 196417,
+      "new_per_s1": 1.091,
+      "pairs": 17147854,
+      "minutes": 0.9
+    },
+    "mini": {
+      "queries": 87952,
+      "old_pairs": 8286867,
+      "new_pairs": 96254,
+      "new_per_s1": 1.094,
+      "recall_before": 0.98404,
+      "recall_after": 0.98712,
+      "true_new": 938,
+      "pairs": 8383121,
+      "minutes": 0.6
+    },
+    "fold0x": {
+      "queries": 353503,
+      "old_pairs": 33292134,
+      "new_pairs": 384964,
+      "new_per_s1": 1.089,
+      "recall_before": 0.98371,
+      "recall_after": 0.98708,
+      "true_new": 4121,
+      "pairs": 33677098,
+      "minutes": 1.5
+    },
+    "test": {
+      "queries": 1732544,
+      "old_pairs": 162320914,
+      "new_pairs": 2424453,
+      "new_per_s1": 1.399,
+      "pairs": 164745367,
+      "minutes": 5.8
+    }
+  }
+}
