@@ -57,11 +57,12 @@ def main(a):
     t = json.loads((art / "decision.json").read_text())["threshold"] if a.threshold is None else a.threshold
     model = lgb.Booster(model_file=str(art / "model.lgb"))
     cv = run_ctx_ver(a.run)                                   # never mix ctx versions between train and test
-    print(f"ctx_features version {cv} (norm_v{cf.norm_of(cv)})")
+    nv = cf.norm_of(cv) if a.norm is None else a.norm      # --norm: same ctx features on a newer norm cache
+    print(f"ctx_features version {cv} (norm_v{nv})")
     if a.from_feats:
         src = feats_path(a.cache, False, cv) if not a.feats_file else paths.ROOT / a.feats_file
     else:
-        src = paths.DATA_DIR / "cands" / a.cache / "test.parquet"
+        src = paths.DATA_DIR / "cands" / a.cache / f"{a.src_tag}.parquet"
     pf = pq.ParquetFile(src)
     all_cols = pf.schema_arrow.names
     have = set(all_cols)
@@ -75,11 +76,13 @@ def main(a):
     featurize = not a.from_feats
     save = featurize and not a.no_save_feats
     # featurizing runs compute ALL ctx groups anyway (add_features), so build the context whenever saving
-    sctx = cf.SplitContext.build("test", cv) if featurize and (need_ctx or save) else None
+    sctx = cf.SplitContext.build("test", cv, nv) if featurize and (need_ctx or save) else None
     print(f"  test context built {time.time() - t0:.0f}s")
     seen, parts, n_done, batch = set(), [], 0, []
     fw = {"writer": None, "schema": None}
     fpath = feats_path(a.cache, bool(a.limit_rows), cv)
+    if nv != cf.norm_of(cv) or a.src_tag != "test":         # never overwrite the default matrix
+        fpath = fpath.with_name(f"{fpath.stem}_{a.src_tag}_n{nv}.parquet")
     ftmp = fpath.with_suffix(".tmp")
 
     def flush(batch):
@@ -90,7 +93,7 @@ def main(a):
         assert not (ids & seen), "an S1 spans row-group batches -> G5/rank features would be wrong"
         seen.update(ids)
         if sctx is not None:
-            F = cf.add_features(cf.attach_norm(X.select("s1_id", "cand_id", "name_tset"), "test", cf.norm_of(cv)), sctx,
+            F = cf.add_features(cf.attach_norm(X.select("s1_id", "cand_id", "name_tset"), "test", nv), sctx,
                                 workers=a.threads)
             new = cf.new_feature_cols(F, ["name_tset"]) if save else need_ctx
             X = X.join(F.select(["s1_id", "cand_id"] + [c for c in new if c not in X.columns]),
@@ -150,5 +153,8 @@ if __name__ == "__main__":
     ap.add_argument("--from-feats", action="store_true", help=f"score data/cands/<cache>/{FEATS_NAME}.parquet only")
     ap.add_argument("--feats-file", default="", help="--from-feats: explicit matrix path (e.g. the _slice file)")
     ap.add_argument("--no-save-feats", action="store_true")
+    ap.add_argument("--src-tag", default="test", help="candidate file data/cands/<cache>/<tag>.parquet (e.g. test_n2 "
+                    "from pipelines/refeat_norm.py)")
+    ap.add_argument("--norm", type=int, default=None, help="norm cache version for ctx features (default: the run's)")
     ap.add_argument("--out-suffix", default="", help="extra suffix for test_pred/test_matches (tests)")
     main(ap.parse_args())

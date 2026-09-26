@@ -116,8 +116,10 @@ class SplitContext:
                    cnt(pool, "n_key"), cnt(pool, "a_key"), idf, df, n_s1, version, twins)
 
     @classmethod
-    def build(cls, split: str, version: int = 1) -> "SplitContext":
-        nv = norm_of(version)
+    def build(cls, split: str, version: int = 1, norm_v: int | None = None) -> "SplitContext":
+        """norm_v overrides the version's default norm cache (same features on a newer normalization,
+        e.g. norm v2 = v1 + France-keyed rules; US/India inputs are byte-identical)."""
+        nv = norm_of(version) if norm_v is None else norm_v
         s1 = (pl.scan_parquet(_norm_file(split, 1, nv))
                 .select("entity_id", "country", "n_core", "a_full", "a_street", "a_house").collect())
         pool = pl.concat([pl.scan_parquet(_norm_file(split, s, nv)).select("country", "n_core", "a_full").collect()

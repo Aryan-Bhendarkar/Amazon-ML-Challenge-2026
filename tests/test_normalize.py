@@ -29,3 +29,30 @@ def test_address():
     assert normalize_address("", "US").empty
     # unknown country must not crash
     assert normalize_address("12 Some St, Town", "Germany").house == "12"
+
+
+def test_france_v2_address_state_and_bis():
+    # region (every test S1) and department (31% of pool) map to the same state; bis/ter dropped
+    a = normalize_address("4 Rue Roger Salengro, Saint-Nazaire, Pays de la Loire", "France")
+    b = normalize_address("4 R Roger Salengro, St-Nazaire, Loire-Atlantique", "France")
+    assert a.state == b.state == "pdl" and a.full == b.full
+    assert "loire" not in a.street and "pays" not in a.street
+    assert normalize_address("1BIS RUE CHARLES DELESALLE, Lille, Nord", "France").house == "1"
+    assert normalize_address("15 ter Rue X, Lille, Hauts-de-France", "France").state == "hdf"
+
+
+def test_france_v2_name_rules():
+    n = normalize_name("Chasse Collège (France) S.A.S", country="France")
+    assert n.core == "chasse college" and n.legal == "sas"
+    assert normalize_name("Martin et Frs Cie", country="France").core == \
+        normalize_name("Martin & Freres Compagnie", country="France").core == "martin freres"
+    assert normalize_name("Dupont EI", country="France").legal == "ei"
+
+
+def test_v2_rules_are_country_keyed():
+    # generic fallback: unknown / other countries unchanged (US/India byte-identical to norm v1)
+    assert normalize_name("Martin et Cie (France)", country="US") == normalize_name("Martin et Cie (France)")
+    assert normalize_name("Martin et Cie", country="Germany").core == "martin et cie"
+    assert normalize_address("12 Main St, Paris, Nord", "US").state == ""
+    assert normalize_address("1 bis Rue X, Lille, Nord", "").house == "1"   # no country: no FR rules
+    assert normalize_address("1bis Rue X, Lille, Nord", "").state == ""

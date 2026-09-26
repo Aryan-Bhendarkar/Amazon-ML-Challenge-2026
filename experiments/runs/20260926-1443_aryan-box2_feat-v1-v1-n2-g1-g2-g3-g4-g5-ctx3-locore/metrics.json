@@ -1,0 +1,22 @@
+{
+  "train_pairs": 14289544,
+  "es_pairs": 2858310,
+  "eval_pairs": 8383121,
+  "loco": {
+    "India->US": {
+      "f05_tuned": 0.95425,
+      "t_tuned": 0.5,
+      "f05_at_src_t": 0.95194,
+      "t_src": 0.7,
+      "in_country_f05": 0.97745
+    },
+    "US->India": {
+      "f05_tuned": 0.92988,
+      "t_tuned": 0.8,
+      "f05_at_src_t": 0.92932,
+      "t_src": 0.775,
+      "in_country_f05": 0.98276
+    }
+  },
+  "timing_min": 7.7
+}
