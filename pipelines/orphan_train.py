@@ -33,6 +33,12 @@ from ber import harness, io, paths
 from ber.orphan import removal_mask
 from ber.tracking import Run
 
+VIEW_SETS = {
+    "handoff": None,                                            # = VIEWS below (HANDOFF mixture)
+    # DIAG-TWIN (26 Sep): the test shift is twin-targeted (same-name S1 at another house missing), not uniform pruning
+    "twin": {0: ("clean", 0.0), 1: ("clean", 0.0), 2: ("uniform", 0.19), 3: ("twin", 0.5), 4: ("twin", 0.5),
+             5: ("biased", 0.19)},
+}
 VIEWS = {0: ("clean", 0.0), 1: ("clean", 0.0), 2: ("uniform", 0.19), 3: ("biased", 0.19),
          4: ("uniform", 0.30), 5: ("biased", 0.30)}
 
@@ -43,7 +49,10 @@ def view_of(ids) -> np.ndarray:
 
 
 def main(a):
+    global VIEWS
     t0 = time.time()
+    if VIEW_SETS.get(a.views):
+        VIEWS = VIEW_SETS[a.views]
     os.environ.setdefault("POLARS_MAX_THREADS", str(a.threads))
     fv.CTX_VER = a.ctx_ver
     nv = cf.norm_of(a.ctx_ver)
@@ -56,7 +65,7 @@ def main(a):
     s1_ids = tr["s1_id"].unique().sort()
     vmap = pl.DataFrame({"s1_id": s1_ids, "view": view_of(s1_ids.to_list())})
     tr = tr.join(vmap, on="s1_id")
-    ctx_cols = [c for c in parent_feats if c not in tr.columns]
+    ctx_cols = [c for c in cf.expand_derived(parent_feats) if c not in tr.columns]   # derived (q05) from raw
     print(f"[load] {tr.height:,} train pairs, {len(s1_ids):,} S1; {len(ctx_cols)} ctx features; "
           f"views {vmap.group_by('view').len().sort('view').to_dicts()}", flush=True)
 
@@ -104,7 +113,7 @@ def main(a):
         del sctx, Fk, V
         gc.collect()
     del s1_all, pool_all
-    trv = pl.concat(parts, how="diagonal_relaxed")
+    trv = cf.add_derived(pl.concat(parts, how="diagonal_relaxed"), parent_feats)
     del parts, tr
     gc.collect()
     feats = parent_feats
@@ -115,8 +124,9 @@ def main(a):
     ctx = harness.EvalContext.load(a.subset)
     ev = fv.load_cache(a.cache, a.eval_tag).filter(pl.col("s1_id").is_in(sorted(ctx.ids)))
     ev = ev.join(pl.read_parquet(fv.ctx_path(a.cache, a.eval_tag)).select(["s1_id", "cand_id"] + ctx_cols),
-                 on=["s1_id", "cand_id"], how="left").select(["s1_id", "cand_id"] + feats).to_pandas()
-    with Run(f"orphan-train-{a.cache}-ctx{a.ctx_ver}", hypothesis=a.hypothesis or
+                 on=["s1_id", "cand_id"], how="left")
+    ev = cf.add_derived(ev, feats).select(["s1_id", "cand_id"] + feats).to_pandas()
+    with Run(f"orphan-train-{a.cache}-ctx{a.ctx_ver}-{a.views}", hypothesis=a.hypothesis or
              "EXP-B: training on orphan-pruned views (0/19/30%, uniform+biased) makes the model robust to test's S1 "
              "removal: orphan-sim mini +0.003, clean >= -0.001, LOCO >= -0.0005",
              params={**{k: v for k, v in vars(a).items()}, "views": {k: list(v) for k, v in VIEWS.items()},
@@ -160,5 +170,6 @@ if __name__ == "__main__":
     ap.add_argument("--chunks", type=int, default=6)
     ap.add_argument("--loco", action="store_true")
     ap.add_argument("--loco-n", type=int, default=60_000)
+    ap.add_argument("--views", default="handoff", choices=list(VIEW_SETS))
     ap.add_argument("--hypothesis", default="")
     main(ap.parse_args())

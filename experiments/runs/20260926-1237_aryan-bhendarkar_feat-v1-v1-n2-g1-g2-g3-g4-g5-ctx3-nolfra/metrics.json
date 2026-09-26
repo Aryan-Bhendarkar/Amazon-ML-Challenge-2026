@@ -1,0 +1,35 @@
+{
+  "val": {
+    "f05_macro": 0.98014,
+    "threshold": 0.75,
+    "pair_precision": 0.9954,
+    "pair_recall": 0.9529,
+    "f05_by_country": {
+      "India": 0.97619,
+      "US": 0.98283
+    }
+  },
+  "loco": {
+    "India->US": {
+      "f05_tuned": 0.96461,
+      "t_tuned": 0.575,
+      "f05_at_src_t": 0.96351,
+      "t_src": 0.725,
+      "in_country_f05": 0.97536
+    },
+    "US->India": {
+      "f05_tuned": 0.92307,
+      "t_tuned": 0.925,
+      "f05_at_src_t": 0.91813,
+      "t_src": 0.725,
+      "in_country_f05": 0.98229
+    }
+  },
+  "orphan_u19_vs_0710": {
+    "delta": 0.00183,
+    "ci95": [
+      0.00142,
+      0.0022
+    ]
+  }
+}

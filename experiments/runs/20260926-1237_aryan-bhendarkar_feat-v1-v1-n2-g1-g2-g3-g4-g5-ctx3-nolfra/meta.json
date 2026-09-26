@@ -1,0 +1,7 @@
+{
+  "run_id": "20260926-1237_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-nolfra",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "EXP-B0a: dropping the 4 brittle lfrac features (log df/n) makes the model robust to S1 pruning/density",
+  "status": "done",
+  "reconstructed": "run dir accidentally deleted 26 Sep ~13:55 IST; metrics re-entered from the run log / console output (amlc-49)"
+}

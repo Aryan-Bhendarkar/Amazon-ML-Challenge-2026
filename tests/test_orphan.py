@@ -47,3 +47,13 @@ def test_derived_lfrac_roundtrip():
     assert cf.expand_derived(feats) == ["other", "ex_lfrac_cmax"]
     Y = cf.add_derived(X, feats)
     assert Y["ex_lfrac_cmax_q05"].to_list()[:2] == [-3.5, -3.0] and Y["ex_lfrac_cmax_q05"][2] is None
+
+
+def test_twin_mask_only_twins():
+    s1 = pl.DataFrame({"entity_id": [f"S1-{i}" for i in range(6)], "country": ["US"] * 6,
+                       "n_core": ["acme", "acme", "beta", "beta", "gamma", "delta"],
+                       "a_full": ["1 a st", "2 a st", "5 b st", "5 b st", "7 c st", "9 d st"], "a_street": ["a st"] * 6,
+                       "a_house": ["1", "02", "5", "05", "7", "9"]})
+    assert orphan.twin_flag(s1).tolist() == [True, True, False, False, False, False]
+    m = orphan.removal_mask(s1, 1.0, "twin")
+    assert m["removed"].to_list() == [True, True, False, False, False, False]

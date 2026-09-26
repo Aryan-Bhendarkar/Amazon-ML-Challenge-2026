@@ -37,7 +37,7 @@ from ber.tracking import Run
 # t19 = test-like: first thin each country to test's pre-pruning S1 density (test S1 count / 0.81, S1 removed WITH
 # their records; unmatched records thinned at the same rate), then the u19 orphan pruning (records kept).
 THIN = {"t19": True, "tclean": True}
-SCEN = {"t19": (0.19, "uniform"), "tclean": (0.0, "uniform"), "clean": (0.0, "uniform"), "u19": (0.19, "uniform"), "b19": (0.19, "biased"), "u30": (0.30, "uniform"),
+SCEN = {"tw50": (0.5, "twin"), "tw25": (0.25, "twin"), "t19": (0.19, "uniform"), "tclean": (0.0, "uniform"), "clean": (0.0, "uniform"), "u19": (0.19, "uniform"), "b19": (0.19, "biased"), "u30": (0.30, "uniform"),
         "b30": (0.30, "biased")}
 TEST_RPS = 5.76
 

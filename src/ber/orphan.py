@@ -39,9 +39,19 @@ def shared_flag(s1: pl.DataFrame) -> np.ndarray:
                     ).to_series().to_numpy()
 
 
+def twin_flag(s1: pl.DataFrame) -> np.ndarray:
+    """True for S1 whose sorted core-name key is shared with another S1 of the same country at a DIFFERENT house
+    number (leading zeros stripped): the 'name twin' whose removal leaves same-name, shifted-house records behind."""
+    k = s1.select("country", "n_core", "a_full", "a_street", "a_house").with_columns(key_exprs()[:1]).with_columns(
+        pl.col("a_house").fill_null("").str.strip_chars_start("0").alias("_h"))
+    k = k.with_columns(pl.col("_h").n_unique().over("country", "n_key").alias("_nh"))
+    return k.select((pl.col("n_key") != "") & (pl.col("_nh") > 1)).to_series().to_numpy()
+
+
 def removal_mask(s1: pl.DataFrame, rate: float = 0.19, variant: str = "uniform", salt: str = SALT) -> pl.DataFrame:
     """entity_id, removed (bool) for every S1 row.
     uniform: remove iff md5 unit < rate.
+    twin   : only S1 that have a same-name S1 at a different house (same country), each removed with prob `rate`.
     biased : per-S1 rate x2 if its name or address key is shared with another S1 (same country), x0.5 otherwise,
              rescaled so the overall expected rate is `rate` (chains / co-located S1 are removed more often)."""
     ids = s1["entity_id"].to_list()
@@ -54,6 +64,8 @@ def removal_mask(s1: pl.DataFrame, rate: float = 0.19, variant: str = "uniform",
         w = np.where(shared_flag(s1), 2.0, 0.5)
         p = np.minimum(1.0, rate * w / w.mean())
         rem = u < p
+    elif variant == "twin":                  # remove only name twins (different house), at `rate` among them
+        rem = twin_flag(s1) & (u < rate)
     else:
         raise ValueError(variant)
     return pl.DataFrame({"entity_id": ids, "removed": rem})
