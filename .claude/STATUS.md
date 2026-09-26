@@ -20,7 +20,20 @@ Running now: tmux xs (`logs/chainXS.sh`): xenc stack
 **Result B (03:50): GATE PASS, chosen.** 20260927-0257_…-ctx3-b, t_DM = 0.825
   - DM-fold0x **+0.00367 [+0.0035, +0.0039]** (IN +0.0055, US +0.0025); clean fold0x +0.00323
   - absolute: DM-fold0x 0.98447, clean fold0x 0.98516
-Running: tmux bxB = the C1-path test build for B (full rescore + FR norm v2 rows + splice + make_submission). ETA ~05:00 IST. Then FR diagnostics + SUBMIT-REQUEST.
+**SUBMIT-REQUEST: XB** (27 Sep, candidate for today's first upload)
+  - file: `submissions/files/20260927-0354_aryan-bhendarkar/{matching_results.tsv,candidate_pairs.tsv}`
+  - run: 20260927-0257_…-ctx3-b (psemb + xenc_minilm − 4 ldf), t = 0.825, C1 path (France rows on norm v2)
+  - validator `--check-ids` **PASS**; matches ⊆ candidates 5,755,308/5,755,308
+  - val vs psemb (paired, identical S1):
+    - **DM-fold0x +0.00367 [+0.0035, +0.0039]**, clean fold0x +0.00323
+    - India +0.0055 / US +0.0025
+    - LOCO is not a transfer measure (xenc saw both countries)
+  - FR diagnostics (vs psemb-C1, LB 0.968):
+    - matches/S1 3.166 → 3.239; empty 6.26% → 5.93%; 21.9% of FR rows change
+    - US 3.404 → 3.371 (net pruning); IN 3.242 → 3.308 (net recall)
+  - **expected LB ≈ 0.971** (0.968 + 0.85 × ~0.0037). France is unmeasured: ±0.0005 on LB.
+  - alternative **HEDGE** (building, logs/bx_hedge_sub.log): the same US/IN rows, France rows = psemb-C1. Expected ≈ 0.971 with the France risk removed. Uploading both tells us the France effect of xenc (LB XB − LB HEDGE).
+  - After upload: `python scripts/record_lb.py <sub_id> --score 0.XXX`
 Done: EXP-NL (psemb − lfrac) KILL: DM-fold0x −0.0009, LOCO direction-flip.
 **Lane G handoff (box2): G3 pair set ready.**
   - `aws s3 sync s3://amlc26-699191579023/share/g3 data/kaggle/g3`

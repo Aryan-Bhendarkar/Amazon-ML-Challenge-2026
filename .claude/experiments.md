@@ -351,3 +351,19 @@ Orphan-sim protocol:
 - LOCO (contaminated by xenc; the ldf-drop effect only, B − A): IN→US 0.98367 (−0.0001), US→IN 0.98156 (+0.0004).
 - verdict: **KEEP. B is the submission candidate** (DM ≥ A and transfer-safer). C1-path test build started 03:52 (tmux bxB, logs/buildC1x.sh).
 
+## SUB-XB C1-path test files for EXP-XS-B (27 Sep 03:52–04:50 IST)
+- **XB** = submissions/files/20260927-0354_aryan-bhendarkar: B (psemb + xenc_minilm − ldf), t = 0.825, France rows on norm v2 (C1 path).
+  - Validator `--check-ids` PASS; matches ⊆ candidates 5,755,308/5,755,308; 1,630,487 non-empty S1.
+  - Splice check: non-FR rows identical to B's own full rescore.
+- vs psemb-C1 (LB 0.968), label-free:
+
+| country | matches/S1 | empty rate | rows changed | pairs added / removed per S1 |
+|---|---|---|---|---|
+| US | 3.404 → 3.371 | 5.77% → 5.80% | 11.7% | +0.051 / −0.084 |
+| India | 3.242 → 3.308 | 6.19% → 5.95% | 12.9% | +0.105 / −0.038 |
+| France | 3.166 → 3.239 | 6.26% → 5.93% | 21.9% | +0.163 / −0.090 |
+
+  - The US net pruning and India net additions match LB-PROBE (US = band negatives, India = copies pushed into the band).
+  - France churns most and is unmeasured (the ckpts never saw France).
+- **HEDGE** = B for US/IN, France rows = psemb-C1 (the LB 0.968 file's France predictions); building (logs/bx_hedge_sub.log). It isolates the France effect of xenc.
+
