@@ -327,20 +327,29 @@ def g6_twins(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.DataFr
                                               scorer=fuzz.token_set_ratio, **W)),
             pl.Series("_ssim", process.cpdist(J["_ts"].fill_null("").to_list(), J["a_street_c"].fill_null("").to_list(),
                                               scorer=fuzz.token_set_ratio, **W)),
+            # strict whole-string street similarity: templated FR twins share the number and generic street words
+            # (rue/des/avenue) but differ in the street NAME, which token overlap hides
+            pl.Series("_ssr", process.cpdist(J["_ts"].fill_null("").to_list(), J["a_street_c"].fill_null("").to_list(),
+                                             scorer=fuzz.ratio, **W)),
             ((pl.col("_th").fill_null("") == pl.col("a_house_c").fill_null("")) & (pl.col("_th").fill_null("") != ""))
             .alias("_heq"))
         A = J.group_by("_r").agg(pl.len().cast(pl.Int16).alias("twin_n"), pl.col("_asim").max().alias("twin_addr_best"),
                                  pl.col("_ssim").max().alias("twin_street_best"),
+                                 pl.col("_ssr").max().alias("twin_sratio_best"),
+                                 pl.col("_ssr").filter(pl.col("_heq")).max().alias("_hs_sratio"),
                                  pl.col("_heq").any().cast(pl.Int8).alias("twin_house_eq"))
         X = X.join(A, on="_r", how="left")
     else:
         X = X.with_columns(pl.lit(None, pl.Int16).alias("twin_n"), pl.lit(None, pl.Float32).alias("twin_addr_best"),
-                           pl.lit(None, pl.Float32).alias("twin_street_best"), pl.lit(None, pl.Int8).alias("twin_house_eq"))
+                           pl.lit(None, pl.Float32).alias("twin_street_best"), pl.lit(None, pl.Float32).alias("twin_sratio_best"),
+                           pl.lit(None, pl.Float32).alias("_hs_sratio"), pl.lit(None, pl.Int8).alias("twin_house_eq"))
     own_a = process.cpdist(X["a_full"].fill_null("").to_list(), X["a_full_c"].fill_null("").to_list(),
                            scorer=fuzz.token_set_ratio, **W)
     own_s = process.cpdist(X["a_street"].fill_null("").to_list(), X["a_street_c"].fill_null("").to_list(),
                            scorer=fuzz.token_set_ratio, **W)
-    X = X.with_columns(pl.Series("_own_a", own_a), pl.Series("_own_s", own_s))
+    own_r = process.cpdist(X["a_street"].fill_null("").to_list(), X["a_street_c"].fill_null("").to_list(),
+                           scorer=fuzz.ratio, **W)
+    X = X.with_columns(pl.Series("_own_a", own_a), pl.Series("_own_s", own_s), pl.Series("_own_r", own_r))
     has = pl.col("twin_n").fill_null(0) > 0
     return X.with_columns(
         pl.col("twin_n").fill_null(0).cast(pl.Int16),
@@ -350,10 +359,14 @@ def g6_twins(X: pl.DataFrame, ctx: SplitContext, workers: int = -1) -> pl.DataFr
           .alias("twin_addr_margin"),
         pl.when(has).then(pl.col("_own_s") - pl.col("twin_street_best")).otherwise(None).cast(pl.Float32)
           .alias("twin_street_margin"),
+        pl.when(has).then(pl.col("_own_r") - pl.col("twin_sratio_best")).otherwise(None).cast(pl.Float32)
+          .alias("twin_street_ratio_margin"),
+        # a twin has the candidate's house number AND a better street-name fit than this S1 (templated-twin FP)
+        (pl.col("_hs_sratio").fill_null(-1.0) > pl.col("_own_r")).cast(pl.Int8).alias("twin_hs_better"),
         pl.col("twin_addr_best").cast(pl.Float32),
         # the key was too generic to compare (more than TWIN_MAX S1 share the candidate's name key)
         pl.lit(0, pl.Int8).alias("twin_generic"),
-    ).drop("_r", "_own_a", "_own_s", "twin_street_best")
+    ).drop("_r", "_own_a", "_own_s", "_own_r", "twin_street_best", "twin_sratio_best", "_hs_sratio")
 
 
 def add_features(X: pl.DataFrame, ctx: SplitContext, groups=GROUPS, workers: int = -1) -> pl.DataFrame:

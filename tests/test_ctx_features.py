@@ -95,3 +95,20 @@ def test_v4_name_twins():
     assert r["twin_n"][1] == 0 and r["twin_addr_margin"][1] is None
     assert r["twin_n"][3] == 1 and r["twin_addr_margin"][3] < 0 and r["twin_house_eq"][3] == 1
     assert r["twin_generic"] == [0, 0, 0, 0]
+
+
+def test_v4_templated_twin_flag():
+    # S1 'c' at 8 rue general dampierre; twin 't1' (same name) at 8 rue de vassy; candidate at 8 r de vassy
+    s1 = pl.DataFrame({"entity_id": ["c", "t1"], "country": ["F"] * 2, "n_core": ["comite", "comite"],
+                       "a_full": ["8 rue general dampierre", "8 rue de vassy"],
+                       "a_street": ["rue general dampierre", "rue de vassy"], "a_house": ["8", "8"]})
+    pool = pl.DataFrame({"country": ["F"], "n_core": ["comite"], "a_full": ["8 rue de vassy"]})
+    ctx = cf.SplitContext.from_frames(s1, pool, version=4)
+    P = pl.DataFrame({"s1_id": ["c"], "cand_id": ["r"], "country": ["F"], "n_core": ["comite"],
+                      "a_full": ["8 rue general dampierre"], "a_street": ["rue general dampierre"], "a_house": ["8"],
+                      "a_numbers": ["8"], "a_postcode": [""], "n_core_c": ["comite"], "a_full_c": ["8 rue de vassy"],
+                      "a_street_c": ["rue de vassy"], "a_house_c": ["8"], "a_numbers_c": ["8"], "a_postcode_c": [""],
+                      "a_empty_c": [False], "name_tset": [100.0]})
+    F = cf.add_features(P, ctx, groups=("G6",), workers=1)
+    assert F["twin_n"][0] == 1 and F["twin_house_eq"][0] == 1 and F["twin_hs_better"][0] == 1
+    assert F["twin_street_ratio_margin"][0] < 0
