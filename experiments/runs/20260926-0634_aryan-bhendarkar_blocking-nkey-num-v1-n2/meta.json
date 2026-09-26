@@ -1,0 +1,25 @@
+{
+  "run_id": "20260926-0634_aryan-bhendarkar_blocking-nkey-num-v1-n2",
+  "name": "blocking-nkey-num-v1_n2",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "EXP-030: exact name key + shared address number recovers native-script generic-name blocking misses (+0.0015 mini upper bound)",
+  "params": {
+    "src": "v1_n1",
+    "dst": "v1_n2",
+    "cap": 50,
+    "norm_v": 1,
+    "files": [
+      "mini"
+    ]
+  },
+  "tags": [
+    "blocking"
+  ],
+  "parent": "20260925-2015_aryan-bhendarkar_gate-blocking-v1-n1",
+  "git_commit": "4fcd8f2",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T06:34:52+05:30",
+  "status": "done",
+  "duration_min": 0.87,
+  "finished_ist": "2026-09-26T06:35:45+05:30"
+}

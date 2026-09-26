@@ -1,1 +1,1 @@
-- [Recurring audit checks](recurring_audit_checks.md) — val-vs-test competition bracket, France drift, density-dependent idf/counts sim, fold0x confirm, dup-match WARN, LB gap
+- [Recurring audit checks](recurring_audit_checks.md) — competition bracket, France drift + generic-name collisions from new retrievers, density sims, fold0x, dup/hash checks, LB gap

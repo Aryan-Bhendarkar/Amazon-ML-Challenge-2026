@@ -41,3 +41,9 @@ Cheap checks that worked (≤2 cores, <15 min):
 9. **Val→LB gap is about −0.005** (0.9057 → 0.901, 0.9107 → 0.9046). Use it when judging expected LB.
 
 See [[validation-audit-protocol]].
+
+10. **New retrievers surface France generic-name collisions (2026-09-26, nkey_num / v1_n2).** France test names are templated ("<City> Club/Amis/Pharmacie <legal form>"). A name+number key finds same-name records on DIFFERENT streets. Those fire at 7.4% of pairs in France vs 0.9% in India, and about 35% of the France fires are different-street FPs.
+   **Why:** in US/India, name + number ≈ match, and a US↔India LOCO cannot simulate name genericity.
+   **How to apply:** for every blocking change, compare the per-country firing rate of the new-retriever-only pairs (the rbits bit) on test vs val. Then run the distinctive-street heuristic on France (drop street tokens with df > 0.3% of the country's S1, then token_set_ratio < 50). Check the competitor S1 too: another S1 ≥ t that lost the record.
+   Scripts: `experiments/runs/20260926-0710_*/audit_scripts/chk5-7.py`, about 10 min. The heuristic is useless on India (native-script addresses).
+11. **Streamed exactness check for candidate_pairs.tsv:** an order-free 64-bit hash-sum of `s1|cand` over the TSV vs the parquet (chk3.py, <1 min). It beats relying on make_submission counts.

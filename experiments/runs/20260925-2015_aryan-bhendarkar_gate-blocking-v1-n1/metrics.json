@@ -1,0 +1,88 @@
+{
+  "train_pairs": 14126418,
+  "train_pos_rate": 0.036115100091190844,
+  "best_iter": 1562,
+  "feature_gain": {
+    "addr_tset": 11329714.9,
+    "addr_rank_in_s1": 7871520.4,
+    "name_partial": 2604640.2,
+    "street_tset": 2249364.0,
+    "extra_tok": 2039722.3,
+    "comp_jw": 1841563.2,
+    "name_ratio": 1283827.2,
+    "house_rel": 1271670.6,
+    "rbits": 918382.5,
+    "num_jacc": 681011.8,
+    "legal_rel": 548867.2,
+    "name_tsort": 481955.7,
+    "alias_tset": 310911.9,
+    "comp_partial": 261449.7,
+    "state_rel": 222513.7,
+    "kmask": 188860.5,
+    "addr_ratio": 170193.4,
+    "name_tset": 129953.9,
+    "missing_tok": 103012.2,
+    "name_rank_in_s1": 95538.4,
+    "len_core_c": 83595.1,
+    "common_tok": 77121.2,
+    "cand_native": 65512.8,
+    "cand_kind": 64459.6,
+    "name_gap_s1": 48841.2,
+    "n_cand_s1": 43270.3,
+    "len_core_s1": 27833.1,
+    "cand_src": 10893.1,
+    "cand_addr_empty": 66.2
+  },
+  "blocking": {
+    "pair_recall": 0.9840376634973999,
+    "entity_full_coverage": 0.9509247545032833,
+    "cands_mean": 94.22033609241404,
+    "cands_p50": 100.0,
+    "cands_p95": 100.0,
+    "cands_max": 100,
+    "n_pairs": 8286867,
+    "empty_cand_rate": 0.0,
+    "pair_recall_by_country": {
+      "India": 0.9745227559029684,
+      "US": 0.9905563300803293
+    }
+  },
+  "val": {
+    "f05_macro": 0.9610904207548023,
+    "n_entities": 87952,
+    "pair_precision": 0.9868415470550802,
+    "pair_recall": 0.9164324736040342,
+    "singleton_rate_true": 0.056360287429507,
+    "singleton_acc": 0.9513818842041557,
+    "empty_pred_on_nonsingleton": 0.007253449002951985,
+    "entities_with_fp": 0.03866881935601237,
+    "avg_pred_per_entity": 3.2160724031289796,
+    "f05_by_ntrue": {
+      "0": 0.9513818842041557,
+      "1": 0.8996218843360783,
+      "2": 0.9519478171048419,
+      "3": 0.964322615734883,
+      "4": 0.9689854475565972,
+      "5": 0.9714277802604229,
+      "6": 0.9730078089406795
+    },
+    "f05_by_country": {
+      "India": 0.9531462738656875,
+      "US": 0.9665216635665074
+    },
+    "threshold": 0.725
+  },
+  "subset": "mini",
+  "val_expected_f05_rule": 0.9600966943890329,
+  "vs_parent": {
+    "n": 87952,
+    "delta": 0.05536800663292447,
+    "ci95": [
+      0.054092735864947276,
+      0.056630859753869854
+    ],
+    "p_not_better": 0.0
+  },
+  "timing_min": 14.9,
+  "peak_rss_gb": 10.8
+}

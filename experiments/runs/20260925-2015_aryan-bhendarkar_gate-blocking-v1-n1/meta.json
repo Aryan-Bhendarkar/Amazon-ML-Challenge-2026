@@ -1,0 +1,40 @@
+{
+  "run_id": "20260925-2015_aryan-bhendarkar_gate-blocking-v1-n1",
+  "name": "gate-blocking-v1-n1",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "Phase 1 gate: blocking v1 union (keys + tf_na + akey/hskey/skel/tf_empty/nkey_empty, cap 100) on norm_v1 (token map), same 28 baseline features + rbits, retrained -> mini F0.5 up vs control",
+  "params": {
+    "cand_ver": "v1_n1",
+    "subset": "mini",
+    "n_feats": 29,
+    "lgb": {
+      "objective": "binary",
+      "learning_rate": 0.05,
+      "num_leaves": 127,
+      "min_data_in_leaf": 100,
+      "feature_fraction": 0.8,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 1.0,
+      "verbose": -1,
+      "seed": 42,
+      "num_threads": 8,
+      "deterministic": true,
+      "force_row_wise": true
+    },
+    "max_rounds": 3000,
+    "loco": false
+  },
+  "tags": [
+    "blocking",
+    "model",
+    "gate"
+  ],
+  "parent": "20260925-1621_aryan-bhendarkar_control-keys-v0",
+  "git_commit": "5494fa0",
+  "git_dirty": true,
+  "started_ist": "2026-09-25T20:15:05+05:30",
+  "status": "done",
+  "duration_min": 14.62,
+  "finished_ist": "2026-09-25T20:29:42+05:30"
+}

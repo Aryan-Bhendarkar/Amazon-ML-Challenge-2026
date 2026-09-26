@@ -1,0 +1,15 @@
+{
+  "files": {
+    "mini": {
+      "queries": 87952,
+      "old_pairs": 8286867,
+      "new_pairs": 96254,
+      "new_per_s1": 1.094,
+      "recall_before": 0.98404,
+      "recall_after": 0.98712,
+      "true_new": 938,
+      "pairs": 8383121,
+      "minutes": 0.9
+    }
+  }
+}

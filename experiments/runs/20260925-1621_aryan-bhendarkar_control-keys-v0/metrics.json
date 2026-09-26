@@ -1,0 +1,93 @@
+{
+  "train_pairs": 10796622,
+  "train_pos_rate": 0.041408136730173566,
+  "best_iter": 1239,
+  "feature_gain": {
+    "addr_tset": 15048126.0,
+    "addr_rank_in_s1": 3291841.0,
+    "street_tset": 2419320.7,
+    "name_partial": 2191077.5,
+    "name_ratio": 1091777.8,
+    "num_jacc": 785485.7,
+    "house_rel": 676505.8,
+    "kmask": 618490.8,
+    "extra_tok": 587491.8,
+    "comp_jw": 532276.8,
+    "legal_rel": 437164.1,
+    "state_rel": 343110.4,
+    "comp_partial": 329828.5,
+    "alias_tset": 247893.5,
+    "addr_ratio": 239762.0,
+    "cand_addr_empty": 186099.1,
+    "name_tsort": 185482.3,
+    "n_cand_s1": 115702.4,
+    "name_tset": 108985.3,
+    "common_tok": 94798.5,
+    "len_core_c": 85774.8,
+    "name_rank_in_s1": 72833.0,
+    "cand_native": 66867.0,
+    "missing_tok": 59655.9,
+    "cand_kind": 54540.4,
+    "name_gap_s1": 32860.7,
+    "len_core_s1": 23602.8,
+    "cand_src": 9496.5
+  },
+  "blocking": {
+    "pair_recall": 0.8606135420496928,
+    "entity_full_coverage": 0.6874992469425869,
+    "cands_mean": 72.08089639803529,
+    "cands_p50": 52.0,
+    "cands_p95": 207.0,
+    "cands_max": 602,
+    "n_pairs": 6339659,
+    "empty_cand_rate": 0.013325450245588503,
+    "pair_recall_by_country": {
+      "India": 0.827255402306276,
+      "US": 0.8834672154727921
+    }
+  },
+  "val": {
+    "f05_macro": 0.9057224141218779,
+    "n_entities": 87952,
+    "pair_precision": 0.9856223583606402,
+    "pair_recall": 0.8176544360981247,
+    "singleton_rate_true": 0.056360287429507,
+    "singleton_acc": 0.9513818842041557,
+    "empty_pred_on_nonsingleton": 0.04143623109825893,
+    "entities_with_fp": 0.03721348008004366,
+    "avg_pred_per_entity": 2.872976168819356,
+    "f05_by_ntrue": {
+      "0": 0.9513818842041557,
+      "1": 0.797041335074506,
+      "2": 0.8837330251447898,
+      "3": 0.9061268664145872,
+      "4": 0.9174372831384312,
+      "5": 0.9213420851733369,
+      "6": 0.9233736404823681
+    },
+    "f05_by_country": {
+      "India": 0.8770753059237718,
+      "US": 0.9253078274644094
+    },
+    "threshold": 0.675
+  },
+  "subset": "mini",
+  "val_expected_f05_rule": 0.9054327714943791,
+  "vs_parent": {
+    "n": 87952,
+    "delta": 0.0,
+    "ci95": [
+      0.0,
+      0.0
+    ],
+    "p_not_better": 1.0
+  },
+  "loco_partial": {
+    "India->US": {
+      "f05_tuned": 0.9098,
+      "t_tuned": 0.625,
+      "f05_at_src_t": 0.9097,
+      "t_src": 0.675
+    }
+  }
+}

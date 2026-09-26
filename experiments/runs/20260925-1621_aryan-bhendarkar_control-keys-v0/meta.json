@@ -1,0 +1,39 @@
+{
+  "run_id": "20260925-1621_aryan-bhendarkar_control-keys-v0",
+  "name": "control-keys-v0",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "control: baseline LGBM retrained from the keys_v0 cache reproduces 0.9057 (parent for Phase 1/2 bootstraps)",
+  "params": {
+    "cand_ver": "keys_v0",
+    "subset": "mini",
+    "n_feats": 28,
+    "lgb": {
+      "objective": "binary",
+      "learning_rate": 0.05,
+      "num_leaves": 127,
+      "min_data_in_leaf": 100,
+      "feature_fraction": 0.8,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 1.0,
+      "verbose": -1,
+      "seed": 42,
+      "num_threads": 0,
+      "deterministic": true,
+      "force_row_wise": true
+    },
+    "max_rounds": 3000,
+    "loco": true
+  },
+  "tags": [
+    "model",
+    "control"
+  ],
+  "parent": "20260925-1236_aryan_baseline-v0-keys-lgbm",
+  "git_commit": "2f03c4c",
+  "git_dirty": true,
+  "started_ist": "2026-09-25T16:21:46+05:30",
+  "status": "done",
+  "finished_ist": "2026-09-25T17:42:00+05:30",
+  "note": "LOCO stage stopped by user request (box contention) after India->US; main val complete"
+}

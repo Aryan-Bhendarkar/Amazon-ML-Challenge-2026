@@ -4,7 +4,7 @@
   "author": "aryan-bhendarkar",
   "note": "REPLACES sub3 (not uploaded): v1_n2 blocking (nkey_num) + ctx v3 (density-robust G3 on norm_v1); mini 0.9813, fold0x 0.98117 (+0.00128 vs sub3 model)",
   "created_ist": "2026-09-26T09:59:36+05:30",
-  "status": "prepared",
+  "status": "uploaded",
   "validator_pass": true,
   "val_f05": 0.9813,
   "stats_matching": {
@@ -34,5 +34,8 @@
     "empty_rate": 0.0591350060950833,
     "mean_matches": 3.3109294771157325
   },
-  "files": "submissions/files/20260926-0953_aryan-bhendarkar"
+  "files": "submissions/files/20260926-0953_aryan-bhendarkar",
+  "public_score": 0.967,
+  "uploaded_ist": "2026-09-26T10:32:01+05:30",
+  "lb_note": "val 0.9813 / fold0x 0.98117 -> LB 0.967: gap -0.014 (was -0.005/-0.006) - investigate"
 }
