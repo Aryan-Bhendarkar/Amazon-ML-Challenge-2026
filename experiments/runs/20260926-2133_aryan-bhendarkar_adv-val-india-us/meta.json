@@ -1,0 +1,22 @@
+{
+  "run_id": "20260926-2133_aryan-bhendarkar_adv-val-india-us",
+  "name": "adv-val-India-US",
+  "author": "aryan-bhendarkar",
+  "hypothesis": "D1: val vs test separability on the psemb features (p >= 0.5)",
+  "params": {
+    "countries": "US,India",
+    "n": 300000,
+    "threads": 6
+  },
+  "tags": [
+    "diagnostic",
+    "adversarial"
+  ],
+  "parent": "20260926-1737_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-psemb",
+  "git_commit": "8968ea8",
+  "git_dirty": true,
+  "started_ist": "2026-09-26T21:33:02+05:30",
+  "status": "done",
+  "duration_min": 0.0,
+  "finished_ist": "2026-09-26T21:33:02+05:30"
+}

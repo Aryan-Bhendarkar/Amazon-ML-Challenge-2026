@@ -301,3 +301,10 @@ Orphan-sim protocol:
   - **band pairs/S1 (p 0.2–0.975) 0.821 → 0.698 (−15%)**
 - expected LB: C0 ≈ 0.967 + gains from ps/emb (non-FR DM +0.0014 → ≈ +0.001); C1 adds the France normalization effect (lead's estimate 0.969–0.972).
 
+## D1 Adversarial validation, val vs test (pipelines/adv_val.py; psemb features; pairs with p ≥ 0.5; 26 Sep 21:35 IST)
+- US+IN: 296,826 val (mini) vs 300,000 test pairs. LightGBM 3-fold **AUC 0.797**: val and test pairs are clearly separable.
+- top gain shares: mi_lfrac_cmax 0.206, ex_lfrac_cmax 0.164, ex_lfrac_cmin 0.086, mi_lfrac_cmin 0.044 (**lfrac = 50%**); then sib_n 0.040, emb_cos_full 0.034 (band NaN rate 0.94 vs 0.89), ex_ldf_max 0.034, s1_name_self 0.027.
+- The lfrac quantiles are nearly identical between val and test, so the classifier uses the *exact* log(df/n) values as a split fingerprint. This is direct evidence for the memorization hypothesis (lead 19:00), consistent with EXP-A's brittleness.
+- action: psemb without lfrac (tmux qNL): train + LOCO → DM-mini → DM-fold0x → D1 on the new feature set. Keep if DM/LOCO hold and the AUC drops.
+- India-only / US-only D1: running.
+
