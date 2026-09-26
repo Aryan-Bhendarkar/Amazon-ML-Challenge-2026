@@ -2,7 +2,7 @@
   "sub_id": "20260926-probe-fr-empty",
   "run_id": "20260926-0710_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3",
   "author": "aryan-bhendarkar",
-  "status": "prepared",
+  "status": "uploaded",
   "note": "DIAGNOSTIC (lead-approved, DIRECTIVES Lane A.1): 0953 predictions with all 259,452 France S1 rows emptied. F_FR = (0.967 - LB_probe)/0.15 + s_FR, s_FR ~ 0.056 +- 0.01 (train singleton prior; FR public share assumed 0.15).",
   "parent_sub": "20260926-0953_aryan-bhendarkar",
   "validator_pass": true,
@@ -14,5 +14,8 @@
   },
   "fr_s1": 259452,
   "fr_nonempty_in_0953": 243522,
-  "files": "submissions/files/20260926-probe-fr-empty"
+  "files": "submissions/files/20260926-probe-fr-empty",
+  "public_score": 0.834,
+  "uploaded_ist": "2026-09-26T16:33:06+05:30",
+  "lb_note": "FR-probe: F_FR~0.944 (0.934-0.954), US+IN LB~0.971"
 }

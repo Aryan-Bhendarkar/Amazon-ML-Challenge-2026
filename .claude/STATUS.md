@@ -11,6 +11,8 @@ Next:
   1. emb verdict
   2. 21:30 submission-#2 candidate
   3. 23:00 overnight test featurization (only if a new non-rescorable group is kept; ps and emb need none)
+**FR-probe uploaded: public 0.834 → F_France ≈ 0.944, F_non-France ≈ 0.971 (val 0.981).** The non-FR gap is the larger part (≈ 0.0086 of the 0.014).
+- US test = extra band negatives (precision); India test = true copies shifted from >0.999 into the band (recall). See LB-PROBE in experiments.md.
 Blockers / needs human:
   **NEEDS-LEAD: which gate governs ps?**
   - It fails the model gate (DM-fold0x +0.00036 < +0.002) but passes the transfer gate (LOCO-avg +0.003 ≥ +0.002, clean −0.00004 ≥ −0.001).
@@ -18,7 +20,7 @@ Blockers / needs human:
   - Expected LB: small positive (≈ +0.0004 from DM, plus France transfer).
   - If you approve, it becomes submission #2 today, or the base for 21:30 with emb on top.
 Submission requests:
-  **SUBMIT-REQUEST: FR-probe** (diagnostic, lead-approved; DIRECTIVES Lane A.1)
+  ~~SUBMIT-REQUEST: FR-probe~~ DONE: uploaded, public 0.834 (recorded)
   - file: `submissions/files/20260926-probe-fr-empty/matching_results.tsv` (candidate_pairs.tsv = hard link to 0953's, unchanged)
   - record: `submissions/records/20260926-probe-fr-empty.json`
   - source run: 20260926-0710 (the 0953 upload, LB 0.967)

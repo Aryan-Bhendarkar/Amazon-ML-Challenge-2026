@@ -235,3 +235,27 @@ Orphan-sim protocol:
 - verdict: **KEEP as the new base; submission status NEEDS-LEAD.** It fails the model gate (DM-fold0x +0.00036 < +0.002) but passes the transfer gate (LOCO-avg ≥ +0.002, clean ≥ −0.001). Expected LB effect is small positive (≈ +0.0004 non-FR plus the FR transfer share).
 - test cost: `--from-feats` rescore (minutes). Prepared as a submission (below; not requested).
 
+## LB-PROBE France-empty (sub 20260926-probe-fr-empty; uploaded 26 Sep; **public 0.834**)
+- setup: the 0953 predictions (public 0.967) with all 259,452 France S1 emptied (FR share of test S1 = 0.1497; any random public subset keeps it within ±0.0005).
+- read-out: F_FR = (0.967 − 0.834)/0.1497 + s_FR, with s_FR ≈ 0.056 ± 0.01 → **F_France ≈ 0.944 ± 0.01**.
+  - Hence **F_non-France ≈ (0.967 − 0.1497·0.944)/0.8503 ≈ 0.971** vs val 0.981.
+- gap decomposition (LB 0.967 vs val 0.981):
+  - non-FR ≈ 0.85 × 0.010 = **0.0086** (the larger part)
+  - France ≈ 0.15 × (0.98 − 0.944) = **0.0054**
+- label-free mass shift, assigned pairs per S1, test vs val mini:
+
+| country | >0.999 | 0.975–0.999 | 0.775–0.975 | 0.3–0.775 | total ≥ 0.3 |
+|---|---|---|---|---|---|
+| US | 2.674 vs 2.702 | 0.529 vs 0.518 | **0.205 vs 0.103** | **0.201 vs 0.112** | **+0.175** |
+| India | **2.312 vs 2.494** | 0.724 vs 0.667 | 0.238 vs 0.144 | 0.146 vs 0.118 | **≈ 0** |
+| France | 2.488 | 0.492 | 0.198 | 0.235 | – |
+
+- reading:
+  - **US** gains new mass in the band with unchanged top mass → extra negatives (distractors / twins): a precision problem. The DM model fits here.
+  - **India** keeps the same total but moves 0.18 pairs/S1 from >0.999 into the band → noisier true copies on test: a recall problem. The DM "excess = negatives" assumption is **wrong for India**; stricter thresholds would hurt there.
+  - France looks like the US on the high side and has the most mass in 0.3–0.775.
+- implications:
+  1. Global-threshold tuning can't serve both regimes; country-keyed thresholds are forbidden.
+  2. The non-FR loss (~0.010) is split between US precision and India recall.
+  3. Features that make noisy true copies score high (India) and features that separate distractors (US) are the levers. bge-m3 cosines target the India case (native / transliteration noise).
+
