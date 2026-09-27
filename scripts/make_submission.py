@@ -26,21 +26,31 @@ def main(a) -> int:
     s1 = io.load_source("test", 1, columns=["entity_id", "country"])
     order = s1.entity_id.tolist()
     m = pd.read_parquet(a.matches)
-    dup = m.duplicated("match_id").sum()
-    if dup:
-        print(f"WARNING: {dup} records matched to >1 S1 — violates the at-most-one structure; "
-              "use ber.decision.assign_best_s1 before thresholding")
+    errs = submission.integrity_errors(m, order)           # audit B3: hard failures, nothing is written
+    if errs:
+        print("FAIL (integrity):\n  " + "\n  ".join(errs))
+        return 2
     sub_id = f"{datetime.now(IST):%Y%m%d-%H%M}_{author()}"
     out = paths.SUB_DIR / "files" / sub_id
     ml = m.groupby("s1_id").match_id.agg(list).to_dict()
     st_m = submission.write_id_lists(out / "matching_results.tsv", ml, order, submission.MATCH_HEADER)
+    errs = submission.readback_errors(out / "matching_results.tsv", order)
+    if st_m["dropped_bad_ids"]:
+        errs.append(f"{st_m['dropped_bad_ids']} matched ids dropped by the writer (not S2-/S3-)")
+    if errs:
+        print("FAIL (matching_results.tsv):\n  " + "\n  ".join(errs))
+        return 3
     st_c = None
     if a.candidates:   # streamed: candidate sets can be 100M+ pairs
         st_c = submission.write_candidates_streaming(a.candidates, out / "candidate_pairs.tsv", order,
                                                      matched_pairs=set(zip(m.s1_id, m.match_id)))
         miss = st_c["matched_pairs_total"] - st_c["matched_pairs_in_candidates"]
+        cerr = submission.readback_errors(out / "candidate_pairs.tsv", order)
         if miss:
-            print(f"WARNING: {miss} matched pairs are not in candidates (pipeline bug?)")
+            cerr.append(f"{miss} matched pairs are not in the candidates (matches must be a subset of candidates)")
+        if cerr:
+            print("FAIL (candidate_pairs.tsv):\n  " + "\n  ".join(cerr))
+            return 4
     c = a.candidates
     ok, log = submission.run_validator(out / "matching_results.tsv",
                                        out / "candidate_pairs.tsv" if c is not None else None,

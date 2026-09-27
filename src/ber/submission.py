@@ -118,3 +118,43 @@ def save_record(record: dict) -> Path:
     p = rec_dir / f"{record['sub_id']}.json"
     p.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
     return p
+
+
+def integrity_errors(matches: pd.DataFrame, s1_order: list[str]) -> list[str]:
+    """Hard checks before writing (audit B3). matches: s1_id, match_id. Empty list = OK."""
+    errs = []
+    o = pd.Series(s1_order)
+    if o.duplicated().any():
+        errs.append(f"{int(o.duplicated().sum())} duplicate S1 ids in the S1 order")
+    m = matches[["s1_id", "match_id"]].drop_duplicates()
+    d = m.match_id.duplicated(keep=False)
+    if d.any():
+        errs.append(f"{int(m.loc[d, 'match_id'].nunique())} records matched to more than one S1, "
+                    f"e.g. {m.loc[d, 'match_id'].iloc[:3].tolist()}")
+    unk = set(m.s1_id) - set(s1_order)
+    if unk:
+        errs.append(f"{len(unk)} matched S1 ids not in test_source1, e.g. {sorted(unk)[:3]}")
+    bad = ~m.match_id.astype(str).str.startswith(("S2-", "S3-"))
+    if bad.any():
+        errs.append(f"{int(bad.sum())} matched ids are not S2-/S3- ids, e.g. {m.loc[bad, 'match_id'].iloc[:3].tolist()}")
+    return errs
+
+
+def readback_errors(path: Path, s1_order: list[str]) -> list[str]:
+    """Every S1 of s1_order exactly once in a written TSV (header + one row per S1, LF, tab)."""
+    raw = Path(path).read_bytes()
+    errs = ["CR characters in file"] if b"\r" in raw else []
+    rows = raw.decode("utf-8").rstrip("\n").split("\n")[1:]
+    ids = [r.split("\t", 1)[0] for r in rows]
+    if any("\t" not in r for r in rows):
+        errs.append("rows without a tab")
+    s = pd.Series(ids)
+    if s.duplicated().any():
+        errs.append(f"{int(s.duplicated().sum())} duplicate S1 rows")
+    miss = set(s1_order) - set(ids)
+    if miss:
+        errs.append(f"{len(miss)} S1 rows missing, e.g. {sorted(miss)[:3]}")
+    extra = set(ids) - set(s1_order)
+    if extra:
+        errs.append(f"{len(extra)} unknown S1 rows")
+    return errs
