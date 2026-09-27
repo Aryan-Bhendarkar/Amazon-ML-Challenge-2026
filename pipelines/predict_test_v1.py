@@ -31,6 +31,7 @@ import polars as pl
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from ber import bag
 from ber import ctx_features as cf
 from ber import paths
 from ber.decision import assign_best_s1, threshold_matches
@@ -55,7 +56,7 @@ def main(a):
     art = paths.ART_DIR / a.run
     feats = json.loads((art / "features.json").read_text())
     t = json.loads((art / "decision.json").read_text())["threshold"] if a.threshold is None else a.threshold
-    model = lgb.Booster(model_file=str(art / "model.lgb"))
+    model = bag.load_model(art)                  # single model.lgb or seed bag (bag.json)
     cv = run_ctx_ver(a.run)                                   # never mix ctx versions between train and test
     nv = cf.norm_of(cv) if a.norm is None else a.norm      # --norm: same ctx features on a newer norm cache
     print(f"ctx_features version {cv} (norm_v{nv})")

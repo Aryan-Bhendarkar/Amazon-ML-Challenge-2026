@@ -14,6 +14,7 @@ import _bootstrap  # noqa: F401
 import argparse
 import gc
 import json
+import shutil
 import os
 import time
 
@@ -217,18 +218,42 @@ def main(a):
     name = f"feat-v1-{a.cache}-{'-'.join(groups) or 'base'}" + (f"-ctx{CTX_VER}" if CTX_VER != 1 else "") \
         + ("-mono" if MONOTONE else "") + (f"-{a.tag}" if a.tag else "")
     with Run(name, hypothesis=a.hypothesis or f"ctx feature groups {groups or 'none'} on {a.cache} cache",
-             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "drop_feats": drop, "lfrac_q": a.lfrac_q, "ps": a.ps, "emb": a.emb, "xenc": a.xenc, "subset": a.subset, "n_train_s1": a.n_train_s1,
+             params={"cache": a.cache, "ctx_ver": CTX_VER, "monotone": MONOTONE, "groups": groups, "drop_feats": drop, "lfrac_q": a.lfrac_q, "ps": a.ps, "emb": a.emb, "xenc": a.xenc, "seeds": a.seeds, "bag_parent": a.bag_parent, "subset": a.subset, "n_train_s1": a.n_train_s1,
                      "threads": a.threads, "n_feats": len(feats), "new_feats": new},
              tags=["features"], parent=a.parent) as run:
         run.log(train_pairs=int((~tr.is_es).sum()), es_pairs=int(tr.is_es.sum()), eval_pairs=len(ev))
         out = None
         if not a.loco_only:
-            model = train_lgb(tr, feats, cats, a.threads)
-            model.save_model(str(run.art_dir / "model.lgb"))
             (run.art_dir / "features.json").write_text(json.dumps(feats))
-            imp = dict(sorted(zip(feats, model.feature_importance("gain").round(1).tolist()), key=lambda x: -x[1]))
-            run.log(best_iter=model.best_iteration, feature_gain=imp)
-            pred = ev[["s1_id", "cand_id"]].assign(prob=model.predict(ev[feats], num_threads=a.threads).astype(np.float32))
+            if a.seeds:                                # seed bag (ber.bag): members averaged in probability space
+                seeds = [int(x) for x in a.seeds.split(",")]
+                members, probs, iters = [], [], {}
+                if a.bag_parent:                       # the parent (trained with seed 42, deterministic) is member s42
+                    pa = paths.ART_DIR / a.bag_parent
+                    assert json.loads((pa / "features.json").read_text()) == feats, "bag parent has other features"
+                    shutil.copyfile(pa / "model.lgb", run.art_dir / "model_s42.lgb")
+                    members.append("model_s42.lgb")
+                    probs.append(lgb.Booster(model_file=str(pa / "model.lgb")).predict(ev[feats], num_threads=a.threads))
+                for sd in seeds:                       # LightGBM derives bagging/feature_fraction seeds from `seed`
+                    m = train_lgb(tr, feats, cats, a.threads, seed=sd)
+                    m.save_model(str(run.art_dir / f"model_s{sd}.lgb"))
+                    members.append(f"model_s{sd}.lgb")
+                    iters[sd] = m.best_iteration
+                    probs.append(m.predict(ev[feats], num_threads=a.threads))
+                    print(f"[bag] seed {sd}: best_iter {m.best_iteration}", flush=True)
+                    del m
+                    gc.collect()
+                (run.art_dir / "bag.json").write_text(json.dumps({"models": members, "parent": a.bag_parent}))
+                run.log(bag_members=members, best_iter=iters)
+                imp = {}
+                pred = ev[["s1_id", "cand_id"]].assign(prob=np.mean(probs, axis=0).astype(np.float32))
+                model = None
+            else:
+                model = train_lgb(tr, feats, cats, a.threads)
+                model.save_model(str(run.art_dir / "model.lgb"))
+                imp = dict(sorted(zip(feats, model.feature_importance("gain").round(1).tolist()), key=lambda x: -x[1]))
+                run.log(best_iter=model.best_iteration, feature_gain=imp)
+                pred = ev[["s1_id", "cand_id"]].assign(prob=model.predict(ev[feats], num_threads=a.threads).astype(np.float32))
             out = harness.log_predictions(run, pred, ctx)
             (run.art_dir / "decision.json").write_text(json.dumps({"threshold": out["val"]["threshold"]}))
             del model
@@ -283,6 +308,8 @@ if __name__ == "__main__":
     ap.add_argument("--featurize-only", action="store_true", help="only build ctx1_<tag>.parquet caches")
     ap.add_argument("--loco-n", type=int, default=60_000)
     ap.add_argument("--drop-feats", default="", help="comma list of features to exclude (ablation)")
+    ap.add_argument("--seeds", default="", help="seed bag: comma list of extra seeds (members averaged)")
+    ap.add_argument("--bag-parent", default="", help="seed-42 run reused as a bag member (same features)")
     ap.add_argument("--xenc", default="", help="comma list of xenc sources joined as features xenc_<name>")
     ap.add_argument("--emb", action="store_true", help="add Lane B bge-m3 band cosines (data/cands/<cache>/emb_<tag>.parquet)")
     ap.add_argument("--ps", action="store_true", help="add per-source competition features (ctx_features.PS_FEATS)")

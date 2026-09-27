@@ -21,6 +21,7 @@ import pandas as pd
 import polars as pl
 
 import features_v1 as fv
+from ber import bag
 from ber import ctx_features as cf
 from ber import dmval, harness, io, metric, paths
 from ber.tracking import Run
@@ -34,7 +35,7 @@ def assign_pl(pred: pl.DataFrame) -> pl.DataFrame:
 
 def score_tag(run: str, cache: str, tag: str, ids: list, threads: int) -> pd.DataFrame:
     art = paths.ART_DIR / run
-    model = lgb.Booster(model_file=str(art / "model.lgb"))
+    model = bag.load_model(art)                  # single model.lgb or seed bag (bag.json)
     feats = json.loads((art / "features.json").read_text())
     fv.CTX_VER = 3
     X = fv.load_cache(cache, tag).filter(pl.col("s1_id").is_in(ids))
