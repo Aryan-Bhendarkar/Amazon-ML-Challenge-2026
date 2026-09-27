@@ -81,11 +81,11 @@ Why rescue fails:
 ## 4. Final package: what is missing
 - **Methodology document (Documentation_template.md filled): MISSING.**
   - Only `student_resource/Documentation_template.md` (template) exists.
-  - Draft: `docs/METHODOLOGY_DRAFT.md` (box2; see below).
+  - Draft written: `docs/METHODOLOGY_DRAFT.md` (branch `audit`, box2). Follows the template sections; team name/members + final LB to fill.
 - **docs/REPRODUCE.md describes XB, not D:**
   - §3 needs `--xenc mlm5x` (MiniLM-5x) instead of `minilm`, and D's run id.
   - TODO 4 (Lane G sha256) values:
-    - MiniLM-5x `ckpt_best_h0/h1.pt`: see `artifacts/kaggle/amlc-g2-minilm/ckpt_sha256.txt` (computed on box2)
+    - MiniLM-5x h0 `182e5c94e29243b7f4464291c25b01d372f21aef71b01efd2f4230d3b47209b9`, h1 `f63ed5ad964809a78cac96db14c0fb02871d4062a6bd8c4d887f16fd305aa1fb`
     - XLM-R h0 `0a06715eac8c30109a3562203b49c287fc8c74350d5b3a95cbe212888910e004`
     - XLM-R h1 `ac94b96c833a58e7fddf71006de3125dfd74470665519f06695abe45ff9d1c92`
   - MiniLM-5x training kernel: acc5 `darshanbagadeycce/amlc-g2-minilm` (2×T4, 128 min); scoring `amlc-g3-minilm` v3 (T4x2).
