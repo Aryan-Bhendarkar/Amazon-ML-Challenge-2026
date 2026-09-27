@@ -298,3 +298,9 @@ Orphan-sim protocol:
 - verdict: ckpts OK → G3 scoring (amlc-g3-minilm) queued automatically; stacking verdict is box1's (DM-fold0x / LOCO)
 - test cost: G3 kernel ~10.8M pairs per model on Kaggle GPU
 - G3 minilm v2 OOM-killed at fold0x (Kaggle RAM; 2 threads × 1M-pair python token lists). Fix: 250k-pair chunks, 50k tokenizer sub-batches → int32 arrays, gc per part; all G3 variants regenerated (XLM-R ones inherit the fix). v3 pushed 02:09 IST on T4x2. Measured: ~2.8k pairs/s per T4 (MiniLM), tokenization ~75 s per 1M pairs.
+
+## LANE-G wrap-up (27 Sep 08:40 IST): GPU work DONE (lead 06:50)
+- G2 XLM-R (L4): full epoch each, 216/221 pairs/s, 307/304 min; best val logloss h0 0.00642 / h1 0.00628 (MiniLM-5x: 0.00629 / 0.00614 → XLM-R not better on val logloss)
+- G3 scoring complete: XLM-R h0/h1 10.43M pairs each (all 4 tags) in 189/178 min at ~1.0k pairs/s on L4; MiniLM v3 complete (lead pulled to artifacts/kaggle/amlc-g3-minilm_latest). All synced to s3 share/g3logits/{minilm5x,xlmr_h0,xlmr_h1} by the lead.
+- box1 stacking: MiniLM-5x +0.0004 DM-fold0x (significant, redundant with old MiniLM); XLM-R verdict pending on box1
+- incident: gpoll's one-shot `.pulled` flag re-pulled the OOM-killed v2 MiniLM output; renamed to amlc-g3-minilm_STALE_v2_oom_pull (README inside). Poller stopped, ~/.keepalive removed (idle-safe).

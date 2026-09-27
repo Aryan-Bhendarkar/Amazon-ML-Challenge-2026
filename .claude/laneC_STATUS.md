@@ -1,4 +1,4 @@
-Updated: 27 Sep 02:10 IST (amlc-box2, Lanes C + G; branch `laneC`)
+Updated: 27 Sep 08:40 IST (amlc-box2; branch `laneC`). **Lane G GPU work DONE (lead 06:50); Lane C items done. Box2 idle-safe (poller stopped, keepalive removed).**
 
 ## Lane G (GPU): per-account status (live: `logs/lane_g_status.log`; tmux `gpoll` = kaggle/poll_lane_g2.sh, every 3 min:
 ## training COMPLETE -> pull ckpts + sha256 -> push the G3 scoring kernel once its amlc-g3 dataset is ready -> pull logits)
