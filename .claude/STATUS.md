@@ -1,4 +1,9 @@
-Updated: 27 Sep 07:55 IST (amlc-49 HEADLESS, lead prompt 04:50). Box idle.
+Updated: 27 Sep 08:20 IST (amlc-49 HEADLESS, lead prompt 08:05)
+**Running (lead 08:05):**
+  - tmux bag: seed bags x5 of XB (0257) and D (0508). Seeds 42 (= parent) + 43..46, probabilities averaged (`ber.bag`) → DM-mini (t re-tuned) → DM-fold0x → paired vs parent. ETA XB-bag ~09:10, D-bag ~10:10 IST.
+  - tmux qLC (queued): learning curve on XB features, 45k / 90k training S1 (100% = XB) → DM-fold0x. ETA ~11:15.
+  - Then: test build (C1 path + HEDGE) for the best of {XB, XB-bag, D, D-bag}, target 13:30.
+  - docs/REPRODUCE.md draft committed.
 **Running (lead 04:50): tmux xs2** = Lane G MiniLM-5x on top of XB
   - C = XB + xenc_mlm5x; D = XB with mlm5x replacing minilm
   - DM-mini → DM-fold0x → paired vs XB (clean, DM, per country)
