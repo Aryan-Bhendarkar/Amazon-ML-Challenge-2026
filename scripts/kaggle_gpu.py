@@ -117,7 +117,10 @@ def cmd_run(a):
         args += ["--accelerator", GPU.get(a.gpu, a.gpu)]
     if a.timeout:
         args += ["-t", str(a.timeout)]
-    sh(*args)
+    r = sh(*args)
+    o = (r.stdout + r.stderr).lower()                      # the CLI exits 0 on "Maximum batch GPU session count" and
+    if "error" in o or "not valid" in o:                   # on missing sources ("not valid dataset sources")
+        sys.exit(f"[run] push FAILED for {user}/{a.slug}")
     print(f"[run] pushed {user}/{a.slug}  (https://www.kaggle.com/code/{user}/{a.slug})")
     if a.wait:
         cmd_wait(a)
