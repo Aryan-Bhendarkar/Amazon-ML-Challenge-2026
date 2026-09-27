@@ -64,6 +64,20 @@ Per-S1 loss = 1 − F0.5, total DM loss 5,358 (mean 0.01516). Attribution: FP lo
 
 | **stage-2 stack** on D (LightGBM on mini labels: D logit, XLM-R logits [not in D], MiniLM-5x, 2-hop, margin, 2nd-S1 p, sims; 2-fold OOF threshold) | t 0.825 | **−0.00011 [−0.00022, +0.00001]** | −0.00013 [−0.00023, −0.00002] | IN −0.00014 / US −0.00008; LOCO US→IN −0.00031, IN→US −0.00050 | KILL (mini OOF already −0.00014: D absorbs these signals; gain dominated by margin and D's logit) |
 
+| contested-record reassignment (record clears t for 2 S1 → give it to the 2nd S1 if that one is otherwise empty) | analysis only | only 467 contested rows on fold0x; argmax picks the true owner 85% of the time; for "2nd otherwise empty" the 2nd is right 1/38 | – | – | KILL |
+
+**C4, India recall** (fold0x, per-S1 loss ×1e-4):
+
+| | blocking miss | in-cand reject | lost to other S1 | FP |
+|---|---|---|---|---|
+| India | **63.7** | 61.2 | 17.4 | 22.9 |
+| US | 29.8 | 72.4 | 20.7 | 19.5 |
+
+- India's extra loss is **blocking** (2.1× US), not the threshold: its in-candidate rejects are lower than US.
+- Only 6% of India's rejects are native-script records.
+- In both countries, 59–67% of in-candidate rejects are **empty-address** records.
+- The lever for India is blocking recall (native-script / trade-name retrieval), not a threshold proxy.
+
 **Threshold robustness** (fold0x, DM-optimal t as the test/val band-density ratio rho varies; w re-derived):
 
 | rho | best t | loss at t = 0.825 vs best |
