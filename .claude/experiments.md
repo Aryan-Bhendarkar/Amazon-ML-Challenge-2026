@@ -450,5 +450,15 @@ Orphan-sim protocol:
 - **25% (45k S1)** (20260927-1049_…-lc4500; DM 1053 / 1054): clean mini 0.9847.
   - Paired vs XB (100%): **DM-fold0x −0.00112 [−0.00124, −0.00099]** (IN −0.00116, US −0.00109); clean fold0x −0.00091.
 - **50% (90k S1)** (20260927-1100_…-lc9000; DM-mini 1104): clean mini 0.9853.
-  - Its DM-fold0x run 1106 was interrupted (the chain's tmux session ended at 11:07 when the lead launched the F build). It is re-queued after bldF (tmux qlc2).
+  - Its DM-fold0x run 1106 was interrupted (the chain's tmux session ended at 11:07 when the lead launched the F build). Re-run as DM-fold0x 20260927-1138_…dm-val-fold0x.
+  - Paired vs XB: **DM-fold0x −0.00054 [−0.00064, −0.00044]** (IN −0.00060, US −0.00050); clean fold0x −0.00048.
+- **curve (DM-fold0x): 45k 0.98335 → 90k 0.98393 → 180k 0.98447.**
+  - Gain per doubling: **+0.00058 (45→90k), +0.00054 (90→180k)**, i.e. about +0.0005–0.0006 per doubling and diminishing only slowly.
+  - Extrapolation: 4× (720k S1) ≈ +0.0011; all ~1.76M fold 2–4 S1 (≈ 3.3 doublings) ≈ +0.0017.
+  - That needs new blocking + ctx + bge-m3 + xenc scoring for the added S1: several hours of CPU + GPU. Not started (lead instruction).
+
+## SUB-F F C1 + F-HEDGE (lead's bldF, 11:07–11:40 IST; F-HEDGE completed by amlc-49)
+- F-C1 = submissions/files/20260927-1131_aryan-bhendarkar (built by the lead's chainBuildF; validator PASS; 5,758,122 matches ⊆ candidates; FR matches/S1 3.241).
+- The chain aborted before F-HEDGE: `logs/buildC1x.sh` was edited during the run and the new line 12 `: keepalive kept (lead)` had unquoted parentheses (syntax error). Fixed to `: 'keepalive kept (lead)'`, same intent.
+- **F-HEDGE** = …/20260927-1138_aryan-bhendarkar, built with the lead's exact commands (hedge_fr + make_submission). Validator PASS; byte-verified: France rows = psemb-C1 (0 differ), US/IN = F-C1 (0 differ); 5,738,594 matches.
 

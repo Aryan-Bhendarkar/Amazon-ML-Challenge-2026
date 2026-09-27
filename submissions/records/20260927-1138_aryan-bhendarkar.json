@@ -1,0 +1,38 @@
+{
+  "sub_id": "20260927-1138_aryan-bhendarkar",
+  "run_id": "20260927-0709_aryan-bhendarkar_feat-v1-v1-n2-g1-g2-g3-g4-g5-ctx3-f",
+  "author": "aryan-bhendarkar",
+  "note": "F-HEDGE: F for US/IN rows; France rows = psemb-C1 (LB 0.968 file)",
+  "created_ist": "2026-09-27T11:45:40+05:30",
+  "status": "prepared",
+  "validator_pass": true,
+  "val_f05": 0.98482,
+  "stats_matching": {
+    "rows": 1732544,
+    "nonempty": 1629705,
+    "ids": 5738594,
+    "dropped_bad_ids": 0
+  },
+  "stats_candidates": {
+    "rows": 1732544,
+    "nonempty": 1732544,
+    "ids": 164745367,
+    "matched_pairs_in_candidates": 5738594,
+    "matched_pairs_total": 5738594
+  },
+  "diagnostics": {
+    "empty_rate_by_country": {
+      "France": 0.06262044617116075,
+      "India": 0.05941954552300904,
+      "US": 0.058004300971488724
+    },
+    "mean_matches_by_country": {
+      "France": 3.1657069515748577,
+      "India": 3.3113732829950147,
+      "US": 3.370620986689911
+    },
+    "empty_rate": 0.059357222673709874,
+    "mean_matches": 3.312235648849322
+  },
+  "files": "submissions/files/20260927-1138_aryan-bhendarkar"
+}

@@ -1,7 +1,8 @@
-Updated: 27 Sep 08:20 IST (amlc-49 HEADLESS, lead prompt 08:05)
+Updated: 27 Sep 11:50 IST (amlc-49 HEADLESS, lead prompt 08:05). Box idle.
 **Running (lead 08:05):**
   - tmux bag: seed bags x5 of XB (0257) and D (0508). Seeds 42 (= parent) + 43..46, probabilities averaged (`ber.bag`) → DM-mini (t re-tuned) → DM-fold0x → paired vs parent. ETA XB-bag ~09:10, D-bag ~10:10 IST.
-  - tmux qLC (queued): learning curve on XB features, 45k / 90k training S1 (100% = XB) → DM-fold0x. ETA ~11:15.
+  - **Learning curve (XB features, DM-fold0x):** 45k 0.98335 / 90k 0.98393 / 180k 0.98447 → **+0.00058 and +0.00054 per doubling**. 4× data ≈ +0.0011; all fold 2–4 S1 ≈ +0.0017 (not started).
+  - **F-HEDGE ready:** submissions/files/20260927-1138_aryan-bhendarkar. The lead's bldF aborted before it on a syntax error in the edited buildC1x.sh line 12; fixed and built with the lead's exact commands. Validator PASS, byte-verified. F-C1 = …/20260927-1131 (lead-built, PASS).
   - **Bags: not kept.** XB-bag DM-fold0x +0.00005 n.s.; D-bag +0.00002 n.s.
   - **SUBMIT-REQUEST: D** (best of {XB, XB-bag, D, D-bag}; DM-fold0x 0.98485 = +0.00038 [+0.00026, +0.00051] vs XB, IN +0.0004 / US +0.0004)
     - **D-C1**: `submissions/files/20260927-1037_aryan-bhendarkar/`
@@ -328,3 +329,10 @@ Submissions used: today 2/5 on the counter (2 left today), tomorrow 0/5
 3. The cross-encoders are redundant with the one already in XB (no complementarity in F). So no new submission files were built.
 4. **SUBMIT-REQUEST unchanged: XB** (submissions/files/20260927-0354_aryan-bhendarkar, expected LB ≈ 0.971) and **HEDGE** (…/20260927-0401, XB US/IN + psemb-C1 France). Both validator PASS; nothing uploaded.
 5. Option for the lead: D swaps in the norm_v2/augmented MiniLM-5x (maybe more France-robust, +0.00038 in-domain); only the LB can show its France effect. All results are in experiments.md (EXP-XS-C..F); commits are local.
+
+## Headless run 08:05
+1. Seed bags x5 (seeds 42..46; LightGBM derives bagging/feature_fraction seeds; `ber.bag` + `features_v1 --seeds/--bag-parent`): XB-bag DM-fold0x **+0.00005 n.s.**, D-bag **+0.00002 n.s.** vs their parents. **Not kept** (bar +0.0005): bagging is a no-op here.
+2. Learning curve (XB features): DM-fold0x 45k 0.98335 / 90k 0.98393 / 180k 0.98447, **≈ +0.00055 per doubling** (slowly diminishing). 4× training S1 would give ≈ +0.0011.
+3. Test build for the best of {XB, XB-bag, D, D-bag} = **D**: **D-C1** submissions/files/20260927-1037 + **D-HEDGE** …/20260927-1043. Validator `--check-ids` PASS, byte-verified. vs XB, D changes 14.5% of FR rows but only 2.5% of US/IN rows. SUBMIT-REQUEST above.
+4. Also completed the lead's **F-HEDGE** (…/20260927-1138, PASS; bldF had aborted on a script syntax error). docs/REPRODUCE.md draft written (CPU + Kaggle steps, versions, seeds, ckpt sha256, 6 TODOs); requirements pin for transformers added.
+5. Incidents: my LC chain was stopped when the lead launched bldF; I re-ran the 50% evaluation after bldF finished. No deletions. All results are in experiments.md; commits local.
