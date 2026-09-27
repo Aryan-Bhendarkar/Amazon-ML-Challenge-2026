@@ -9,6 +9,7 @@ Outputs (/kaggle/working): logits_h{k}_{tag}.parquet (pair_id, xenc_h{k}) per ta
 in 1M-pair parts so a time-out keeps partial results), progress_g3.json.
 """
 import glob
+import gc
 import json
 import os
 import threading
@@ -19,7 +20,7 @@ import pandas as pd
 import torch
 
 CONFIG = {"model": "FacebookAI/xlm-roberta-base", "halves": [0]}  # @CONFIG@ (generated from xenc_g3.py)
-MAX_LEN, EVAL_BS, CHUNK = 96, 1024, 1_000_000
+MAX_LEN, EVAL_BS, CHUNK, TOK_BS = 96, 1024, 250_000, 50_000   # small chunks: 2 threads x 1M pairs OOM-killed v2
 W, IN = "/kaggle/working", "/kaggle/input"
 TAGS = ["mini", "train", "fold0x", "test"]
 PROG = {}
@@ -83,15 +84,21 @@ def run_half(k, gpu, P, text, tok):
                 continue
             c = d.iloc[o:o + CHUNK]
             t0 = time.time()
-            enc = tok(text[c.r1.to_numpy()].tolist(), text[c.r2.to_numpy()].tolist(), truncation="longest_first",
-                      max_length=MAX_LEN, return_attention_mask=False, return_token_type_ids=False)["input_ids"]
+            r1, r2, ids = c.r1.to_numpy(), c.r2.to_numpy(), []
+            for b in range(0, len(c), TOK_BS):              # python token lists -> int32 arrays per sub-batch
+                enc = tok(text[r1[b:b + TOK_BS]].tolist(), text[r2[b:b + TOK_BS]].tolist(), truncation="longest_first",
+                          max_length=MAX_LEN, return_attention_mask=False, return_token_type_ids=False)["input_ids"]
+                ids.extend(np.asarray(x, dtype=np.int32) for x in enc)
+                del enc
             t1 = time.time()
-            lg = score(model, [np.asarray(x, dtype=np.int32) for x in enc], pad, dev)
+            lg = score(model, ids, pad, dev)
+            del ids
             pd.DataFrame({"pair_id": c.pair_id.to_numpy(), f"xenc_h{k}": lg}).to_parquet(f)
             rate = len(c) / (time.time() - t1)
             PROG[k]["tags"][f"{tag}_{part:02d}"] = {"rows": len(c), "tok_s": round(t1 - t0), "pairs_per_s": round(rate)}
             log(f"h{k} {tag} part {part}: {len(c):,} pairs, tokenize {t1 - t0:.0f}s, score {rate:.0f} pairs/s")
             json.dump(PROG, open(f"{W}/progress_g3.json", "w"), indent=2)
+            gc.collect()
 
 
 if __name__ == "__main__":

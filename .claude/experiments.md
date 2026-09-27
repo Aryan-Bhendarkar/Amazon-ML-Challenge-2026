@@ -297,3 +297,4 @@ Orphan-sim protocol:
 - result: full epoch 31.2k steps × 128 in 128 min (492 pairs/s/GPU); fold-1 val logloss h0 0.00629 / h1 0.00614 (pos rate 3.75%), monotone improvement 0.0096 → 0.0063 over 4 ckpts
 - verdict: ckpts OK → G3 scoring (amlc-g3-minilm) queued automatically; stacking verdict is box1's (DM-fold0x / LOCO)
 - test cost: G3 kernel ~10.8M pairs per model on Kaggle GPU
+- G3 minilm v2 OOM-killed at fold0x (Kaggle RAM; 2 threads × 1M-pair python token lists). Fix: 250k-pair chunks, 50k tokenizer sub-batches → int32 arrays, gc per part; all G3 variants regenerated (XLM-R ones inherit the fix). v3 pushed 02:09 IST on T4x2. Measured: ~2.8k pairs/s per T4 (MiniLM), tokenization ~75 s per 1M pairs.

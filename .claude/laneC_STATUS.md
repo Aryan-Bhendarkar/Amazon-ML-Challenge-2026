@@ -1,4 +1,4 @@
-Updated: 27 Sep 01:03 IST (amlc-box2, Lanes C + G; branch `laneC`)
+Updated: 27 Sep 02:10 IST (amlc-box2, Lanes C + G; branch `laneC`)
 
 ## Lane G (GPU): per-account status (live: `logs/lane_g_status.log`; tmux `gpoll` = kaggle/poll_lane_g2.sh, every 3 min:
 ## training COMPLETE -> pull ckpts + sha256 -> push the G3 scoring kernel once its amlc-g3 dataset is ready -> pull logits)
@@ -6,7 +6,7 @@ Updated: 27 Sep 01:03 IST (amlc-box2, Lanes C + G; branch `laneC`)
 |---|---|---|---|
 | acc2 ashu273k | XLM-R half 0 (amlc-g2-xlmr-h0, v2 by lead) | RUNNING since ~23:30 IST (420 min budget) → ETA ~06:30 IST | auto-push after training (L4, T4x2 fallback) |
 | acc3 darshanbagade | XLM-R half 1 (amlc-g2-xlmr-h1) | RUNNING (L4) → ETA ~06:30 IST | auto-push after training |
-| acc5 darshanbagadeycce | MiniLM both halves (amlc-g2-minilm) | **COMPLETE** 00:01 IST: full epoch in 128 min on 2×T4, 492 pairs/s/GPU; best val logloss **h0 0.00629, h1 0.00614** (still falling at every 30-min ckpt); ckpts pulled to artifacts/kaggle/amlc-g2-minilm | pushed 00:27 IST on L4 (v1); still QUEUED at 01:01 → re-pushed on **T4x2 (v2)**, QUEUED; both halves score in parallel |
+| acc5 darshanbagadeycce | MiniLM both halves (amlc-g2-minilm) | **COMPLETE** 00:01 IST: full epoch in 128 min on 2×T4, 492 pairs/s/GPU; best val logloss **h0 0.00629, h1 0.00614** (still falling at every 30-min ckpt); ckpts pulled to artifacts/kaggle/amlc-g2-minilm | v2 (T4x2) ran 01:32–02:00 IST at ~2.8k pairs/s/GPU, then OOM-killed in fold0x (2 threads × 1M-pair python token lists); mini+train logits saved (artifacts/kaggle/amlc-g3-minilm_v2_oom). **v3 pushed 02:09 IST** (250k chunks, int32 sub-batch tokenization; CPU smoke OK); ETA ~80 min after start |
 - **G3 inputs** (`pipelines/xenc_g3_prep.py`, data/kaggle/g3_up): box1's 10.76M-pair set (test 8.06M, fold0x 1.52M, mini 0.38M, train 0.79M) with
   - **halves recomputed as md5(s1_id) % 2**: the G2 models trained on these; box1's `cf` is hash(42), the OLD ckpts' halves. Checked 0 mismatches vs the G1 export over 146k S1.
   - text rebuilt on norm_v2 in the training serialization.
