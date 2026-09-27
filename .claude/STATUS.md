@@ -1,10 +1,12 @@
-Updated: 27 Sep 05:00 IST (amlc-49 HEADLESS, lead prompt 04:50)
+Updated: 27 Sep 07:55 IST (amlc-49 HEADLESS, lead prompt 04:50). Box idle.
 **Running (lead 04:50): tmux xs2** = Lane G MiniLM-5x on top of XB
   - C = XB + xenc_mlm5x; D = XB with mlm5x replacing minilm
   - DM-mini → DM-fold0x → paired vs XB (clean, DM, per country)
   - **Result:** C DM-fold0x **+0.00035**, D **+0.00038** vs XB (both countries up, significant). **Both below the +0.001 gate: not kept; XB stays the candidate** (SUBMIT-REQUEST XB / HEDGE unchanged).
   - mlm5x halves verified OOF: md5(s1_id) % 2; each train-role pair in exactly one file, 0 in-sample, es rows in both.
-  - XLM-R: tmux qE (`logs/chainE.sh`) polls s3://…/share/g3logits/xlmr_h{0,1}/ every 5 min until 08:30 IST. On arrival: sync → `xenc_verify_halves` (aborts on any in-sample pair) → `xenc_join` → **E = XB + xenc_xlmr**, evaluated vs XB (DM-fold0x, clean, per country).
+  - XLM-R arrived 06:49; halves verified (0 in-sample). **E = XB + xlmr: DM-fold0x +0.00029.**
+  - **F = XB + mlm5x + xlmr: +0.00035.** Not kept (below +0.001).
+  - **The SUBMIT-REQUEST stays XB (…/20260927-0354) / HEDGE (…/20260927-0401).**
 Base: **psemb 20260926-1737**, t = 0.775 (C1 = psemb + FR norm v2 = **LB 0.968**, current best)
   - clean fold0x 0.98192, DM-fold0x 0.98101
   - LOCO 0.95383 / 0.93387
@@ -299,3 +301,15 @@ Submissions used: today 2/5 on the counter (2 left today), tomorrow 0/5
 3. Transfer: xenc LOCO is contaminated (ckpts saw both countries); the ldf drop in the presence of xenc is LOCO-neutral (−0.0001 / +0.0004). FR test: matches/S1 3.166 → 3.239, empty 6.26% → 5.93%, 21.9% of FR rows change. US net-prunes, IN net-adds, matching LB-PROBE.
 4. SUBMIT-REQUEST **XB** = submissions/files/20260927-0354_aryan-bhendarkar (C1 path, validator PASS, expected LB ≈ 0.971) and **HEDGE** = …/20260927-0401_aryan-bhendarkar (XB for US/IN + psemb-C1 France, PASS, ≈ 0.971 without the France risk). Nothing uploaded.
 5. Also: EXP-NL (psemb − lfrac) KILLED (DM-fold0x −0.0009, LOCO direction-flip). Box idle; all results in experiments.md; commits local (no push).
+
+## Headless run 04:50
+1. Lane G logits joined as extra GBDT features (`xenc_join.py`: halves format + multi-dir). MiniLM-5x and XLM-R halves verified OOF with `xenc_verify_halves.py`: every train-role pair in exactly one file, 0 in-sample, es rows in both.
+2. Paired vs XB, DM-fold0x:
+   - C (+mlm5x) **+0.00035**
+   - D (mlm5x replacing minilm) **+0.00038**
+   - E (+xlmr) **+0.00029**
+   - F (+mlm5x +xlmr) **+0.00035**
+   All are significant with both countries up, but **all below the +0.001 gate**.
+3. The cross-encoders are redundant with the one already in XB (no complementarity in F). So no new submission files were built.
+4. **SUBMIT-REQUEST unchanged: XB** (submissions/files/20260927-0354_aryan-bhendarkar, expected LB ≈ 0.971) and **HEDGE** (…/20260927-0401, XB US/IN + psemb-C1 France). Both validator PASS; nothing uploaded.
+5. Option for the lead: D swaps in the norm_v2/augmented MiniLM-5x (maybe more France-robust, +0.00038 in-domain); only the LB can show its France effect. All results are in experiments.md (EXP-XS-C..F); commits are local.

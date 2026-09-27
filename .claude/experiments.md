@@ -411,3 +411,10 @@ Orphan-sim protocol:
 - verdict: **below the +0.001 gate; not kept.** C (+mlm5x) +0.00035, D (mlm5x instead) +0.00038, E (+xlmr) +0.00029: the cross-encoders are largely redundant given XB.
 - next: F = XB + mlm5x + xlmr (all three), a final complementarity check.
 
+## EXP-XS-F XB + MiniLM-5x + XLM-R (all three xenc; 20260927-0709_…-ctx3-f; DM 0718 / 0719; 27 Sep 07:09–07:50 IST)
+- clean mini 0.9859 @ t = 0.75; t_DM = 0.825.
+- paired vs XB: **DM-fold0x +0.00035 [+0.00024, +0.00046]** (IN +0.00048, US +0.00026); clean fold0x +0.00029.
+- verdict: **not kept.** No complementarity: F ≈ C ≈ D ≈ E ≈ +0.0003–0.0004. The first cross-encoder (in XB) captured the xenc signal; extra xenc models add ~+0.0004 at most.
+- Summary for the lead: the gate (+0.001 vs XB) is not reached by any Lane G combination. XB / HEDGE remain the candidates.
+  - If a Lane G model is wanted for France robustness, D (MiniLM-5x on norm_v2 text with augmentation, replacing the old MiniLM; +0.00038 in-domain) is the natural swap, but its France effect can only be measured on the LB.
+
