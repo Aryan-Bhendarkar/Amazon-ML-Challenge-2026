@@ -75,7 +75,7 @@ python scripts/make_submission.py --run <run> --matches artifacts/<run>/test_mat
 `make_submission` writes both TSVs through `ber.submission.write_id_lists` (LF, tab, empty rows kept) and runs the official validator with `--check-ids`. `candidate_pairs.tsv` is the exact scored set (v1_n2 test cache), and matches ⊆ candidates is asserted. Wrapper used: `logs/buildC1x.sh <run> <t> <val> "<note>"`.
 
 ## TODO before the final zip
-1. `requirements.txt` from `.venv` (`uv pip freeze`) plus a Kaggle kernel environment note (Kaggle image torch/transformers versions from the kernel logs).
+1. `requirements.txt`: pins verified against `.venv` on 27 Sep (transformers added). Still TODO: Kaggle image torch/transformers versions from the kernel logs.
 2. `build_norm_cache.py --norm-version` flag (it is currently a module constant).
 3. Exact `build_cache.py` / `augment_nkey_num.py` / `blocking_v1.py` commands per tag (from the run records).
 4. Lane G ckpt sha256 + kernel versions (box2 / branch laneC merge).
