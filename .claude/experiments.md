@@ -424,3 +424,9 @@ Orphan-sim protocol:
 - **paired vs XB (0.825):** DM-fold0x **+0.00005 [−0.00002, +0.00012]** (IN +0.00007, US +0.00004; n.s.); clean fold0x +0.00002; DM-mini +0.00016.
 - verdict: **not kept** (bar: +0.0005). The single deterministic LightGBM already has negligible seed variance at this data size.
 
+## EXP-BAG-D Seed bag x5 of D (20260927-0905_…-ctx3-dbag; DM 0937 / fold0x run after it; 27 Sep 09:05–10:05 IST)
+- members = D (seed 42) + seeds 43..46 (best_iter 607 / 648 / 492 / 515). clean mini 0.9859; t_DM = 0.825.
+- **paired vs D (0.825):** DM-fold0x **+0.00002 [−0.00005, +0.00009]** (IN −0.00004, US +0.00006; n.s.); clean fold0x −0.00002; DM-mini +0.00002.
+- verdict: **not kept.** Seed bagging is a no-op for both XB and D.
+- test-build pick (task 3): **D** (20260927-0508). Best DM-fold0x of {XB, XB-bag, D, D-bag}: D 0.98485 vs XB 0.98447 (+0.00038 [+0.00026, +0.00051], both countries up). Its cross-encoder was trained on norm_v2 text with augmentation.
+
