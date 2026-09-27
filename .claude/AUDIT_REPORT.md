@@ -1,7 +1,7 @@
 SUBMIT-REQUEST: none. No prediction-level change clears the gate (DM-fold0x ≥ +0.0005, CI > 0, no per-country drop). Ship D as built.
 
 # AUDIT REPORT: run D (box2, branch `audit`, 27 Sep 2026)
-Updated 11:00 IST. D = `20260927-0508_…-ctx3-d`, t = 0.825. Reproduced here exactly: DM-fold0x **0.98485** (draws 5), clean fold0x **0.98548**, DM-mini 0.98511.
+Updated 10:50 IST. D = `20260927-0508_…-ctx3-d`, t = 0.825. Reproduced here exactly: DM-fold0x **0.98485** (draws 5), clean fold0x **0.98548**, DM-mini 0.98511.
 Code: `pipelines/audit_d.py` (tables + DM scorer for arbitrary selections), `audit_errors.py` (part A), `audit_rules.py` (part C), `audit_hop2.py` (2-hop). Outputs are in `artifacts/audit_d/`.
 
 ## TL;DR (ranked by expected gain per hour)
@@ -62,6 +62,18 @@ Per-S1 loss = 1 − F0.5, total DM loss 5,358 (mean 0.01516). Attribution: FP lo
 | sibling rescue (S1 already matched; strong name+addr band rows) | t_lo 0.75, nt 100, at 95 | −0.00001 | +0.00002 | ≈0 | KILL |
 | 2-hop record↔record (accept rejected rows near-identical to an accepted sibling / drop accepted outliers) | analysis only | no separation: rejected rows with hop_full ≥ 90 & p ≥ 0.6 are 0.71 positive, the same as p's calibration; accepted rows with low hop are 90–100% positive | – | – | KILL |
 
+| **stage-2 stack** on D (LightGBM on mini labels: D logit, XLM-R logits [not in D], MiniLM-5x, 2-hop, margin, 2nd-S1 p, sims; 2-fold OOF threshold) | t 0.825 | **−0.00011 [−0.00022, +0.00001]** | −0.00013 [−0.00023, −0.00002] | IN −0.00014 / US −0.00008; LOCO US→IN −0.00031, IN→US −0.00050 | KILL (mini OOF already −0.00014: D absorbs these signals; gain dominated by margin and D's logit) |
+
+**Threshold robustness** (fold0x, DM-optimal t as the test/val band-density ratio rho varies; w re-derived):
+
+| rho | best t | loss at t = 0.825 vs best |
+|---|---|---|
+| 1.39 (India estimate) | 0.8 | 0.00002 |
+| 1.63 (used) / 1.80 (US) / 2.2 / 2.6 | 0.825 | 0 |
+| 1.0 (test as clean as val) | 0.75 | 0.00019 |
+
+→ t = 0.825 is safe for any plausible density; no per-segment threshold is needed.
+
 Why rescue fails:
 - Among S1s predicted empty, true singletons dominate every p band (fold0x p 0.5–0.65: 102 rescuable vs 233 singletons that would score 0).
 - The 262 correct top candidates of empty non-singletons at p 0.5–0.825 cannot be separated from singletons without a singleton detector.
@@ -71,7 +83,7 @@ Why rescue fails:
 |---|---|---|---|---|
 | B1 | test candidate cache v1_n2 | all 1,732,544 test S1 present (0 with no candidates); 164.7M pairs, 0 duplicate pairs; 0 null similarity features; 0 null/NA S1 names; max 215 cands/S1 (nkey_num exempt from the 100 cap, by design) | OK | – |
 | B2 | `assign_best_s1` tie-breaking | pandas default (unstable) sort → exact ties broken arbitrarily. Measured on fold0x: **0 exact ties** between best and 2nd S1 | OK (latent) | optional: `kind="stable"` |
-| B3 | `scripts/make_submission.py` | records matched to > 1 S1 only print a WARNING; the validator does not check this | low (splice_fr asserts uniqueness; predict_test assigns first) | make it a hard failure before the final zip |
+| B3 | `scripts/make_submission.py` | records matched to > 1 S1, and matched pairs missing from candidates, only print a WARNING (exit code still 0 if the validator passes); the validator does not check the one-owner structure | low (splice_fr asserts uniqueness; predict_test assigns first) | make it a hard failure before the final zip |
 | B4 | xenc parity | pairs never scored have NaN in both train and test, but the selection differs: train used v1_n1 OOF p ≥ 0.01, val/test use psemb p ≥ 0.01. **nkey_num-only positives (0.33% of positives): xenc coverage 0% in train vs 99% in mini/fold0x/test** | low (the model never saw a scored xenc on those; true-copy values are high → benign direction) | document in the methodology |
 | B5 | France splice | France matches from test_n2fr (norm v2) replace only France S1; uniqueness asserted; candidate set unchanged (refeat keeps it) → candidate_pairs.tsv = v1_n2 test cache stays the scored set | OK | – |
 | B6 | xenc test text | G3 text built on norm_v2 (France rules) → consistent with the C1 France path; US/IN identical to v1 | OK | – |
