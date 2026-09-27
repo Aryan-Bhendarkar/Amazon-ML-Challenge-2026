@@ -2,7 +2,17 @@ Updated: 27 Sep 08:20 IST (amlc-49 HEADLESS, lead prompt 08:05)
 **Running (lead 08:05):**
   - tmux bag: seed bags x5 of XB (0257) and D (0508). Seeds 42 (= parent) + 43..46, probabilities averaged (`ber.bag`) → DM-mini (t re-tuned) → DM-fold0x → paired vs parent. ETA XB-bag ~09:10, D-bag ~10:10 IST.
   - tmux qLC (queued): learning curve on XB features, 45k / 90k training S1 (100% = XB) → DM-fold0x. ETA ~11:15.
-  - Then: test build (C1 path + HEDGE) for the best of {XB, XB-bag, D, D-bag}, target 13:30.
+  - **Bags: not kept.** XB-bag DM-fold0x +0.00005 n.s.; D-bag +0.00002 n.s.
+  - **SUBMIT-REQUEST: D** (best of {XB, XB-bag, D, D-bag}; DM-fold0x 0.98485 = +0.00038 [+0.00026, +0.00051] vs XB, IN +0.0004 / US +0.0004)
+    - **D-C1**: `submissions/files/20260927-1037_aryan-bhendarkar/`
+      - validator `--check-ids` PASS; matches ⊆ candidates 5,761,349
+      - FR matches/S1 3.261, empty 5.83%
+      - vs XB: 14.5% of France rows differ; US/IN only 2.5%
+      - expected LB ≈ XB + 0.0003 (US/IN) + France effect
+    - **D-HEDGE**: `…/20260927-1043_aryan-bhendarkar/` (D US/IN + psemb-C1 France; validator PASS; byte-verified). Expected ≈ HEDGE(XB) + 0.0003.
+    - Suggested use once the XB / HEDGE LB scores are in:
+      - If LB(XB) > LB(HEDGE) (the xenc France effect is positive), upload D-C1: its France model saw French-normalized text.
+      - Otherwise upload D-HEDGE.
   - docs/REPRODUCE.md draft committed.
 **Running (lead 04:50): tmux xs2** = Lane G MiniLM-5x on top of XB
   - C = XB + xenc_mlm5x; D = XB with mlm5x replacing minilm

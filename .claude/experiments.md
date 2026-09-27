@@ -430,3 +430,18 @@ Orphan-sim protocol:
 - verdict: **not kept.** Seed bagging is a no-op for both XB and D.
 - test-build pick (task 3): **D** (20260927-0508). Best DM-fold0x of {XB, XB-bag, D, D-bag}: D 0.98485 vs XB 0.98447 (+0.00038 [+0.00026, +0.00051], both countries up). Its cross-encoder was trained on norm_v2 text with augmentation.
 
+## SUB-D C1-path test files for D + HEDGE (27 Sep 10:05–10:50 IST)
+- **D-C1** = submissions/files/20260927-1037_aryan-bhendarkar: run 20260927-0508 (psemb + xenc_mlm5x − ldf), t = 0.825, France rows on norm v2.
+  - Validator `--check-ids` PASS; matches ⊆ candidates 5,761,349; splice non-FR identical.
+- **D-HEDGE** = …/20260927-1043_aryan-bhendarkar: D-C1 US/IN + psemb-C1 France rows (byte-verified: 0 / 0 differ). Validator PASS; 5,736,610 matches.
+- per country (matches/S1, empty rate):
+
+| country | D-C1 | XB | psemb-C1 (LB 0.968) |
+|---|---|---|---|
+| France | 3.261 / 5.83% | 3.239 / 5.93% | 3.166 / 6.26% |
+| India | 3.309 / 5.96% | 3.308 / 5.95% | 3.242 / 6.19% |
+| US | 3.370 / 5.80% | 3.371 / 5.80% | 3.404 / 5.77% |
+
+- churn, D-C1 vs XB: US 2.5% of rows (±0.013 pairs/S1), IN 2.4%, **FR 14.5% (+0.092 / −0.070 per S1)**.
+  - D differs from XB mainly in France. LB(D) − LB(XB) ≈ the France effect of the norm_v2/augmented MiniLM-5x vs the old MiniLM, plus ~+0.0003 US/IN.
+
