@@ -1,3 +1,11 @@
+## Packaging 11:25 (box2, branch `audit`, done 12:05 IST; no test submissions built)
+1. `pipelines/hedge_unseen.py`: seen = train S1 countries (data-driven) → unseen get psemb (no xenc). Reproduces D-HEDGE exactly: identical to `…-ctx3-d/test_matches_c1_frref.parquet`, 5,736,610 matches. Box1 check vs the 1043 TSV: `python pipelines/hedge_unseen.py --run <D> --check <1043 matches parquet>`. `hedge_fr.py` kept (no deletions).
+2. Lane G merged from laneC: `xenc_g1_export.py`, `xenc_g3_prep.py`, `kaggle/xenc_g2*`/`xenc_g3*`, the generators, `launch_lane_g`/`relaunch_g2`/`poll_lane_g*.sh`, and `kaggle_gpu` push-error detection. `refeat_norm.py` was already identical. `python -m pytest -q`: 49 passed.
+3. `make_submission.py` fails hard via `ber.submission.integrity_errors`/`readback_errors`, and writes nothing when matches are bad (tested: exit 2). Exit 2: record > 1 S1, unknown S1, non-S2/S3 id, duplicate S1. Exit 3: TSV read-back (missing/duplicate rows, CR) or writer-dropped ids. Exit 4: matched pairs ∉ candidates.
+4. `requirements.txt` re-frozen from the box `.venv` (Python 3.13.15): imported packages only; faiss/sentence-transformers/psutil/tqdm dropped. `requirements-kaggle.txt`: torch 2.10.0+cu128 from the kernel logs; transformers not logged (Kaggle image default; CPU smoke tests ran on 5.17.0). `check_env.py` list updated.
+5. `docs/REPRODUCE.md` rewritten for the final pipeline: norm → blocking v1_n2 → features/ps/bge-m3 → Lane G G1/G2/G3 → xenc_join → D/psemb (+ F variant) → DM-val → predict_test → France splice → hedge_unseen → make_submission. Includes the six ckpt sha256, seeds, runtimes and hardware.
+6. `docs/METHODOLOGY.md` (from the draft; `[TEAM NAME]`/`[MEMBERS]` placeholders) with final numbers: DM-fold0x 0.98497, LB table 0.901 → 0.9046 → 0.967 → 0.968 → 0.978 → 0.9795, reduction ratio 0.999976 (95 cands/S1), MIT licences (MiniLM, XLM-R, bge-m3, LightGBM), no external data, unseen-country fallback rationale.
+
 SUBMIT-REQUEST: none. No prediction-level change clears the gate (DM-fold0x ≥ +0.0005, CI > 0, no per-country drop). Ship D as built.
 
 # AUDIT REPORT: run D (box2, branch `audit`, 27 Sep 2026)
