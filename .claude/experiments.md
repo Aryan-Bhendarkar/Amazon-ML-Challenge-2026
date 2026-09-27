@@ -418,3 +418,9 @@ Orphan-sim protocol:
 - Summary for the lead: the gate (+0.001 vs XB) is not reached by any Lane G combination. XB / HEDGE remain the candidates.
   - If a Lane G model is wanted for France robustness, D (MiniLM-5x on norm_v2 text with augmentation, replacing the old MiniLM; +0.00038 in-domain) is the natural swap, but its France effect can only be measured on the LB.
 
+## EXP-BAG-XB Seed bag x5 of XB (20260927-0806_…-ctx3-xbbag; DM 0838 / 0839; 27 Sep 08:06–09:15 IST)
+- change: members = XB (seed 42, reused: deterministic) + seeds 43..46 (LightGBM derives bagging/feature_fraction seeds from `seed`). Probabilities averaged (`ber.bag`; bag.json). best_iter 543 / 606 / 500 / 552.
+- clean mini 0.9858 @ t = 0.75; t_DM = 0.825.
+- **paired vs XB (0.825):** DM-fold0x **+0.00005 [−0.00002, +0.00012]** (IN +0.00007, US +0.00004; n.s.); clean fold0x +0.00002; DM-mini +0.00016.
+- verdict: **not kept** (bar: +0.0005). The single deterministic LightGBM already has negligible seed variance at this data size.
+
