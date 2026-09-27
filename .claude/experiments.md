@@ -396,3 +396,18 @@ Orphan-sim protocol:
 - verdict: **below the +0.001 gate. XB stays the candidate.** C ≈ D ≈ +0.0004. The new MiniLM-5x alone matches the old MiniLM + a small gain, so the two cross-encoders are largely redundant.
 - Note for the lead: D's cross-encoder was trained on norm_v2 text with augmentation, so it may transfer to France better than the old MiniLM (which XB uses). That is unmeasurable label-free; D is a reasonable swap if the lead weighs France robustness over the n.s. difference (D − C ≈ 0).
 
+## EXP-XS-E XB + Lane G XLM-R as a second xenc feature (20260927-0651_…-ctx3-e; DM 0659 / 0700; 27 Sep 06:51–07:35 IST)
+- change: XB + `xenc_xlmr`: xlm-roberta-base (MIT), two cross-fitted halves delivered as separate dirs, joined with '+'.
+  - Verified: every train-role pair in exactly one file, 0 in-sample, es rows in both.
+- clean mini 0.9859 @ t = 0.725; t_DM = 0.825.
+- **paired vs XB (0.825):**
+
+| | overall | India | US |
+|---|---|---|---|
+| **DM-fold0x** | **+0.00029 [+0.00019, +0.00040]** | +0.00041 | +0.00022 |
+| clean fold0x | +0.00022 [+0.00013, +0.00030] | +0.00032 | +0.00015 |
+| DM-mini | +0.00024 (US +0.00005 n.s.) | | |
+
+- verdict: **below the +0.001 gate; not kept.** C (+mlm5x) +0.00035, D (mlm5x instead) +0.00038, E (+xlmr) +0.00029: the cross-encoders are largely redundant given XB.
+- next: F = XB + mlm5x + xlmr (all three), a final complementarity check.
+
