@@ -1,18 +1,14 @@
-# Pinned from the team laptop venv (Python 3.13.1, Windows 11, CUDA 12.4). Re-freeze before packaging.
-# NOTE: pandas 2.2.3 segfaults (hashtable access violation) with numpy 2.4 on this setup -> use pandas 3.x.
+# CPU pipeline (everything except the Kaggle GPU kernels). Frozen from the AWS box .venv on 27 Sep 2026:
+# Python 3.13.15 (uv venv), Ubuntu, r7i 8 vCPU / 61 GB. Only packages imported by src/, pipelines/, scripts/, tests/.
+# GPU kernels (kaggle/*.py) run on the Kaggle image: see requirements-kaggle.txt.
 numpy==2.4.6
-pandas==3.0.2
+pandas==3.0.2            # pandas 2.2.x segfaults with numpy 2.4 on the Windows laptop -> keep 3.x
 pyarrow==24.0.0
 polars==1.44.2
 scipy==1.15.3
 scikit-learn==1.7.0
-rapidfuzz==3.14.6
-sparse-dot-topn==1.2.0     # Apache-2.0; multithreaded sparse top-k matmul for TF-IDF blocking
-anyascii==0.3.3
-lightgbm==4.6.0
-faiss-cpu==1.14.2
-sentence-transformers==5.5.1
-torch==2.6.0            # CUDA build from https://download.pytorch.org/whl/cu124 (or reuse system torch)
-psutil==7.0.0
-tqdm
-pytest==9.0.2
+rapidfuzz==3.14.6        # MIT
+sparse-dot-topn==1.2.0   # Apache-2.0; multithreaded sparse top-k matmul for TF-IDF blocking
+anyascii==0.3.3          # ISC (used instead of the GPL unidecode)
+lightgbm==4.6.0          # MIT
+pytest==9.0.2            # tests only

@@ -1,0 +1,10 @@
+# Kaggle GPU kernels (kaggle/emb_bge_m3.py, kaggle/xenc_train_score.py, kaggle/xenc_g2*.py, kaggle/xenc_g3*.py).
+# They run on the stock Kaggle Python image (Python 3.12, 2x Tesla T4 or 1x L4; internet on for the HF model download).
+# Versions below are the ones reported by our kernels (kaggle/gpu_smoke.py -> smoke.json, 26 Sep 2026):
+torch==2.10.0+cu128      # Kaggle image build
+# transformers, tokenizers, pandas, pyarrow, numpy, scikit-learn: the Kaggle image defaults at run time (26-27 Sep
+# 2026); the kernels only use stable APIs (AutoTokenizer / XLMRobertaTokenizerFast, AutoModelForSequenceClassification,
+# BertForSequenceClassification, AutoConfig). CPU smoke tests of kaggle/xenc_g3.py ran with transformers==5.17.0,
+# torch==2.6.0 (box .venv).
+# Models (all MIT, <= 8B params): microsoft/Multilingual-MiniLM-L12-H384 (117M), FacebookAI/xlm-roberta-base (278M,
+# also the MiniLM tokenizer files), BAAI/bge-m3 (568M, frozen).

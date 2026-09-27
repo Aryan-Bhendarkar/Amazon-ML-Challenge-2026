@@ -9,8 +9,8 @@ import sys
 from ber import paths
 
 # torch FIRST: on Windows, loading torch after some native libs can fail with a DLL OSError
-PKGS = ["torch", "sentence_transformers", "numpy", "pandas", "pyarrow", "sklearn", "scipy", "rapidfuzz",
-        "anyascii", "lightgbm", "polars", "faiss", "psutil", "pytest"]
+PKGS = ["numpy", "pandas", "pyarrow", "sklearn", "scipy", "rapidfuzz", "sparse_dot_topn",
+        "anyascii", "lightgbm", "polars", "pytest"]   # torch: only for Kaggle kernels / CPU smoke tests (optional)
 print(f"python {sys.version.split()[0]} on {platform.platform()}")
 for p in PKGS:
     try:
