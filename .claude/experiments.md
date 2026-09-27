@@ -445,3 +445,10 @@ Orphan-sim protocol:
 - churn, D-C1 vs XB: US 2.5% of rows (±0.013 pairs/S1), IN 2.4%, **FR 14.5% (+0.092 / −0.070 per S1)**.
   - D differs from XB mainly in France. LB(D) − LB(XB) ≈ the France effect of the norm_v2/augmented MiniLM-5x vs the old MiniLM, plus ~+0.0003 US/IN.
 
+## LC Learning curve on the XB feature set (lead 08:05 task 2; no new featurization; 27 Sep 10:49– IST)
+- same recipe and features as XB; training S1 subsampled (`--n-train-s1`; es role subsampled alike); xenc NaN where unscored as before; t re-tuned on DM-mini (frozen ρ/w).
+- **25% (45k S1)** (20260927-1049_…-lc4500; DM 1053 / 1054): clean mini 0.9847.
+  - Paired vs XB (100%): **DM-fold0x −0.00112 [−0.00124, −0.00099]** (IN −0.00116, US −0.00109); clean fold0x −0.00091.
+- **50% (90k S1)** (20260927-1100_…-lc9000; DM-mini 1104): clean mini 0.9853.
+  - Its DM-fold0x run 1106 was interrupted (the chain's tmux session ended at 11:07 when the lead launched the F build). It is re-queued after bldF (tmux qlc2).
+

@@ -1,0 +1,64 @@
+{
+  "dm_params": {
+    "lo": 0.2,
+    "hi": 0.975,
+    "t_ship": 0.775,
+    "test_band_per_s1": 0.45124,
+    "val_band_per_s1": 0.27689,
+    "val_band_pos_per_s1": 0.17728,
+    "val_band_precision": 0.6402,
+    "rho": 1.6297,
+    "w": 2.7503,
+    "rho_by_country_REPORT_ONLY": {
+      "US": 1.796,
+      "France": null,
+      "India": 1.386
+    },
+    "draws": 5,
+    "t_dm": 0.825,
+    "frozen_from": "20260927-1053_aryan-bhendarkar_dm-val-mini"
+  },
+  "clean": {
+    "at_t_ship": 0.98436,
+    "at_t_dm": 0.98425,
+    "delta_t_dm_vs_ship": {
+      "n": 353503,
+      "delta": -0.00011790878477811051,
+      "ci95": [
+        -0.00017804482291961413,
+        -4.923574031056962e-05
+      ],
+      "p_not_better": 1.0
+    },
+    "by_country_at_t_dm": {
+      "India": 0.98292,
+      "US": 0.98513
+    },
+    "by_country_at_t_ship": {
+      "India": 0.98307,
+      "US": 0.98522
+    }
+  },
+  "dm": {
+    "at_t_ship": 0.98317,
+    "at_t_dm": 0.98335,
+    "delta_t_dm_vs_ship": {
+      "n": 353503,
+      "delta": 0.00018176057992847714,
+      "ci95": [
+        0.00010822297436773155,
+        0.0002700443986634984
+      ],
+      "p_not_better": 0.0
+    },
+    "by_country_at_t_dm": {
+      "India": 0.98189,
+      "US": 0.98432
+    },
+    "by_country_at_t_ship": {
+      "India": 0.98174,
+      "US": 0.98412
+    }
+  },
+  "timing_min": 4.8
+}
