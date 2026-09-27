@@ -1,7 +1,7 @@
 SUBMIT-REQUEST: none. No prediction-level change clears the gate (DM-fold0x ≥ +0.0005, CI > 0, no per-country drop). Ship D as built.
 
 # AUDIT REPORT: run D (box2, branch `audit`, 27 Sep 2026)
-Updated 10:50 IST. D = `20260927-0508_…-ctx3-d`, t = 0.825. Reproduced here exactly: DM-fold0x **0.98485** (draws 5), clean fold0x **0.98548**, DM-mini 0.98511.
+Updated 10:45 IST (all brief items done; tested 10 rules/models, none passes). D = `20260927-0508_…-ctx3-d`, t = 0.825. Reproduced here exactly: DM-fold0x **0.98485** (draws 5), clean fold0x **0.98548**, DM-mini 0.98511.
 Code: `pipelines/audit_d.py` (tables + DM scorer for arbitrary selections), `audit_errors.py` (part A), `audit_rules.py` (part C), `audit_hop2.py` (2-hop). Outputs are in `artifacts/audit_d/`.
 
 ## TL;DR (ranked by expected gain per hour)
@@ -13,8 +13,11 @@ Code: `pipelines/audit_d.py` (tables + DM scorer for arbitrary selections), `aud
    - "lost to another S1" +0.0020
 
    The points toward 0.99 are in the *model* (hard true copies scored < t) and *blocking*, not in thresholds. Neither can be built and validated before 13:30 without test re-featurization on box1.
+   - 59–67% of in-candidate rejects are **empty-address** records.
+   - India's extra loss is **blocking misses** (2.1× US).
+   - Next-competition levers: address-only / trade-name retrieval, and an empty-address-aware model.
 3. **Package gaps (must fix before the zip; see §4):**
-   - no filled methodology document exists anywhere in the repo
+   - no filled methodology document existed anywhere in the repo → **draft written: `docs/METHODOLOGY_DRAFT.md`** (team name/members + final LB to fill)
    - REPRODUCE.md describes XB, not D
    - Lane G kernels + ckpt sha256 live on branch laneC (sha256 below)
    - requirements.txt pins unused packages from the Windows laptop
